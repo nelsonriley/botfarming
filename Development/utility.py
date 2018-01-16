@@ -166,6 +166,84 @@ def save_buy_order_info_to_state(current_state, buy_order_info):
     return current_state
 
 
+def get_first_in_line_price(current_state):
+    order_book = current_state['client'].get_order_book(symbol=current_state['symbol'], limit=10)
+    # pprint(order_book)
+    # bids & asks.... 0=price, 1=qty
+    first_ask = float(order_book['asks'][0][0])
+    price_to_buy = first_ask - current_state['min_price']
+    # print(first_ask)
+    # print(price_to_buy)
+    return price_to_buy
+
+
+def sell_with_order_book(current_state, price_to_sell, minutes_until_sale):
+
+    minutes_since_start = int(round((int(time.time()) - current_state['original_buy_time'])/60))
+    minutes_to_run = minutes_until_sale - minutes_since_start
+
+    time_to_give_up = int(time.time()) + minutes_to_run * 60
+    price_to_sell_min = 0.998 * price_to_sell
+    while True:
+        if current_state['orderId'] != False:
+            sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
+            if sale_order_info['status'] == 'FILLED':
+                current_state['executedQty'] = current_state['executedQty'] - float(sale_order_info['executedQty'])
+                current_state['total_revenue'] += float(sale_order_info['executedQty']) * float(sale_order_info['price'])
+                current_state['state'] = 'selling'
+                current_state['orderId'] = False
+                pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state 2nd sell******')
+                return True, current_state
+
+        if int(time.time()) >= time_to_give_up:
+            if not sale_order_info is None:
+                current_state = cancel_sale_order(current_state, sale_order_info)
+                if current_state['executedQty'] < current_state['min_quantity']:
+                    return True, current_state
+                else:
+                    return False, current_state
+
+        first_in_line_price = get_first_in_line_price(current_state)
+        if first_in_line_price < price_to_sell_min:
+            if current_state['orderId'] != False:
+                sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
+                current_state = cancel_sale_order(current_state, sale_order_info)
+        else:
+            if current_state['orderId'] != False:
+                if not first_in_line_price == sale_order_info['price']:
+                    current_state = cancel_sale_order(current_state, sale_order_info)
+                    current_state = create_sale_order(current_state, first_in_line_price)
+            else:
+                current_state = create_sale_order(current_state, first_in_line_price)
+
+        time.sleep(1)
+
+
+
+def sell_coin_with_order_book(current_state):
+
+    if current_state['executedQty'] < current_state['min_quantity']:
+
+        print('selling..', current_state['symbol'], get_time())
+
+        sold_coin, current_state = sell_with_order_book(current_state, current_state['price_to_sell'], current_state['minutes_until_sale'])
+
+        if not sold_coin:
+            sold_coin, current_state = sell_with_order_book(current_state, current_state['price_to_sell_2'], current_state['minutes_until_sale_2'])
+
+        if not sold_coin:
+            sold_coin, current_state = sell_with_order_book(current_state, current_state['price_to_sell_3'], current_state['minutes_until_sale_3'])
+
+        if not sold_coin:
+            final_sale_order = current_state['client'].order_market_sell(symbol=current_state['symbol'], quantity=current_state['executedQty'])
+            order_book = current_state['client'].get_order_book(symbol=current_state['symbol'])
+            current_state['total_revenue'] += float(final_sale_order['executedQty'])*float(order_book['bids'][0][0])
+
+
+    calculate_profit_and_free_coin(current_state)
+    return
+
+
 def sell_coin(current_state):
 
     if current_state['executedQty'] != 0:
@@ -240,6 +318,7 @@ def sell_coin(current_state):
     calculate_profit_and_free_coin(current_state)
     return
 
+
 def buy_coin_from_state(current_state):
 
     print('buy coin from state', current_state['symbol'])
@@ -302,20 +381,21 @@ def buy_coin(symbol, length, file_number, data=[]):
 
         if (length == '1m'):
 
-            trail_vol_min = 3000
             price_to_start_buy = 1.003
-            lower_band_buy_factor = .989
-            price_to_buy_factor = .989
+
+            trail_vol_min = 1000
+            lower_band_buy_factor = .984
+            price_to_buy_factor = .977
             bollingers_percentage_increase_factor = -.006
             datapoints_trailing = 22
 
+            minutes_until_sale = 4
+            minutes_until_sale_2 = 12
+            minutes_until_sale_3 = 45
+            price_to_sell_factor = .988
+            price_to_sell_factor_2 = .981
+            price_to_sell_factor_3 = .9625
 
-            minutes_until_sale = 30
-            minutes_until_sale_2 = 45
-            minutes_until_sale_3 = 60
-            price_to_sell_factor = .996
-            price_to_sell_factor_2 = .985
-            price_to_sell_factor_3 = .965
             part_of_bitcoin_to_use = .2
 
             minutes = 1
@@ -366,9 +446,17 @@ def buy_coin(symbol, length, file_number, data=[]):
 
                 bollingers_percentage_increase = (trailing_and_current_candles[-1][14] - trailing_and_current_candles[-2][14])/trailing_and_current_candles[-2][14]
                 lower_band_for_index = trailing_and_current_candles[-1][14]
-                should_buy = float(candle[4]) < lower_band_for_index*lower_band_buy_factor*price_to_start_buy and bollingers_percentage_increase > bollingers_percentage_increase_factor and float(candle[4]) < float(candle[1])*price_to_buy_factor*price_to_start_buy and numpy.mean(trailing_volumes) > trail_vol_min
 
 
+                band_ok = float(candle[4]) < lower_band_for_index*lower_band_buy_factor*price_to_start_buy
+                bollinger_increase_ok = bollingers_percentage_increase > bollingers_percentage_increase_factor
+                price_to_buy_ok = float(candle[4]) < float(candle[1])*price_to_buy_factor*price_to_start_buy
+                trailing_vol_ok = numpy.mean(trailing_volumes) > trail_vol_min
+
+                should_buy = band_ok and bollinger_increase_ok and price_to_buy_ok and trailing_vol_ok
+
+
+                #should_buy = float(candle[4]) < lower_band_for_index*lower_band_buy_factor*price_to_start_buy and bollingers_percentage_increase > bollingers_percentage_increase_factor and float(candle[4]) < float(candle[1])*price_to_buy_factor*price_to_start_buy and numpy.mean(trailing_volumes) > trail_vol_min
 
                 #should_buy = float(candle[4]) < lower_band_for_index*lower_band_buy_factor*price_to_start_buy
 
@@ -406,10 +494,10 @@ def buy_coin(symbol, length, file_number, data=[]):
                         price_to_sell_2 = float_to_str(round(price_to_sell_2, price_decimals))
                         price_to_sell_3 = float_to_str(round(price_to_sell_3, price_decimals))
 
-                        decimals = get_min_decimals(symbol['filters'][1]['minQty'])
-                        # decimals = get_min_decimals_new(symbol['filters'][2]['minNotional'])
+                        quantity_decimals = get_min_decimals(symbol['filters'][1]['minQty'])
+                        # quantity_decimals = get_min_decimals_new(symbol['filters'][2]['minNotional'])
 
-                        amount_to_buy = float_to_str(round(amount_to_buy, decimals))
+                        amount_to_buy = float_to_str(round(amount_to_buy, quantity_decimals))
 
                         buy_order = client.order_limit_buy(symbol=symbol['symbol'],quantity=amount_to_buy,price=price_to_buy)
 
@@ -424,7 +512,6 @@ def buy_coin(symbol, length, file_number, data=[]):
                         current_state['minutes_until_sale'] = minutes_until_sale
                         current_state['minutes_until_sale_2'] = minutes_until_sale_2
                         current_state['minutes_until_sale_3'] = minutes_until_sale_3
-                        current_state['decimals'] = decimals
                         current_state['price_to_sell'] = price_to_sell
                         current_state['price_to_sell_2'] = price_to_sell_2
                         current_state['price_to_sell_3'] = price_to_sell_3
@@ -432,6 +519,11 @@ def buy_coin(symbol, length, file_number, data=[]):
                         current_state['file_number'] = str(file_number)
                         current_state['client'] = client
                         current_state['error_cancel_order'] = False
+                        current_state['error_cancel_order'] = False
+                        current_state['price_decimals'] = price_decimals
+                        current_state['quantity_decimals'] = quantity_decimals
+                        current_state['min_price'] = float(symbol['filters'][0]['minPrice'])
+                        current_state['min_quantity'] = float(symbol['filters'][1]['minQty'])
 
 
                         pickle_write('./program_state_' + length + '/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '.pklz', current_state, '******could not write state******')
@@ -463,7 +555,7 @@ def buy_coin(symbol, length, file_number, data=[]):
 
                         current_state = save_buy_order_info_to_state(current_state, buy_order_info)
 
-                        sell_coin(current_state)
+                        sell_coin_with_order_book(current_state)
 
 
                         print('finished order - freeing coin', current_state['symbol'])

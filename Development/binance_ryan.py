@@ -37,35 +37,29 @@ symbol_data = symbol_r.json()
 
 step_back = 0
 minutes = 1
-day = '20180115'
+day = '20180116'
+
+trailing_and_current_candles_array = {}
+smart_trailing_candles_array = {}
 
 
 if minutes == 1:
 
     final_sale_factor = 1.005
-    trail_vol_min = 1000
 
-    lower_band_buy_factor = .989
-    price_to_buy_factor = .989
+    trail_vol_min = 1000
+    lower_band_buy_factor = .984
+    price_to_buy_factor = .977
     bollingers_percentage_increase_factor = -.006
     datapoints_trailing = 22
 
+    minutes_until_sale = 4
+    minutes_until_sale_2 = 12
+    minutes_until_sale_3 = 45
+    price_to_sell_factor = .988
+    price_to_sell_factor_2 = .981
+    price_to_sell_factor_3 = .9625
 
-    minutes_until_sale = 30
-    minutes_until_sale_2 = 45
-    minutes_until_sale_3 = 60
-    price_to_sell_factor = .996
-    price_to_sell_factor_2 = .985
-    price_to_sell_factor_3 = .965
-    part_of_bitcoin_to_use = .3
-
-    best_price_to_sell_factor = 0
-    best_price_to_sell_factor_2 = 0
-    best_price_to_sell_factor_3 = 0
-    best_minutes_until_sale = 0
-    best_minutes_until_sale_2 = 0
-    best_minutes_until_sale_3 = 0
-    best_gain = 0
 
 
 if minutes == 30:
@@ -82,11 +76,8 @@ if minutes == 30:
     price_to_sell_factor_2 = .981
     price_to_sell_factor_3 = .974
 
-    best_gain = 0
-    best_movement_multiplier = 0
-    best_price_to_buy_factor = 0
 
-
+best_gain = 0
 best_price_to_buy_factor = 0
 best_bollingers_percentage_increase_factor = 0
 best_lower_band_buy_factor = 0
@@ -97,33 +88,31 @@ best_minutes_until_sale = 0
 best_minutes_until_sale_2 = 0
 best_minutes_until_sale_3 = 0
 
-
-for step_back in range(0, 4):
-
-#for price_to_sell_factor_2 in range(0, 6):
-#    price_to_sell_factor_2 = round(.982 + .001*price_to_sell_factor_2, 4)
-#for price_to_sell_factor_2 in range(0, 20):
-#    price_to_sell_factor_2 = round(.95 + .005*price_to_sell_factor_2, 4)
-
-    for price_to_sell_factor in range(0, 4):
-        price_to_sell_factor = round(.990 + .002*price_to_sell_factor, 4)
-        for lower_band_buy_factor in range(0, 3):
-            lower_band_buy_factor = round(.980 + .002*lower_band_buy_factor,4)
-            for price_to_buy_factor in range(0, 2):
-                price_to_buy_factor = round(.98 + .002*price_to_buy_factor, 4)
+for step_back in range(1, 3):
+            for price_to_sell_factor_2 in range(0, 1):
+                price_to_sell_factor_2 = round(.988 + .002*price_to_sell_factor_2, 4)
 
 
 
-                #lower_band_buy_factor = .989
-                #price_to_buy_factor = .989
+    # for price_to_sell_factor in range(0, 1):
+    #     price_to_sell_factor = round(.988 + .001*price_to_sell_factor, 4)
+    #     for lower_band_buy_factor in range(0, 1):
+    #         lower_band_buy_factor = round(.984 + .002*lower_band_buy_factor,4)
+    #         for price_to_buy_factor in range(0, 1):
+    #             price_to_buy_factor = round(.977 + .002*price_to_buy_factor, 4)
+
+
+                trail_vol_min = 1000
+                lower_band_buy_factor = .984
+                price_to_buy_factor = .977
                 bollingers_percentage_increase_factor = -.006
 
-                minutes_until_sale = 3
+                minutes_until_sale = 4
                 minutes_until_sale_2 = 12
                 minutes_until_sale_3 = 45
-                #price_to_sell_factor = .996
-                price_to_sell_factor_2 = .985
-                price_to_sell_factor_3 = .965
+                price_to_sell_factor = .988
+                price_to_sell_factor_2 = .981
+                price_to_sell_factor_3 = .960
 
 
                 #if minutes == 1:
@@ -171,7 +160,7 @@ for step_back in range(0, 4):
                         sale_time = 0
                         for index,candle in enumerate(data):
 
-                            if float(candle[0]) < sale_time:
+                            if float(candle[0]) < float(sale_time):
                                 continue
 
                             if minutes == 1:
@@ -193,22 +182,18 @@ for step_back in range(0, 4):
 
 
                                 #get bollinger data
+                                # if symbol['symbol'] + '_' + str(candle[0]) in trailing_and_current_candles_array.keys():
+                                #
+                                #     trailing_and_current_candles = trailing_and_current_candles_array[symbol['symbol'] + '_' + str(candle[0])]
+                                #     smart_trailing_candles = smart_trailing_candles_array[symbol['symbol'] + '_' + str(candle[0])]
+                                # else:
+                                #     trailing_and_current_candles = data[index-datapoints_trailing:index]
+                                #     trailing_and_current_candles, smart_trailing_candles = fn.add_bollinger_bands_to_candles(trailing_and_current_candles)
+                                #     trailing_and_current_candles_array[symbol['symbol'] + '_' + str(candle[0])] = trailing_and_current_candles
+                                #     smart_trailing_candles_array[symbol['symbol'] + '_' + str(candle[0])] = smart_trailing_candles
+
                                 trailing_and_current_candles = data[index-datapoints_trailing:index]
                                 trailing_and_current_candles, smart_trailing_candles = fn.add_bollinger_bands_to_candles(trailing_and_current_candles)
-
-
-                                #if pickle_read('./bollinger_band_data/' + symbol['symbol'] + '_' + str(candle[0]) + '_trailing_and_current_candles'):
-                                # try:
-                                #     trailing_and_current_candles = pickle_read('./bollinger_band_data/' + symbol['symbol'] + '_' + str(candle[0]) + '_trailing_and_current_candles')
-                                #     smart_trailing_candles = pickle_read('./bollinger_band_data/' + symbol['symbol'] + '_' + str(candle[0]) + '_smart_trailing_candles')
-                                #     #pprint(smart_trailing_candles)
-                                #     #print('read from file' + symbol['symbol'])
-                                # except Exception as e:
-                                #     #print('writing to file' + symbol['symbol'])
-                                #     trailing_and_current_candles, smart_trailing_candles = fn.add_bollinger_bands_to_candles(trailing_and_current_candles)
-                                #     pickle_write('./bollinger_band_data/' + symbol['symbol'] + '_' + str(candle[0]) + '_trailing_and_current_candles', trailing_and_current_candles)
-                                #     pickle_write('./bollinger_band_data/' + symbol['symbol'] + '_' + str(candle[0]) + '_smart_trailing_candles', smart_trailing_candles)
-
 
 
                                 bollingers_percentage_increase = (trailing_and_current_candles[-1][14] - trailing_and_current_candles[-2][14])/trailing_and_current_candles[-2][14]

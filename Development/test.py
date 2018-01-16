@@ -23,33 +23,54 @@ import functions_financial as fn
 print('start @',  time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
 start_time = int(time.time())
 
+############################################ Get Order Book Data + first in line price
+api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
+api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
+client = Client(api_key, api_secret)
+current_state = {
+    'symbol': 'ETHBTC',
+    'client': client,
+    'min_price': 0.00000100
+}
+# get min_price @ https://www.binance.com/api/v1/exchangeInfo  minPrice
+ut.get_first_in_line_price(current_state)
 
-symbol = 'BCCBTC'
-minutes = 1
-periods = 120
-end_time_period = int(time.time()) * 1000
-start_time_period = end_time_period - 60 * 1000 * minutes * periods
-start_readable = datetime.datetime.fromtimestamp(start_time_period/1000).strftime('%Y-%m-%d %H:%M:%S')
-end_readable = datetime.datetime.fromtimestamp(end_time_period/1000).strftime('%Y-%m-%d %H:%M:%S')
-print('symbol', symbol, 'minutes', minutes, 'periods', periods)
-print('start_readable', start_readable)
-print('end_readable', end_readable)
-url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol +'&interval='+str(minutes)+'m&startTime='+str(start_time_period)+'&endTime='+str(end_time_period)
-print(url)
-r = requests.get(url)
-data = r.json()
 
-# candles, smart_candles = fn.add_bollinger_bands_to_candles(data)
-candles2, smart_candles2 = fn.make_smart_candles(data)
 
-for i in range(27,120):
-    # readable = datetime.datetime.fromtimestamp(float(candles[i][0])/1000).strftime('%Y-%m-%d %H:%M:%S')
-    # print(readable, candles2[i][14])
-    # pprint(candles2)
-    readable2 = datetime.datetime.fromtimestamp(float(candles2[i][0])/1000-7*60*60).strftime('%Y-%m-%d %H:%M:%S')
-    print(readable2, candles2[i][18])
-    # print(readable2, candles2[i][14], candles2[i][16], candles2[i][17], candles2[i][18])
-    # print('-------')
+
+
+
+
+
+
+
+############################################ Develop Technical Indicators (MACD)
+# symbol = 'BCCBTC'
+# minutes = 1
+# periods = 120
+# end_time_period = int(time.time()) * 1000
+# start_time_period = end_time_period - 60 * 1000 * minutes * periods
+# start_readable = datetime.datetime.fromtimestamp(start_time_period/1000).strftime('%Y-%m-%d %H:%M:%S')
+# end_readable = datetime.datetime.fromtimestamp(end_time_period/1000).strftime('%Y-%m-%d %H:%M:%S')
+# print('symbol', symbol, 'minutes', minutes, 'periods', periods)
+# print('start_readable', start_readable)
+# print('end_readable', end_readable)
+# url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol +'&interval='+str(minutes)+'m&startTime='+str(start_time_period)+'&endTime='+str(end_time_period)
+# print(url)
+# r = requests.get(url)
+# data = r.json()
+
+# # candles, smart_candles = fn.add_bollinger_bands_to_candles(data)
+# candles2, smart_candles2 = fn.make_smart_candles(data)
+
+# for i in range(27,120):
+#     # readable = datetime.datetime.fromtimestamp(float(candles[i][0])/1000).strftime('%Y-%m-%d %H:%M:%S')
+#     # print(readable, candles2[i][14])
+#     # pprint(candles2)
+#     readable2 = datetime.datetime.fromtimestamp(float(candles2[i][0])/1000-7*60*60).strftime('%Y-%m-%d %H:%M:%S')
+#     print(readable2, candles2[i][18])
+#     # print(readable2, candles2[i][14], candles2[i][16], candles2[i][17], candles2[i][18])
+#     # print('-------')
 
 
 

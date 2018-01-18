@@ -116,26 +116,30 @@ def sleep_but_check_order(current_state, time_to_sleep):
             return
 
 
-def cancel_sale_order(current_state, sale_order_info):
+def cancel_sale_order(current_state):
 
-    current_state['executedQty'] = current_state['executedQty'] - float(sale_order_info['executedQty'])
-    current_state['total_revenue'] += float(sale_order_info['executedQty']) * float(sale_order_info['price'])
+    order_id_of_current_state = current_state['orderId']
 
     try:
-        sale_canceled_order = current_state['client'].cancel_order(symbol=current_state['symbol'], orderId=sale_order_info['orderId'])
+        sale_canceled_order = current_state['client'].cancel_order(symbol=current_state['symbol'], orderId=current_state['orderId'])
     except Exception as e:
-        print('could not cancel sale order, assuming sale order filled or manually canceled, calculating profit and freeing coin...')
-        print(e)
-        current_state['error_cancel_order'] = True
-        return current_state
+        print('could not cancel sale order')
+
 
     current_state['state'] = 'selling'
     current_state['orderId'] = False
     pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state******')
 
+    sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=order_id_of_current_state)
+
+    current_state['executedQty'] = current_state['executedQty'] - float(sale_order_info['executedQty'])
+    current_state['total_revenue'] += float(sale_order_info['executedQty']) * float(sale_order_info['price'])
+    pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state******')
+
     return current_state
 
 def create_sale_order(current_state, price_to_sell):
+    #print('in create sale order', price_to_sell)
 
     sale_order = current_state['client'].order_limit_sell(symbol=current_state['symbol'],quantity=current_state['executedQty'],price=price_to_sell)
 
@@ -157,6 +161,7 @@ def calculate_profit_and_free_coin(current_state):
 
 
 def save_buy_order_info_to_state(current_state, buy_order_info):
+    buy_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=buy_order_info['orderId'])
     current_state['executedQty'] = float(buy_order_info['executedQty'])
     current_state['original_quantity'] = float(buy_order_info['executedQty'])
     current_state['original_price'] = float(buy_order_info['price'])
@@ -171,10 +176,13 @@ def get_first_in_line_price(current_state):
     # pprint(order_book)
     # bids & asks.... 0=price, 1=qty
     first_ask = float(order_book['asks'][0][0])
-    price_to_buy = first_ask - current_state['min_price']
+    second_ask = float(order_book['asks'][1][0])
+    second_price_to_check = first_ask + 3*current_state['min_price']
+    second_price_to_buy = float_to_str(round(second_ask - current_state['min_price'], current_state['price_decimals']))
+    price_to_buy = float_to_str(round(first_ask - current_state['min_price'], current_state['price_decimals']))
     # print(first_ask)
     # print(price_to_buy)
-    return price_to_buy
+    return price_to_buy,first_ask, second_price_to_buy, second_ask, second_price_to_check
 
 
 def sell_with_order_book(current_state, price_to_sell, minutes_until_sale):
@@ -183,7 +191,7 @@ def sell_with_order_book(current_state, price_to_sell, minutes_until_sale):
     minutes_to_run = minutes_until_sale - minutes_since_start
 
     time_to_give_up = int(time.time()) + minutes_to_run * 60
-    price_to_sell_min = 0.998 * price_to_sell
+    price_to_sell_min = .998 * float(price_to_sell)
     while True:
         if current_state['orderId'] != False:
             sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
@@ -196,23 +204,36 @@ def sell_with_order_book(current_state, price_to_sell, minutes_until_sale):
                 return True, current_state
 
         if int(time.time()) >= time_to_give_up:
-            if not sale_order_info is None:
-                current_state = cancel_sale_order(current_state, sale_order_info)
+            if current_state['orderId'] != False:
+                current_state = cancel_sale_order(current_state)
                 if current_state['executedQty'] < current_state['min_quantity']:
                     return True, current_state
                 else:
                     return False, current_state
+            return False, current_state
 
-        first_in_line_price = get_first_in_line_price(current_state)
-        if first_in_line_price < price_to_sell_min:
+        first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check = get_first_in_line_price(current_state)
+        if float(first_in_line_price) < price_to_sell_min:
             if current_state['orderId'] != False:
-                sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
-                current_state = cancel_sale_order(current_state, sale_order_info)
+                current_state = cancel_sale_order(current_state)
+                if current_state['executedQty'] < current_state['min_quantity']:
+                    return True, current_state
         else:
             if current_state['orderId'] != False:
-                if not first_in_line_price == sale_order_info['price']:
-                    current_state = cancel_sale_order(current_state, sale_order_info)
+                sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
+                if first_ask != float(sale_order_info['price']):
+                    current_state = cancel_sale_order(current_state)
+                    if current_state['executedQty'] < current_state['min_quantity']:
+                        return True, current_state
                     current_state = create_sale_order(current_state, first_in_line_price)
+                else:
+                    if second_price_to_check < second_ask:
+                        print('second_price_to_check, second_ask',second_price_to_check, second_ask)
+                        current_state = cancel_sale_order(current_state)
+                        if current_state['executedQty'] < current_state['min_quantity']:
+                            return True, current_state
+                        current_state = create_sale_order(current_state, second_in_line_price)
+
             else:
                 current_state = create_sale_order(current_state, first_in_line_price)
 
@@ -222,98 +243,25 @@ def sell_with_order_book(current_state, price_to_sell, minutes_until_sale):
 
 def sell_coin_with_order_book(current_state):
 
-    if current_state['executedQty'] < current_state['min_quantity']:
+    if current_state['executedQty'] >= current_state['min_quantity']:
 
         print('selling..', current_state['symbol'], get_time())
 
+        print('selling at price level 1', current_state['symbol'])
         sold_coin, current_state = sell_with_order_book(current_state, current_state['price_to_sell'], current_state['minutes_until_sale'])
 
         if not sold_coin:
+            print('selling at price level 2', current_state['symbol'])
             sold_coin, current_state = sell_with_order_book(current_state, current_state['price_to_sell_2'], current_state['minutes_until_sale_2'])
 
         if not sold_coin:
+            print('selling at price level 3', current_state['symbol'])
             sold_coin, current_state = sell_with_order_book(current_state, current_state['price_to_sell_3'], current_state['minutes_until_sale_3'])
 
         if not sold_coin:
             final_sale_order = current_state['client'].order_market_sell(symbol=current_state['symbol'], quantity=current_state['executedQty'])
             order_book = current_state['client'].get_order_book(symbol=current_state['symbol'])
             current_state['total_revenue'] += float(final_sale_order['executedQty'])*float(order_book['bids'][0][0])
-
-
-    calculate_profit_and_free_coin(current_state)
-    return
-
-
-def sell_coin(current_state):
-
-    if current_state['executedQty'] != 0:
-
-        print('selling..', current_state['symbol'], get_time())
-
-        current_state = create_sale_order(current_state, current_state['price_to_sell'])
-
-        minutes_since_start = int(round((int(time.time()) - current_state['original_buy_time'])/60))
-        print('sell_coin() 1st sale_order created, sleeping for', current_state['minutes_until_sale'] - minutes_since_start-1, current_state['symbol'])
-        sleep_but_check_order(current_state, current_state['minutes_until_sale'] - minutes_since_start-1)
-        print('sell_coin() awake from 1st sale attempt', current_state['symbol'])
-
-        sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
-
-        if sale_order_info['status'] != 'FILLED':
-
-            current_state = cancel_sale_order(current_state, sale_order_info)
-            if current_state['error_cancel_order']:
-                calculate_profit_and_free_coin(current_state)
-                return
-
-            current_state = create_sale_order(current_state, current_state['price_to_sell_2'])
-
-            minutes_since_start = int(round((int(time.time()) - current_state['original_buy_time'])/60))
-            print('sell_coin() 2nd sale_order created, sleeping for', current_state['minutes_until_sale_2']-minutes_since_start-1, current_state['symbol'])
-            sleep_but_check_order(current_state, current_state['minutes_until_sale_2']-minutes_since_start-1)
-            print('sell_coin() awake from 2nd sale attempt', current_state['symbol'])
-
-            sale_order_info_2 = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
-
-            if sale_order_info_2['status'] != 'FILLED':
-
-                current_state = cancel_sale_order(current_state, sale_order_info_2)
-                if current_state['error_cancel_order']:
-                    calculate_profit_and_free_coin(current_state)
-                    return
-
-                current_state = create_sale_order(current_state, current_state['price_to_sell_3'])
-
-                minutes_since_start = int(round((int(time.time()) - current_state['original_buy_time'])/60))
-                print('sell_coin() 3rd sale_order created, sleeping for', current_state['minutes_until_sale_3']-minutes_since_start-1, current_state['symbol'])
-                sleep_but_check_order(current_state, current_state['minutes_until_sale_3']-minutes_since_start-1)
-                print('sell_coin() awake from 3rd sale attempt', current_state['symbol'])
-
-                sale_order_info_3 = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
-
-                if sale_order_info_3['status'] != 'FILLED':
-
-                    print('sell_coin() 3rd sale order not filled, creating MARKET sale order..', current_state['symbol'], get_time())
-
-                    current_state = cancel_sale_order(current_state, sale_order_info_3)
-                    if current_state['error_cancel_order']:
-                        calculate_profit_and_free_coin(current_state)
-                        return
-
-                    final_sale_order = current_state['client'].order_market_sell(symbol=current_state['symbol'], quantity=current_state['executedQty'])
-
-                    order_book = current_state['client'].get_order_book(symbol=current_state['symbol'])
-
-                    current_state['total_revenue'] += float(final_sale_order['executedQty'])*float(order_book['bids'][0][0])
-
-
-                else:
-                    current_state['total_revenue'] += float(sale_order_info_3['executedQty']) * float(sale_order_info_3['price'])
-            else:
-                current_state['total_revenue'] += float(sale_order_info_2['executedQty']) * float(sale_order_info_2['price'])
-        else:
-            current_state['total_revenue'] += float(sale_order_info['executedQty']) * float(sale_order_info['price'])
-
 
     calculate_profit_and_free_coin(current_state)
     return
@@ -325,27 +273,22 @@ def buy_coin_from_state(current_state):
 
     if (current_state['state'] == 'buying'):
         print('current state was buying', current_state['symbol'])
+
+        try:
+            canceled_order = current_state['client'].cancel_order(symbol=current_state['symbol'], orderId=current_state['orderId'])
+        except Exception as e:
+            print('error canceling order...')
+            print(e)
+
         buy_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
 
-        if float(buy_order_info['executedQty']) == 0:
-            print('order not filled, canceling order and freeing coin')
-            try:
-                canceled_order = current_state['client'].cancel_order(symbol=current_state['symbol'], orderId=current_state['orderId'])
-            except Exception as e:
-                print('error canceling order... freeing coin')
-                print(e)
-
+        if float(buy_order_info['executedQty']) < current_state['min_quantity']:
+            print('buy order canceled, but not filled, exiting')
             pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', False, '******could not write state buy from stae******')
             pickle_write('./binance_is_invested_' + current_state['length'] + '/is_invested_' + current_state['length'] + '_' + current_state['symbol'] + '.pklz', False)
             return
         else:
-            print('some or all of the buy order filled, executed qty', buy_order_info['executedQty'])
             current_state = save_buy_order_info_to_state(current_state, buy_order_info)
-            try:
-                canceled_order = current_state['client'].cancel_order(symbol=current_state['symbol'], orderId=current_state['orderId'])
-            except Exception as e:
-                print('error canceling order, but need to sell coin as some was executed')
-                print(e)
 
     ##are selling...
     print('buy_coin_from_state() selling..', current_state['symbol'])
@@ -353,14 +296,13 @@ def buy_coin_from_state(current_state):
     if current_state['orderId'] > 0:
 
         print('sale order exisits canceling it..')
-        sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
-        current_state = cancel_sale_order(current_state, sale_order_info)
-        if current_state['error_cancel_order']:
+        current_state = cancel_sale_order(current_state)
+        if current_state['executedQty'] < current_state['min_quantity']:
             calculate_profit_and_free_coin(current_state)
             return
 
     print('buy_coin_from_state() no open orders, selling coin..', current_state['symbol'])
-    sell_coin(current_state)
+    sell_coin_with_order_book(current_state)
 
 
 def buy_coin(symbol, length, file_number, data=[]):
@@ -381,24 +323,24 @@ def buy_coin(symbol, length, file_number, data=[]):
 
         if (length == '1m'):
 
+            minutes = 1
+            part_of_bitcoin_to_use = .2
             price_to_start_buy = 1.003
 
-            trail_vol_min = 1000
-            lower_band_buy_factor = .984
-            price_to_buy_factor = .977
+            trail_vol_min = 5000
+            lower_band_buy_factor = .987
+            price_to_buy_factor = .98
             bollingers_percentage_increase_factor = -.006
             datapoints_trailing = 22
+
 
             minutes_until_sale = 4
             minutes_until_sale_2 = 12
             minutes_until_sale_3 = 45
-            price_to_sell_factor = .988
-            price_to_sell_factor_2 = .981
-            price_to_sell_factor_3 = .9625
+            price_to_sell_factor = .99
+            price_to_sell_factor_2 = .984
+            price_to_sell_factor_3 = .965
 
-            part_of_bitcoin_to_use = .2
-
-            minutes = 1
 
         if(length == '30m'):
 
@@ -519,7 +461,6 @@ def buy_coin(symbol, length, file_number, data=[]):
                         current_state['file_number'] = str(file_number)
                         current_state['client'] = client
                         current_state['error_cancel_order'] = False
-                        current_state['error_cancel_order'] = False
                         current_state['price_decimals'] = price_decimals
                         current_state['quantity_decimals'] = quantity_decimals
                         current_state['min_price'] = float(symbol['filters'][0]['minPrice'])
@@ -545,7 +486,13 @@ def buy_coin(symbol, length, file_number, data=[]):
                             buy_order_info = client.get_order(symbol=current_state['symbol'],orderId=buy_order['orderId'])
 
                         if buy_order_info['status'] != 'FILLED':
-                            canceled_order = client.cancel_order(symbol=current_state['symbol'], orderId=buy_order_info['orderId'])
+                            try:
+                                canceled_order = client.cancel_order(symbol=current_state['symbol'], orderId=buy_order_info['orderId'])
+                            except Exception as e:
+                                print(e)
+                                print_exception()
+
+                        buy_order_info = client.get_order(symbol=current_state['symbol'],orderId=buy_order['orderId'])
 
                         if float(buy_order_info['executedQty']) == 0:
                             print('no one bought cancel order - freeing coin', current_state['symbol'])

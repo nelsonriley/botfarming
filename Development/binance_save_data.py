@@ -11,7 +11,7 @@ import pickle
 import gzip
 
 # 1m & 30m
-day = '20180116'
+day = '20180117'
 
 # 1m_p8 :: 6 hrs per step_back :: 80s per step_back
 minutes = 1

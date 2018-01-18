@@ -30,6 +30,10 @@ def pickle_write(file_path, data, error_message='pickle could not write'):
         print(error_message)
 
 
+print(ut.get_time())
+sys.exit()
+
+
 symbol_url = "https://api.binance.com/api/v1/exchangeInfo"
 symbol_r = requests.get(symbol_url)
 symbol_data = symbol_r.json()
@@ -45,20 +49,23 @@ smart_trailing_candles_array = {}
 
 if minutes == 1:
 
-    final_sale_factor = 1.005
+    final_sale_factor = 1.002
+    final_buy_factor = 1.00
 
-    trail_vol_min = 1000
-    lower_band_buy_factor = .984
-    price_to_buy_factor = .977
+    trail_vol_min = 5000
+    price_to_start_buy = 1.003
+    lower_band_buy_factor = .987
+    price_to_buy_factor = .98
     bollingers_percentage_increase_factor = -.006
     datapoints_trailing = 22
+
 
     minutes_until_sale = 4
     minutes_until_sale_2 = 12
     minutes_until_sale_3 = 45
-    price_to_sell_factor = .988
-    price_to_sell_factor_2 = .981
-    price_to_sell_factor_3 = .9625
+    price_to_sell_factor = .99
+    price_to_sell_factor_2 = .984
+    price_to_sell_factor_3 = .965
 
 
 
@@ -88,9 +95,30 @@ best_minutes_until_sale = 0
 best_minutes_until_sale_2 = 0
 best_minutes_until_sale_3 = 0
 
-for step_back in range(1, 3):
-            for price_to_sell_factor_2 in range(0, 1):
-                price_to_sell_factor_2 = round(.988 + .002*price_to_sell_factor_2, 4)
+for step_back in range(0, 3):
+    for price_to_sell_factor in range(0, 1):
+        price_to_sell_factor = round(.99 + .002*price_to_sell_factor, 4)
+        for price_to_buy_factor in range(0, 1):
+                price_to_buy_factor = round(.98 + .002*price_to_buy_factor, 4)
+
+
+                trail_vol_min = 5000
+                price_to_start_buy = 1.003
+                lower_band_buy_factor = .987
+                price_to_buy_factor = .98
+                bollingers_percentage_increase_factor = -.006
+                datapoints_trailing = 22
+
+
+                minutes_until_sale = 4
+                minutes_until_sale_2 = 12
+                minutes_until_sale_3 = 45
+                price_to_sell_factor = .99
+                price_to_sell_factor_2 = .984
+                price_to_sell_factor_3 = .965
+
+            # for price_to_sell_factor_2 in range(0, 1):
+            #     price_to_sell_factor_2 = round(.988 + .002*price_to_sell_factor_2, 4)
 
 
 
@@ -102,17 +130,17 @@ for step_back in range(1, 3):
     #             price_to_buy_factor = round(.977 + .002*price_to_buy_factor, 4)
 
 
-                trail_vol_min = 1000
-                lower_band_buy_factor = .984
-                price_to_buy_factor = .977
-                bollingers_percentage_increase_factor = -.006
+                # trail_vol_min = 1000
+                # lower_band_buy_factor = .984
+                # price_to_buy_factor = .977
+                # bollingers_percentage_increase_factor = -.006
 
-                minutes_until_sale = 4
-                minutes_until_sale_2 = 12
-                minutes_until_sale_3 = 45
-                price_to_sell_factor = .988
-                price_to_sell_factor_2 = .981
-                price_to_sell_factor_3 = .960
+                # minutes_until_sale = 4
+                # minutes_until_sale_2 = 12
+                # minutes_until_sale_3 = 45
+                # price_to_sell_factor = .988
+                # price_to_sell_factor_2 = .981
+                # price_to_sell_factor_3 = .960
 
 
                 #if minutes == 1:

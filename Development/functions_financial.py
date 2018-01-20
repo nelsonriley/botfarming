@@ -92,8 +92,6 @@ def make_smart_candles(candles):
 
     # setup
     calculation_periods = 27
-    macd_periods_big = 26
-    macd_periods_small = 12
     bollinger_periods = 20
     sma_array = []
     smart_candle_array = []
@@ -131,31 +129,63 @@ def make_smart_candles(candles):
             middle_band = boll_sma
             upper_band = boll_sma + stan_dev * 2.0
             lower_band = boll_sma - stan_dev * 2.0
+
+
             # EMA (exponential moving average)
-            macd_small_sma_array = sma_array[calculation_periods-macd_periods_small:calculation_periods]
-            macd_small_sma = sum(macd_small_sma_array) / macd_periods_small
-            macd_small_weighted_multiplier = 2 / (macd_periods_small + 1)
-            macd_small_ema = (c - macd_small_sma) * macd_small_weighted_multiplier + macd_small_sma
+            macd_12_sma_array = sma_array[calculation_periods-12-1:calculation_periods-1]
+            macd_12_sma = float(sum(macd_12_sma_array) / 12.0)
+            macd_12_ema = (c - macd_12_sma) * float(2.0 / (12.0 + 1.0)) + macd_12_sma
+            # macd_12_ema = (c - macd_12_sma) * float(2.0 / (12.0 + 1.0))
+            # macd_12_ema = (c - macd_12_ema) * (2 / (12 + 1)) + macd_12_ema
 
-            df = pd.DataFrame(macd_small_sma_array)
-            macd_small_ema_2 = pd.ewma(df, span=macd_periods_small, adjust=False).mean()
+            df = pd.DataFrame(macd_12_sma_array)
+            macd_12_ema_2 = float(pd.ewma(df, span=12, adjust=False).mean())
+            the_12_2 = c - macd_12_ema_2
+            the_12 = c - macd_12_ema
 
-            macd_big_sma_array = sma_array[calculation_periods-macd_periods_big:calculation_periods]
-            macd_big_sma = sum(macd_big_sma_array) / macd_periods_big
-            macd_big_weighted_multiplier = 2 / (macd_periods_big + 1)
-            macd_big_ema = (c - macd_big_sma) * macd_big_weighted_multiplier + macd_big_sma
+            macd_26_sma_array = sma_array[calculation_periods-26-1:calculation_periods-1]
+            macd_26_sma = float(sum(macd_26_sma_array) / 26.0)
+            macd_26_ema = (c - macd_26_sma) * float(2.0 / (26.0 + 1.0)) + macd_26_sma
+            # macd_26_ema = (c - macd_26_sma) * float(2.0 / (26.0 + 1.0))
+            # macd_26_ema = (c - macd_26_ema) * (2 / (26 + 1)) + macd_26_ema
 
-            df = pd.DataFrame(macd_big_sma_array)
-            macd_big_ema_2 = pd.ewma(df, span=macd_periods_big, adjust=False).mean()
+            df = pd.DataFrame(macd_26_sma_array)
+            macd_26_ema_2 = float(pd.ewma(df, span=26, adjust=False).mean())
+            the_26_2 = c - macd_26_ema_2
+            the_26 = c - macd_26_ema
+            the_9 = the_26 + the_12
+            the_9_2 = the_26_2 + the_12_2
 
-            diff_ema = macd_small_ema - macd_big_ema
-            macd_diff_weighted_multiplier = 2 / (9 + 1)
-            macd_mid_ema = (c - diff_ema) * macd_diff_weighted_multiplier + diff_ema
-            macd = diff_ema - macd_mid_ema
+            macd_line = float(macd_12_ema - macd_26_ema)
+            macd_line_2 = float(macd_12_ema_2 - macd_26_ema_2)
 
-            macd_positive_2 = macd_small_ema_2 > macd_big_ema_2
-            macd_positive = macd_small_ema > macd_big_ema
+            macd_signal_line = (c - macd_line) * float(2.0 / (9.0 + 1.0)) + macd_line
+            # macd_signal_line = (c - macd_line) * float(2.0 / (9.0 + 1.0))
+            # macd_signal_array = sma_array[calculation_periods-9:calculation_periods]
+            # df = pd.DataFrame(macd_signal_array)
+            # macd_signal_line_2 = float(pd.ewma(df, span=9, adjust=False).mean())
+            macd_signal_line_2 = (c - macd_line_2) * float(2.0 / (9.0 + 1.0)) + macd_line_2
+
+
+            macd_9_sma_array = sma_array[calculation_periods-9:calculation_periods]
+            macd_9_sma = float(sum(macd_9_sma_array) / 9.0)
+            macd_9_ema = (c - macd_9_sma) * float(2.0 / (9.0 + 1.0)) + macd_9_sma
+            macd_9_ema = (c - macd_26_sma) * float(2.0 / (9.0 + 1.0))
+
+            macd_histogram = macd_line - macd_signal_line
+            macd_histogram = macd_line - macd_9_ema
+
+            macd_histogram_positive = macd_histogram >= 0
+            macd_histogram_2 = float(macd_line_2 - macd_signal_line_2)
+            macd_histogram_positive_2 = macd_histogram_2 >= 0
+
             # MACD
+                # The Chart
+                # The MACD Line is the 12-day Exponential Moving Average (EMA) less the 26-day EMA. Closing prices are used for these moving averages.
+                # A 9-day EMA of the MACD Line is plotted with the indicator to act as a signal line and identify turns.
+                # The MACD Histogram represents the difference between MACD and its 9-day EMA, the Signal line.
+                # The histogram is positive when the MACD Line is above its Signal line and negative when the MACD Line is below its Signal line.
+
                 # An EMA is calculated as follows:
                 # Calculate the simple moving average (SMA) for the chosen number of time periods. (The EMA uses an SMA as the previous period's EMA to start its calculations.) To calculate a 12-period EMA, this would simply be the sum of the last 12 time periods, divided by 12.
                 # Calculate the weighting multiplier using this equation: 2 / (12 + 1) ) = 0.1538
@@ -188,16 +218,34 @@ def make_smart_candles(candles):
                 # candles[i][13] = middle_band
                 # candles[i][14] = lower_band
                 # candles[i][15] = stan_dev
-                # candles[i][16] = macd_small_ema
-                # candles[i][17] = macd_big_ema
-                # candles[i][18] = macd
+                # candles[i][16] = macd_line
+                # candles[i][17] = macd_signal_line
+                # candles[i][18] = macd_histogram
+                # candles[i][19] = macd_histogram_positive
             candles[i].append(upper_band)
             candles[i].append(middle_band)
             candles[i].append(lower_band)
             candles[i].append(stan_dev)
-            candles[i].append(macd_small_ema_2)
-            candles[i].append(macd_big_ema_2)
-            candles[i].append(macd_positive)
+            candles[i].append(macd_line)
+            candles[i].append(macd_signal_line)
+            candles[i].append(macd_histogram)
+            candles[i].append(macd_histogram_positive)
+            candles[i].append(macd_line_2)
+            candles[i].append(macd_signal_line_2)
+            candles[i].append(macd_histogram_2)
+            candles[i].append(macd_histogram_positive_2)
+            candles[i].append(macd_12_ema)
+            candles[i].append(macd_26_ema)
+            candles[i].append(macd_9_ema)
+            candles[i].append(macd_12_ema_2)
+            candles[i].append(macd_26_ema_2)
+            candles[i].append(macd_signal_line_2)
+            candles[i].append(the_12)
+            candles[i].append(the_26)
+            candles[i].append(the_9)
+            candles[i].append(the_12_2)
+            candles[i].append(the_26_2)
+            candles[i].append(the_9_2)
             #candles[i].append(macd)
             # update the candles as objects array (smart candles)
             smart_candle_array.append({

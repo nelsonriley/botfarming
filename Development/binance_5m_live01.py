@@ -3,9 +3,9 @@ import sys
 print 'python', sys.version
 import utility as ut
 
-file_number = 0
+file_number = 1
 total_files = 3
 overlap = 2
-length = '30m'
+length = '5m'
 
 ut.run_bot(file_number, total_files, overlap, length)

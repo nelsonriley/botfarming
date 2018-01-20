@@ -4,7 +4,7 @@ print 'python', sys.version
 import utility as ut
 
 file_number = 7
-total_files = 8
+total_files = 12
 overlap = 3
 length = '1m'
 

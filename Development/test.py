@@ -23,17 +23,32 @@ import functions_financial as fn
 print('start @',  time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
 start_time = int(time.time())
 
+
+
+
+############################################ Test Data Quality
+# data = ut.pickle_read('./binance_training_data/20180118/ETHBTC_data_30m_p7.pklz')
+# pprint(data)
+
+
+
+
+
+
+
+
+
 ############################################ Get Order Book Data + first in line price
-api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
-api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
-client = Client(api_key, api_secret)
-current_state = {
-    'symbol': 'ETHBTC',
-    'client': client,
-    'min_price': 0.00000100
-}
-# get min_price @ https://www.binance.com/api/v1/exchangeInfo  minPrice
-ut.get_first_in_line_price(current_state)
+# api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
+# api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
+# client = Client(api_key, api_secret)
+# current_state = {
+#     'symbol': 'ETHBTC',
+#     'client': client,
+#     'min_price': 0.00000100
+# }
+# # get min_price @ https://www.binance.com/api/v1/exchangeInfo  minPrice
+# ut.get_first_in_line_price(current_state)
 
 
 
@@ -68,7 +83,19 @@ ut.get_first_in_line_price(current_state)
 #     # print(readable, candles2[i][14])
 #     # pprint(candles2)
 #     readable2 = datetime.datetime.fromtimestamp(float(candles2[i][0])/1000-7*60*60).strftime('%Y-%m-%d %H:%M:%S')
-#     print(readable2, candles2[i][18])
+#     # print('macd_line, macd_signal_line, macd_histogram, macd_histogram_positive')
+#     # print('11:37')
+#     # print('-0.000016 (12), -0.000139 (26), -0.000154 (9)')
+#     print(readable2, candles2[i][30])
+#     print(readable2, candles2[i][31])
+#     print(readable2, candles2[i][32])
+#     print(readable2, candles2[i][33])
+#     print(readable2, candles2[i][34])
+#     print(readable2, candles2[i][35])
+#     # print(readable2, candles2[i][24], candles2[i][25], candles2[i][26])
+#     # print(readable2, candles2[i][27], candles2[i][28], candles2[i][29])
+#     # print(readable2, candles2[i][16], candles2[i][17], candles2[i][18], candles2[i][19])
+#     # print(readable2, candles2[i][20], candles2[i][21], candles2[i][22], candles2[i][23])
 #     # print(readable2, candles2[i][14], candles2[i][16], candles2[i][17], candles2[i][18])
 #     # print('-------')
 

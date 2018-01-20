@@ -23,6 +23,7 @@ f.close()
 
 
 
+
 # file_path = './program_state_30m/program_state_30m_0_GXSBTC.pklz'
 # f = gzip.open(file_path,'rb')
 # data_points = pickle.load(f)

@@ -1,56 +1,77 @@
 #!/usr/bin/python2.7
 import sys
 print 'python', sys.version
+from pprint import pprint
 import utility as ut
 import requests
 import time
-from pprint import pprint
-import numpy
-import sys
-import pickle
-import gzip
+import os
 
-# 1m & 30m
-day = '20180117'
+day_folder = '20180118'
+minutes = [30]
+step_backs = [8]
 
-# 1m_p8 :: 6 hrs per step_back :: 80s per step_back
-minutes = 1
-step_backs = 4
+directory = './binance_training_data/'+day_folder
+if not os.path.exists(directory):
+    os.makedirs(directory)
 
-# 30m_p1 :: 8 days per step_back :: 80s per step_back
-# minutes = 30
-# step_backs = 8
+run_time = 0
+data_sets = 0
+for i in range(0, len(minutes)):
+    step_back = step_backs[i]
+    run_time += step_back * 80
+    data_sets += step_back
+run_time = round(run_time / 60, 2)
+print('estimated run time:', run_time, 'minutes for', data_sets, 'datasets')
 
-# setup
-symbol_url = "https://api.binance.com/api/v1/exchangeInfo"
-symbol_r = requests.get(symbol_url)
-symbol_data = symbol_r.json()
+# Notes
+    # 80s to save each step_back
+    # 1m = 6 hrs per step_back
+    # 30m = 8 days per step_back
 
-for step_back in range(0, step_backs):
+# start all
+print('start all @',  time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
+start_time_all = int(time.time())
 
-    end_time_period = int(time.time())*1000-400*60*1000*minutes*step_back
-    start_time_period = (end_time_period-400*60*1000*minutes)
+symbols = ut.pickle_read('./binance_btc_symbols.pklz')
+for i in range(0, len(minutes)):
+    minute = minutes[i]
+    for step_back in range(0, step_backs[i]):
 
+        end_time_period = int(time.time())*1000-400*60*1000*minute*step_back
+        start_time_period = (end_time_period-400*60*1000*minute)
 
-    # start
-    print('start @',  time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
-    start_time = int(time.time())
+        print('save: {symbol}_data_'+str(minute)+'m_p'+str(step_back)+'.pklz')
+        # start
+        print('start @',  time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
+        start_time = int(time.time())
 
-    for symbol in symbol_data['symbols']:
+        for s in symbols:
+            symbol = symbols[s]
 
-        if symbol['quoteAsset'] == 'BTC':
             #get data from binance
-            url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval='+str(minutes)+'m&startTime='+str(start_time_period)+'&endTime='+str(end_time_period)
-            print('data url', url)
+            url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval='+str(minute)+'m&startTime='+str(start_time_period)+'&endTime='+str(end_time_period)
             r = requests.get(url)
             data = r.json()
 
-            #write out to file
-            ut.pickle_write('./binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz',data)
-            print('# step_back', step_back, 'symbol', symbol['symbol'])
+            # watch for too many API requests
+            if isinstance(data, dict):
+                print('ERROR... API Failed')
+                print(url)
+                pprint(data)
+                break
 
-    # end
-    print('end @', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
-    print('elapsed:', int(time.time()) - start_time, 'seconds')
+            #write out to file
+            ut.pickle_write('./binance_training_data/'+ day_folder + '/'+ symbol['symbol'] +'_data_'+str(minute)+'m_p'+str(step_back)+'.pklz',data)
+            # print('# step_back', step_back, 'symbol', symbol['symbol'])
+
+        # end
+        print('end @', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
+        print('elapsed:', int(time.time()) - start_time, 'seconds')
+
+# end all
+print('end all @', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
+print('elapsed:', int(time.time()) - start_time_all, 'seconds')
 
 print('------------------done')
+

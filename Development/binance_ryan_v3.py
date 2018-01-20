@@ -21,14 +21,20 @@ import functions_financial as fn
 
 
 step_back = 0
-minutes = 5
-day = '20180118'
+minutes = 1
+day = '20180115'
 
 trailing_and_current_candles_array = {}
 smart_trailing_candles_array = {}
 
 
+sell_price_drop_factor = .997
+buy_price_increase_factor = 1.002
+
 if minutes == 1:
+
+    sell_price_drop_factor = .997
+    buy_price_increase_factor = 1.002
 
     lower_band_buy_factor = 1.05
     price_to_buy_factor = .978
@@ -95,32 +101,26 @@ best_minutes_until_sale_2 = 0
 best_minutes_until_sale_3 = 0
 
 
-for step_back in range(0, 8):
-    gain_for_period = {}
-    gain_for_period[0] = 0
-    gain_for_period[1] = 0
-    gain_for_period[2] = 0
-    gain_for_period[3] = 0
-    gain_for_period[4] = 0
-    gain_for_period[5] = 0
-    gain_for_period[6] = 0
-    gain_for_period[7] = 0
-    gain_for_period[8] = 0
-    for price_to_buy_factor in range(0, 1):
-        price_to_buy_factor = round(.969 + .003*price_to_buy_factor, 4)
-        for lower_band_buy_factor in range(0, 1):
-                lower_band_buy_factor = round(1.09 + .05*lower_band_buy_factor, 4)
+
+for price_to_buy_factor in range(0, 1):
+    price_to_buy_factor = round(.92 + .01*price_to_buy_factor, 4)
+    for price_to_sell_factor in range(0, 1):
+            price_to_sell_factor = round(price_to_buy_factor + .025 + .005*price_to_sell_factor, 4)
+            gain_for_period = {}
+            gain_for_period[0] = 0
+            gain_for_period[1] = 0
+            gain_for_period[2] = 0
+            for step_back in range(0, 3):
 
 
-
-                lower_band_buy_factor = 1.14
-                price_to_buy_factor = .969
+                lower_band_buy_factor = 1.05
+                price_to_buy_factor = .978
                 datapoints_trailing = 22
 
                 minutes_until_sale = 4
                 minutes_until_sale_2 = 12
                 minutes_until_sale_3 = 45
-                price_to_sell_factor = .989
+                price_to_sell_factor = .994
                 price_to_sell_factor_2 = .984
                 price_to_sell_factor_3 = .965
 
@@ -145,10 +145,12 @@ for step_back in range(0, 8):
                 for s in symbols_trimmed:
                     symbol = symbols_trimmed[s]
 
+
                     data = ut.pickle_read('./binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz')
 
                     if not data:
                         continue
+
 
                     trailing_closes = []
                     trailing_volumes = []
@@ -187,21 +189,18 @@ for step_back in range(0, 8):
                             # candles[i][13] = middle_band
                             # candles[i][14] = lower_band
                             # candles[i][15] = stan_dev
-                            if lower_band_buy_factor < 100:
-                                trailing_and_current_candles = data[index-datapoints_trailing:index]
-                                trailing_and_current_candles, smart_trailing_candles = fn.add_bollinger_bands_to_candles(trailing_and_current_candles)
-                                bollingers_percentage_increase = (trailing_and_current_candles[-1][14] - trailing_and_current_candles[-2][14])/trailing_and_current_candles[-2][14]
-                                lower_band_for_index = trailing_and_current_candles[-1][14]
-                                upper_band_for_index = trailing_and_current_candles[-1][12]
-                                middle_band_for_index = trailing_and_current_candles[-1][13]
+                            trailing_and_current_candles = data[index-datapoints_trailing:index]
+                            trailing_and_current_candles, smart_trailing_candles = fn.add_bollinger_bands_to_candles(trailing_and_current_candles)
+                            bollingers_percentage_increase = (trailing_and_current_candles[-1][14] - trailing_and_current_candles[-2][14])/trailing_and_current_candles[-2][14]
+                            lower_band_for_index = trailing_and_current_candles[-1][14]
+                            upper_band_for_index = trailing_and_current_candles[-1][12]
+                            middle_band_for_index = trailing_and_current_candles[-1][13]
 
-                                band_ok_value = lower_band_for_index*lower_band_buy_factor
-                                band_ok = float(candle[3]) < band_ok_value
-                            else:
-                                band_ok = True
-
-
+                            band_ok_value = lower_band_for_index*lower_band_buy_factor
+                            band_ok = float(candle[3]) < band_ok_value
+                            #band_ok = float(candle[3]) < lower_band_for_index*lower_band_buy_factor
                             price_to_buy_ok = float(candle[3]) < float(candle[1])*price_to_buy_factor
+                            #trailing_vol_ok = numpy.mean(trailing_volumes) > trail_vol_min
 
                             #will_buy = price_to_buy_ok and trailing_vol_ok
                             will_buy = band_ok and price_to_buy_ok
@@ -212,11 +211,7 @@ for step_back in range(0, 8):
 
                                 #buy_price = float(candle[1])*price_to_buy_factor
                                 #buy_price = min(lower_band_for_index*lower_band_buy_factor,float(candle[1])*price_to_buy_factor)
-                                if lower_band_buy_factor < 100:
-                                    buy_price = min(band_ok_value,float(candle[1])*price_to_buy_factor)
-                                else:
-                                    buy_price = float(candle[1])*price_to_buy_factor
-
+                                buy_price = min(band_ok_value,float(candle[1])*price_to_buy_factor)
 
                                 if minutes > 1:
 
@@ -226,23 +221,11 @@ for step_back in range(0, 8):
                                     sale_data_path = './binance_training_data/'+ day + '/sale_data_' + str(minutes) + 'm_'+ symbol['symbol'] +'_start_' + str(start_time_period) + '_end_' + str(end_time_period) +'.pklz'
 
                                     data_for_sale = ut.pickle_read(sale_data_path)
-                                    # watch for bad saved data
-                                    if isinstance(data_for_sale, dict):
-                                        print('ERROR... Bad Data Saved. Deleting this file:')
-                                        data_for_sale = False
-
 
                                     if not data_for_sale:
                                         print('getting one minute data', symbol['symbol'])
-                                        url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval=1m&startTime='+str(start_time_period)+'&endTime='+str(end_time_period)
-                                        data_for_sale = requests.get(url).json()
-
-                                        # watch for too many API requests
-                                        if isinstance(data_for_sale, dict):
-                                            print('ERROR... API Failed')
-                                            print(url)
-                                            pprint(data_for_sale)
-                                            sys.exit()
+                                        r = requests.get('https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval=1m&startTime='+str(start_time_period)+'&endTime='+str(end_time_period))
+                                        data_for_sale = r.json()
                                         ut.pickle_write(sale_data_path, data_for_sale, 'trying to save data for sale')
 
 
@@ -296,7 +279,7 @@ for step_back in range(0, 8):
                                     sale_price = float(data_for_sale[index_for_sale + minutes_until_sale_3][4])*.98
                                     sale_index = index_for_sale + minutes_until_sale_3
 
-                                percentage_made = (sale_price*.998-buy_price*1.002)/buy_price*1.002
+                                percentage_made = (sale_price*sell_price_drop_factor-buy_price*buy_price_increase_factor)/buy_price*buy_price_increase_factor
 
                                 sale_time = data_for_sale[sale_index][0]
                                 #print('sold at', ut.get_readable_time(sale_time/1000))
@@ -364,8 +347,8 @@ for step_back in range(0, 8):
                     print('wins/losses', wins/losses)
                 print()
 
-                print('gain across periods:', gain_for_period[0]+gain_for_period[1]+gain_for_period[2]+gain_for_period[3]+gain_for_period[4]+gain_for_period[5]+gain_for_period[6]+gain_for_period[7])
-                print()
+            print('gain across periods:', gain_for_period[0]+gain_for_period[1]+gain_for_period[2])
+            print()
 
 
 print('best price to sell factors', best_price_to_sell_factor, best_price_to_sell_factor_2, best_price_to_sell_factor_3)

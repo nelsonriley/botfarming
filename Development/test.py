@@ -25,6 +25,10 @@ start_time = int(time.time())
 
 
 
+############################################ N-minute Candles from 1-minute Data
+
+
+
 
 ############################################ Test Data Quality
 # data = ut.pickle_read('./binance_training_data/20180118/ETHBTC_data_30m_p7.pklz')

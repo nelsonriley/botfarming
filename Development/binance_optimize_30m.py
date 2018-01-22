@@ -45,7 +45,7 @@ for s in symbols:
 # Settings
 minutes = 30
 day = '20180118'
-step_backs = 4
+step_backs = 1
 # Params
 price_to_buy_factor = .90
 price_to_sell_factor = .99

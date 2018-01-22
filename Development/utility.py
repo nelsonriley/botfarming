@@ -397,7 +397,7 @@ def buy_coin(symbol, length, file_number, data=[]):
 
             lower_band_buy_factor = 1000000
             price_to_buy_factor = .942
-            datapoints_trailing = 1
+            datapoints_trailing = 22
 
             minutes_until_sale = 4
             minutes_until_sale_2 = 12
@@ -434,6 +434,7 @@ def buy_coin(symbol, length, file_number, data=[]):
             sell_price_drop_factor = .997
             buy_price_increase_factor = 1.002
 
+            lower_band_buy_factor = 1000000
             price_to_buy_factor = .90
             price_to_sell_factor = .99
             price_to_sell_factor_2 = 0.98
@@ -441,8 +442,7 @@ def buy_coin(symbol, length, file_number, data=[]):
             minutes_until_sale = 75 # 75, 115, 155 8.22       55, 80, 100  7.33
             minutes_until_sale_2 = 115
             minutes_until_sale_3 = 155
-            lower_band_buy_factor = 9999
-            datapoints_trailing = 1
+            datapoints_trailing = 22
 
         if minutes == 1 or minutes == 5:
             is_invested_length = '5m'

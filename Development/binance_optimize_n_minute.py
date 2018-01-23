@@ -41,9 +41,10 @@ minutes_until_sale_3 = 45
 combined_results = {}
 
 
-buy_price_levels = [.978]
+buy_price_levels = [.978, .97]
 sell_price_levels = range(0,3)
 sell_price_levels[0] = [.994,.984,.965]
+sell_price_levels[1] = [.994,.984,.965]
 
 for step_back in range(0, 8):
 

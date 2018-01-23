@@ -32,7 +32,7 @@ if minutes == 1:
     sell_price_drop_factor = .997
     buy_price_increase_factor = 1.002
 
-    lower_band_buy_factor = 200
+    lower_band_buy_factor = 1.04
     price_to_buy_factor = .978
     datapoints_trailing = 23
 
@@ -132,72 +132,81 @@ for a in range(0, 1):
                         # compare
                         if index > datapoints_trailing:
 
-                            if symbol['symbol'] == 'WTCBTC' and candle[0] == 1516680720000:
-                                print('here')
-
                             #print(float(candle[3]), float(candle[1]), price_to_buy_factor)
                             if float(candle[3]) < float(candle[1])*price_to_buy_factor:
 
-                                #print('buying..', symbol['symbol'])
-
-                                buy_price = float(candle[1])*price_to_buy_factor
-
-
-                                if minutes == 1:
-
-                                    data_for_sale = data
-                                    index_for_sale = index
-
-                                #print('')
-                                #print('bought ' + symbol['symbol'] + ' at', time.strftime("%Z - %Y/%m/%d, %H:%M:%S", time.gmtime(data_for_sale[index_for_sale][0]/1000)))
-
-                                #selling coin
-                                sold_it = False
-                                for i in range(1,minutes_until_sale):
-                                    if float(data_for_sale[index_for_sale + i][2]) > float(candle[1])*price_to_sell_factor:
-                                        if candle[0] == 1516680420000 and symbol['symbol'] == 'LENDBTC':
-                                            print('here')
-                                        sale_price = float(candle[1])*price_to_sell_factor
-                                        sale_index = index_for_sale + i
-                                        sold_it = True
-                                        break
-
-                                if sold_it == False:
-                                    for i in range(minutes_until_sale, minutes_until_sale_2):
-                                        if float(data_for_sale[index_for_sale + i][2]) > float(candle[1])*price_to_sell_factor_2:
-                                            sale_price = float(candle[1])*price_to_sell_factor_2
-                                            sale_index = index_for_sale + i
-                                            sold_it = True
-                                            break
-
-                                if sold_it == False:
-                                    for i in range(minutes_until_sale_2, minutes_until_sale_3):
-                                        if float(data_for_sale[index_for_sale + i][2]) > float(candle[1])*price_to_sell_factor_3:
-                                            sale_price = float(candle[1])*price_to_sell_factor_3
-                                            sale_index = index_for_sale + i
-                                            sold_it = True
-                                            break
-
-                                if sold_it == False:
-                                    sale_price = float(data_for_sale[index_for_sale + minutes_until_sale_3][4])*.98
-                                    sale_index = index_for_sale + minutes_until_sale_3
-
-                                percentage_made = (sale_price*sell_price_drop_factor-buy_price*buy_price_increase_factor)/buy_price*buy_price_increase_factor
-
-                                sale_time = data_for_sale[sale_index][0]
-                                #print('sold at', ut.get_readable_time(sale_time/1000))
-                                #print('percentage_made', percentage_made)
-
-                                if percentage_made > 0:
-                                    #current_movement_win.append(current_movement_percentage)
-                                    percentage_made_win.append(percentage_made)
-                                    #print('win')
-                                    wins += 1
+                                if lower_band_buy_factor < 100:
+                                    candles_for_look_back = data[index-22-1:index]
+                                    candles_for_look_back, smart_trailing_candles = fn.add_bollinger_bands_to_candles(candles_for_look_back)
+                                    lower_band_for_index = candles_for_look_back[-1][14]
+                                    #print('lower_band_for_index', lower_band_for_index)
+                                    band_ok_value = lower_band_for_index*lower_band_buy_factor
+                                    band_ok = float(candle[3]) < band_ok_value
                                 else:
-                                    #current_movement_loss.append(current_movement_percentage)
-                                    percentage_made_loss.append(percentage_made)
-                                    #print('loss')
-                                    losses += 1
+                                    band_ok = True
+
+
+                                if band_ok:
+
+                                    buy_price = min(band_ok_value, float(candle[1])*price_to_buy_factor)
+
+
+                                    if minutes == 1:
+
+                                        data_for_sale = data
+                                        index_for_sale = index
+
+                                    #print('')
+                                    #print('bought ' + symbol['symbol'] + ' at', time.strftime("%Z - %Y/%m/%d, %H:%M:%S", time.gmtime(data_for_sale[index_for_sale][0]/1000)))
+
+                                    #selling coin
+                                    sold_it = False
+                                    for i in range(1,minutes_until_sale):
+                                        if float(data_for_sale[index_for_sale + i][2]) > float(candle[1])*price_to_sell_factor:
+                                            if candle[0] == 1516680420000 and symbol['symbol'] == 'LENDBTC':
+                                                print('here')
+                                            sale_price = float(candle[1])*price_to_sell_factor
+                                            sale_index = index_for_sale + i
+                                            sold_it = True
+                                            break
+
+                                    if sold_it == False:
+                                        for i in range(minutes_until_sale, minutes_until_sale_2):
+                                            if float(data_for_sale[index_for_sale + i][2]) > float(candle[1])*price_to_sell_factor_2:
+                                                sale_price = float(candle[1])*price_to_sell_factor_2
+                                                sale_index = index_for_sale + i
+                                                sold_it = True
+                                                break
+
+                                    if sold_it == False:
+                                        for i in range(minutes_until_sale_2, minutes_until_sale_3):
+                                            if float(data_for_sale[index_for_sale + i][2]) > float(candle[1])*price_to_sell_factor_3:
+                                                sale_price = float(candle[1])*price_to_sell_factor_3
+                                                sale_index = index_for_sale + i
+                                                sold_it = True
+                                                break
+
+                                    if sold_it == False:
+                                        sale_price = float(data_for_sale[index_for_sale + minutes_until_sale_3][4])*.98
+                                        sale_index = index_for_sale + minutes_until_sale_3
+
+                                    percentage_made = (sale_price*sell_price_drop_factor-buy_price*buy_price_increase_factor)/buy_price*buy_price_increase_factor
+
+
+                                    sale_time = data_for_sale[sale_index][0]
+                                    #print('sold at', ut.get_readable_time(sale_time/1000))
+                                    #print('percentage_made', percentage_made)
+
+                                    if percentage_made > 0:
+                                        #current_movement_win.append(current_movement_percentage)
+                                        percentage_made_win.append(percentage_made)
+                                        #print('win')
+                                        wins += 1
+                                    else:
+                                        #current_movement_loss.append(current_movement_percentage)
+                                        percentage_made_loss.append(percentage_made)
+                                        #print('loss')
+                                        losses += 1
 
                         # update
                         if len(trailing_volumes) <= datapoints_trailing:

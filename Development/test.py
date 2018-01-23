@@ -23,9 +23,89 @@ import functions_financial as fn
 print('start @',  time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
 start_time = int(time.time())
 
+fn.print_ascii()
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# print(int(12/10))
+# print(int(10/10))
+# print(12%10)
+# print(0%10)
+# pprint(range(5, 0, -1))
 
 ############################################ N-minute Candles from 1-minute Data
+# one_min_data = ut.pickle_read('./binance_training_data/20180117/BATBTC_data_1m_p0.pklz')
+# pprint(data)
+    # https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md#klinecandlestick-data
+    # 1499040000000,      0 // Open time
+    # "0.01634790",       1 // Open
+    # "0.80000000",       2 // High
+    # "0.01575800",       3 // Low
+    # "0.01577100",       4 // Close
+    # "148976.11427815",  5 // Volume
+    # 1499644799999,      6 // Close time
+
+# def get_n_minute_candles(n_minutes, one_min_data):
+
+#     candles_to_return = int(len(one_min_data) / n_minutes)
+#     offset = len(one_min_data) % n_minutes
+
+#     candles = []
+#     start_of_n_min_candle = True
+#     open_time = 0
+#     open_price = 0
+#     high = 0
+#     low = 9999999
+#     close = 0
+#     volume = 0.0
+#     close_time = 0
+#     for i in range(0 + offset, candles_to_return * n_minutes):
+#         c = one_min_data[i]
+#         if start_of_n_min_candle:
+#             open_time = int(c[0])
+#             open_price = float(c[1])
+#             start_of_n_min_candle = False
+#         if float(c[2]) > high:
+#             high = float(c[2])
+#         if float(c[3]) < low:
+#             low = float(c[3])
+#         volume += float(c[5])
+
+#         if (i + 1) % n_minutes == 0:
+#             close_time = int(c[6])
+#             close = float(c[4])
+
+#             candle = [open_time, ut.float_to_str(open_price), ut.float_to_str(high), ut.float_to_str(low), ut.float_to_str(close), ut.float_to_str(volume), close_time]
+#             candles.append(candle)
+
+#             start_of_n_min_candle = True
+#             open_time = 0
+#             open_price = 0
+#             high = 0
+#             low = 9999999
+#             close = 0
+#             volume = 0.0
+#             close_time = 0
+#     return candles
+
+# two_min_data = get_n_minute_candles(2, one_min_data)
+# print('len 2m', len(two_min_data))
+# pprint(one_min_data[-2])
+# pprint(one_min_data[-1])
+# pprint(two_min_data[-1])
 
 
 
@@ -33,10 +113,6 @@ start_time = int(time.time())
 ############################################ Test Data Quality
 # data = ut.pickle_read('./binance_training_data/20180118/ETHBTC_data_30m_p7.pklz')
 # pprint(data)
-
-
-
-
 
 
 
@@ -53,11 +129,6 @@ start_time = int(time.time())
 # }
 # # get min_price @ https://www.binance.com/api/v1/exchangeInfo  minPrice
 # ut.get_first_in_line_price(current_state)
-
-
-
-
-
 
 
 
@@ -107,22 +178,6 @@ start_time = int(time.time())
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ################################################### parallel via functions
 
 # urls = []
@@ -135,6 +190,8 @@ start_time = int(time.time())
 #     urls.append(url)
 # ##
 # ut.start_url_threads(urls, ut.get_candles_then_buy_coin_test, call_back_args=['WINGSBTC', '1m', 4])
+
+
 
 
 
@@ -186,6 +243,9 @@ start_time = int(time.time())
 
 
 
+
+
+
 ################## concurrent HTTP requests example
 # print('threads running', threading.active_count())
 # # maximum = 124
@@ -225,8 +285,6 @@ start_time = int(time.time())
 #     q.join()
 # except KeyboardInterrupt:
 #     sys.exit(1)
-
-
 
 
 

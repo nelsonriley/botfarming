@@ -1,6 +1,52 @@
 import datetime
 import numpy
 import pandas as pd
+import utility as ut
+
+
+def get_n_minute_candles(n_minutes, one_min_data):
+
+    candles_to_return = int(len(one_min_data) / n_minutes)
+    offset = len(one_min_data) % n_minutes
+
+    candles = []
+    start_of_n_min_candle = True
+    open_time = 0
+    open_price = 0
+    high = 0
+    low = 9999999
+    close = 0
+    volume = 0.0
+    close_time = 0
+    for i in range(0 + offset, candles_to_return * n_minutes):
+        c = one_min_data[i]
+        if start_of_n_min_candle:
+            open_time = int(c[0])
+            open_price = float(c[1])
+            start_of_n_min_candle = False
+        if float(c[2]) > high:
+            high = float(c[2])
+        if float(c[3]) < low:
+            low = float(c[3])
+        volume += float(c[5])
+
+        if (i + 1) % n_minutes == 0:
+            close_time = int(c[6])
+            close = float(c[4])
+
+            candle = [open_time, ut.float_to_str(open_price), ut.float_to_str(high), ut.float_to_str(low), ut.float_to_str(close), ut.float_to_str(volume), close_time, 'na', 'na', 'na', 'na', 'na']
+            # candle = [open_time, open_price, high, low, close, volume, close_time]
+            candles.append(candle)
+
+            start_of_n_min_candle = True
+            open_time = 0
+            open_price = 0
+            high = 0
+            low = 9999999
+            close = 0
+            volume = 0.0
+            close_time = 0
+    return candles
 
 
 def add_bollinger_bands_to_candles(candles):
@@ -267,3 +313,28 @@ def make_smart_candles(candles):
                 'consecutive_higher_open_close_centers': consecutive_higher_open_close_centers
                 })
     return candles, smart_candle_array
+
+
+def print_ascii():
+    longstring = """\
+
+       ______________________
+     .'   __                 `.
+     |  .'__`.    = = = =     |_.-----._                          .---.
+     |  `.__.'    = = = =     | |     | \ _______________        / .-. \
+     |`.                      | |     |  |  ````````````,)       \ `-' /
+     |  `.                    |_|     |_/~~~~~~~~~~~~~~~'         `---'
+     |    `-;___              | `-----'                   ___
+     |        /\``---..._____.'               _  _...--'''   ``-._
+     |       |  \                            /\\`                 `._
+     |       |   )              __..--''\___/  \\     _.-'```''-._   `;
+     |       |  /              /       .'       \\_.-'            ````
+     |       | /              |_.-.___|  .-.   .'~
+     |       `(               | `-'      `-'  ;`._
+     |         `.     jgs      \__       ___.'  //`-._          _,,,
+     |           )                ``--../   \  //     `-.,,,..-'    `;
+     `----------'                            \//,_               _.-'
+                                              ^   ```--...___..-'
+
+    """
+    print(longstring)

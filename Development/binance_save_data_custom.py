@@ -1,3 +1,6 @@
+#!/usr/bin/python2.7
+import sys
+print('python', sys.version)
 import requests
 import time
 from pprint import pprint
@@ -7,11 +10,11 @@ import pickle
 import gzip
 
 # custom time period
-directory = './binance_training_data/30m_20180114_0000_to_1900/'
-minutes = 30
+directory = './binance_training_data/1m_20180118/'
+minutes = 1
 # 7:30 until 9:45 (use epochtimeconverter.com or some shit)
-end_time_period = 1515956400000
-start_time_period = 1515888000000
+end_time_period = 1516222800000
+start_time_period = 1516198800000
 
 # start
 print('start @',  time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))

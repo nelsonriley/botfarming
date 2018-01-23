@@ -7,8 +7,8 @@ import requests
 import time
 import os
 
-day_folder = '20180118'
-minutes = [30]
+day_folder = '20180122'
+minutes = [1]
 step_backs = [8]
 
 directory = './binance_training_data/'+day_folder

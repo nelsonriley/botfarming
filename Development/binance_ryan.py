@@ -105,7 +105,7 @@ for step_back in range(0, 1):
                 for s in symbols_trimmed:
                     symbol = symbols_trimmed[s]
 
-                    path = './binance_training_data/1m_20180118/' + symbol['symbol']+'.pklz'
+                    path = './binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz'
                     data = ut.pickle_read(path)
 
                     # if data != False:

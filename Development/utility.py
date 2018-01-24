@@ -409,8 +409,10 @@ def buy_coin(symbol, length, file_number, data=[]):
             if len(trailing_movement) >= datapoints_trailing:
 
                 should_buy = False
-                for look_back in range(1,7):
-                    look_back = 7 - look_back
+
+                look_back_schedule = [6,1,8,10,9,4,5,2,7]
+                # look_back_schedule = [1,2,3,4,5,6]
+                for look_back in look_back_schedule:
 
                     if float(candle[4]) < float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy:
 

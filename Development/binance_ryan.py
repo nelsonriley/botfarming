@@ -20,7 +20,8 @@ step_backs = 8
 day = '20180124'
 step_backs = 1
 continuous_mode = True
-
+continous_length = 1
+datapoints_trailing = 230
 
 
 trailing_and_current_candles_array = {}
@@ -60,7 +61,6 @@ price_to_sell_factor_2_array = [0,.984, .984, .984, .983, .984, .983, .982, .982
 price_to_sell_factor_3_array = [0,.965, .965, .965, .965, .965, .964, .964, .963, .963, .963]
 lower_band_buy_factor_array = [0,1.04, 1.12, 1.09, 1.07, 1.09, 1.12, 1.15, 1.16, 1.19, 200]
 
-datapoints_trailing = 230
 
 minutes_until_sale = 4
 minutes_until_sale_2 = 12
@@ -94,6 +94,7 @@ for step_back in range(0, step_backs):
 
                     if continuous_mode:
                         data = ut.pickle_read('./binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m.pklz')
+                        continous_length = len(data)
                     else:
                         data = ut.pickle_read('./binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz')
 
@@ -133,8 +134,20 @@ for step_back in range(0, step_backs):
                             # 6m 7 = 1.1366348059505818 / 0.66346049538269181 = 1.713    (1min only results = 0.66346049538269181)
                             # 7m 8 = 1.0503049454585349
                             # 8m 9 = 1.0741785441158287
-                            for look_back in range(1, 7):
-                                look_back = 7 - look_back
+
+                            # 1m 0.0050744532332511133
+                            # 2m 0.001068869364864567
+                            # 3m -9.7985117809497995e-06
+                            # 4m 0.0023596572214278147
+                            # 5m 0.0011758390734144218
+                            # 6m 0.0066660790138777124
+                            # 7m 0.00080603570466044813
+                            # 8m 0.0043885167377726107
+                            # 9m 0.003914479784433926
+                            # 10m 0.0039828724589074148
+                            look_back_schedule = [6,1,8,10,9,4,5,2,7]
+                            # look_back_schedule = [1,2,3,4,5,6]
+                            for look_back in look_back_schedule:
 
                                 compare_price = float(data[index-look_back+1][1])
                                 buy_price = compare_price*price_to_buy_factor_array[look_back]
@@ -261,29 +274,68 @@ for step_back in range(0, step_backs):
     print('#########################')
     print('combined results end of step back', step_back)
     pprint(combined_results)
+    if continuous_mode:
+        hours = (continous_length - datapoints_trailing) / 60
+        trades_per_hour = float(all_trades_count) / float(hours)
+        minutes_per_trade = 60.0 / trades_per_hour
+        print('all_trades_count', all_trades_count)
+        print('trades_per_hour', trades_per_hour)
+        print('minutes_per_trade', minutes_per_trade)
+        for key in combined_results:
+            profit = combined_results[key]
+            profit_per_minute = profit / (continous_length - datapoints_trailing)
+            profit_per_hour = round(profit_per_minute * 60, 5)
+            profit_per_24_hours = round(profit_per_minute * 60 * 24, 5)
+            profit_per_trade = profit / all_trades_count
+            print(key, profit)
+            print('profit_per_24_hours', profit_per_24_hours)
+            print('profit_per_hour', profit_per_hour)
+            print('profit_per_trade', profit_per_trade)
+        print('#########################')
+    else:
+        for key in combined_results:
+            profit = combined_results[key]
+            profit_per_step_back = profit / step_backs * (400/170)
+            profit_per_24_hours = profit_per_step_back * 24 / 6.66
+            profit_per_hour = profit_per_24_hours / 24
+            print(key, profit)
+            print('profit_per_step_back', profit_per_step_back)
+            print('profit_per_24_hours', profit_per_24_hours)
+            print('profit_per_hour', profit_per_hour)
+        print('#########################')
+if continuous_mode:
+    hours = (continous_length - datapoints_trailing) / 60
+    trades_per_hour = float(all_trades_count) / float(hours)
+    minutes_per_trade = 60.0 / trades_per_hour
+    print('all_trades_count', all_trades_count)
+    print('trades_per_hour', trades_per_hour)
+    print('minutes_per_trade', minutes_per_trade)
+    for key in combined_results:
+        profit = combined_results[key]
+        profit_per_minute = profit / (continous_length - datapoints_trailing)
+        profit_per_hour = round(profit_per_minute * 60, 5)
+        profit_per_24_hours = round(profit_per_minute * 60 * 24, 5)
+        profit_per_trade = profit / all_trades_count
+        print(key, profit)
+        print('profit_per_24_hours', profit_per_24_hours)
+        print('profit_per_hour', profit_per_hour)
+        print('profit_per_trade', profit_per_trade)
+
+    print('#########################')
+else:
+    print('all_trades_count', all_trades_count)
+    trades_per_step_back_avg = round(float(all_trades_count) / float(step_backs) * (400/170), 3)
+    print('trades_per_step_back_avg', trades_per_step_back_avg)
+    trades_per_hour = trades_per_step_back_avg / 6.66
+    print('trades_per_hour', trades_per_hour)
+    minutes_per_trade = 60 / trades_per_hour
+    print('minutes_per_trade', minutes_per_trade)
     for key in combined_results:
         profit = combined_results[key]
         profit_per_step_back = profit / step_backs * (400/170)
         profit_per_24_hours = profit_per_step_back * 24 / 6.66
-        profit_per_hour = profit_per_24_hours / 24
-        print(key, profit)
-        print('profit_per_step_back', profit_per_step_back)
-        print('profit_per_24_hours', profit_per_24_hours)
-        print('profit_per_hour', profit_per_hour)
-    print('#########################')
-print('all_trades_count', all_trades_count)
-trades_per_step_back_avg = round(float(all_trades_count) / float(step_backs) * (400/170), 3)
-print('trades_per_step_back_avg', trades_per_step_back_avg)
-trades_per_hour = trades_per_step_back_avg / 6.66
-print('trades_per_hour', trades_per_hour)
-minutes_per_trade = 60 / trades_per_hour
-print('minutes_per_trade', minutes_per_trade)
-for key in combined_results:
-    profit = combined_results[key]
-    profit_per_step_back = profit / step_backs * (400/170)
-    profit_per_24_hours = profit_per_step_back * 24 / 6.66
-    profit_per_trade = profit_per_step_back / trades_per_step_back_avg
-    print('profit_per_trade', profit_per_trade, '(for', key,')')
+        profit_per_trade = profit_per_step_back / trades_per_step_back_avg
+        print('profit_per_trade', profit_per_trade, '(for', key,')')
 print('done')
 
 # 2018-01-24 backtest of previous night (12 hrs) 0.3818494060513612 * 0.4 = 0.1527

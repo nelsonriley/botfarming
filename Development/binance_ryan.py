@@ -123,8 +123,13 @@ for step_back in range(0, step_backs):
                         if index > datapoints_trailing:
 
                             will_buy = False
-                            for look_back in range(1,4):
-                                look_back = 4 - look_back
+                            # 4m 5 = 1.0263655652760697
+                            # 5m 6 = 1.0156496276888616
+                            # 6m 7 = 1.1366348059505818 / 0.66346049538269181 = 1.713    (1min only results = 0.66346049538269181)
+                            # 7m 8 = 1.0503049454585349
+                            # 8m 9 = 1.0741785441158287
+                            for look_back in range(1, 9):
+                                look_back = 9 - look_back
 
                                 compare_price = float(data[index-look_back+1][1])
                                 buy_price = compare_price*price_to_buy_factor_array[look_back]

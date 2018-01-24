@@ -367,7 +367,7 @@ def buy_coin(symbol, length, file_number, data=[]):
 
         minutes = 1
 
-        part_of_bitcoin_to_use = .2
+        part_of_bitcoin_to_use = .4
         price_to_start_buy = 1.003
 
         sell_price_drop_factor = .997
@@ -409,8 +409,8 @@ def buy_coin(symbol, length, file_number, data=[]):
             if len(trailing_movement) >= datapoints_trailing:
 
                 should_buy = False
-                for look_back in range(1,4):
-                    look_back = 4 - look_back
+                for look_back in range(1,7):
+                    look_back = 7 - look_back
 
                     if float(candle[4]) < float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy:
 
@@ -680,7 +680,7 @@ def run_bot(file_number, total_files, overlap, length):
 
                 loops += 1
                 if length == '1m':
-                    time.sleep(.3)
+                    time.sleep(.25)
                 elif length == '5m':
                     time.sleep(.5)
                 else:

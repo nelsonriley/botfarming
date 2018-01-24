@@ -17,7 +17,9 @@ import functions_financial as fn
 minutes = 1
 day = '20180122'
 step_backs = 8
-
+day = '20180124'
+step_backs = 1
+continuous_mode = True
 
 
 
@@ -90,7 +92,10 @@ for step_back in range(0, step_backs):
                 for s in symbols_trimmed:
                     symbol = symbols_trimmed[s]
 
-                    data = ut.pickle_read('./binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz')
+                    if continuous_mode:
+                        data = ut.pickle_read('./binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m.pklz')
+                    else:
+                        data = ut.pickle_read('./binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz')
 
                     # if data != False:
                     #     print(path)
@@ -128,8 +133,8 @@ for step_back in range(0, step_backs):
                             # 6m 7 = 1.1366348059505818 / 0.66346049538269181 = 1.713    (1min only results = 0.66346049538269181)
                             # 7m 8 = 1.0503049454585349
                             # 8m 9 = 1.0741785441158287
-                            for look_back in range(1, 9):
-                                look_back = 9 - look_back
+                            for look_back in range(1, 7):
+                                look_back = 7 - look_back
 
                                 compare_price = float(data[index-look_back+1][1])
                                 buy_price = compare_price*price_to_buy_factor_array[look_back]
@@ -280,3 +285,5 @@ for key in combined_results:
     profit_per_trade = profit_per_step_back / trades_per_step_back_avg
     print('profit_per_trade', profit_per_trade, '(for', key,')')
 print('done')
+
+# 2018-01-24 backtest of previous night (12 hrs) 0.3818494060513612 * 0.4 = 0.1527

@@ -23,7 +23,11 @@ import functions_financial as fn
 print('start @',  time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
 start_time = int(time.time())
 
-fn.print_ascii()
+print(time.localtime().tm_sec)
+
+print(time.localtime())
+print(int(time.time()))
+print('time @',  time.strftime('%Y-%m-%d %H:%M:%S', int(time.time())))
 
 
 

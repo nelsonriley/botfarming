@@ -52,13 +52,13 @@ best_minutes_until_sale_3 = 0
 sell_price_drop_factor = .997
 buy_price_increase_factor = 1.002
 
-price_to_buy_factor_array = [0,.978, .976, .974, .972, .969, .966, .963, .96, .957, .961]
-price_to_sell_factor_array = [0,.994, .993, .992, .991, .989, .989, .988, .987, .986, .991]
+price_to_buy_factor_array = [0,.978, .973, .97, .971, .966, .96, .955, .95, .956, .961]
+price_to_sell_factor_array = [0,.994, .993, .996, .991, .989, .989, .983, .986, .986, .991]
 price_to_sell_factor_2_array = [0,.984, .984, .984, .983, .984, .983, .982, .982, .982, .981]
 price_to_sell_factor_3_array = [0,.965, .965, .965, .965, .965, .964, .964, .963, .963, .963]
-lower_band_buy_factor_array = [0,1.04, 1.07, 1.09, 1.11, 1.14, 1.16, 1.18, 1.2, 1.22, 200]
+lower_band_buy_factor_array = [0,1.04, 1.12, 1.09, 1.07, 1.09, 1.12, 1.15, 1.16, 1.19, 200]
 
-datapoints_trailing = 23
+datapoints_trailing = 230
 
 minutes_until_sale = 4
 minutes_until_sale_2 = 12
@@ -66,31 +66,13 @@ minutes_until_sale_3 = 45
 
 combined_results = {}
 
-for step_back in range(0, 8):
-    best_gain = 0
-    best_price_to_buy_factor = 0
-    best_bollingers_percentage_increase_factor = 0
-    best_lower_band_buy_factor = 0
-    best_price_to_sell_factor = 0
-    best_price_to_sell_factor_2 = 0
-    best_price_to_sell_factor_3 = 0
-    best_minutes_until_sale = 0
-    best_minutes_until_sale_2 = 0
-    best_minutes_until_sale_3 = 0
+all_trades_count = 0
+for step_back in range(0, step_backs):
+    trades_count = 0
     for a in range(0, 1):
-        #price_to_buy_factor_array[2] = .975 + .003*a
+        #price_to_buy_factor_array[3] = .968 + .002*a
         for b in range(0, 1):
-                #price_to_sell_factor_array[2] = .985 + .003*b
-                gain_for_period = {}
-                gain_for_period[0] = 0
-                gain_for_period[1] = 0
-                gain_for_period[2] = 0
-                gain_for_period[3] = 0
-                gain_for_period[4] = 0
-                gain_for_period[5] = 0
-                gain_for_period[6] = 0
-                gain_for_period[7] = 0
-                gain_for_period[8] = 0
+                #price_to_sell_factor_array[3] = .99 + .003*b
 
                 wins = 0
                 losses = 0
@@ -128,8 +110,9 @@ for step_back in range(0, 8):
 
                         #print(symbol['symbol'])
 
-                        #if float(candle[0]) < float(sale_time):
-                        #    continue
+                        # prevent bots buying at same time
+                        if float(candle[0]) < float(sale_time):
+                            continue
 
                         try:
                             gotdata = data[index + minutes_until_sale_3+1]
@@ -140,8 +123,8 @@ for step_back in range(0, 8):
                         if index > datapoints_trailing:
 
                             will_buy = False
-                            for look_back in range(9,10):
-                                look_back = 10 - look_back
+                            for look_back in range(1,4):
+                                look_back = 4 - look_back
 
                                 compare_price = float(data[index-look_back+1][1])
                                 buy_price = compare_price*price_to_buy_factor_array[look_back]
@@ -240,7 +223,6 @@ for step_back in range(0, 8):
 
 
                 current_gain = numpy.sum(percentage_made_win)+numpy.sum(percentage_made_loss)
-                gain_for_period[step_back] += current_gain
 
                 the_key = str(price_to_buy_factor_array[look_back]) + '_' + str(price_to_sell_factor_array[look_back]) + '_' + str(lower_band_buy_factor_array[look_back])
                 if the_key in combined_results:
@@ -248,18 +230,8 @@ for step_back in range(0, 8):
                 else:
                     combined_results[the_key] = current_gain
 
-                if current_gain > best_gain:
-                    print("NEW BEST:")
-                    best_gain = current_gain
-                    best_lower_band_buy_factor = lower_band_buy_factor_array[look_back]
-                    best_price_to_buy_factor = price_to_buy_factor_array[look_back]
-                    best_price_to_sell_factor = price_to_sell_factor_array[look_back]
-                    best_price_to_sell_factor_2 = price_to_sell_factor_2_array[look_back]
-                    best_price_to_sell_factor_3 = price_to_sell_factor_3_array[look_back]
-                    best_minutes_until_sale = minutes_until_sale
-                    best_minutes_until_sale_2 = minutes_until_sale_2
-                    best_minutes_until_sale_3 = minutes_until_sale_3
-
+                trades_count += wins + losses
+                print('trades_count', trades_count)
 
                 print("gain", current_gain)
                 print('step_back', step_back)
@@ -267,11 +239,6 @@ for step_back in range(0, 8):
                 print('price_to_buy_factor, price to sell factors', price_to_buy_factor_array[look_back], price_to_sell_factor_array[look_back])
                 print('other price to sell factors', price_to_sell_factor_2_array[look_back], price_to_sell_factor_3_array[look_back])
                 print('minutes until sales', minutes_until_sale, minutes_until_sale_2, minutes_until_sale_3)
-                print('BEST gain:', best_gain)
-                print('BEST lower_band_buy_factor', best_lower_band_buy_factor)
-                print('BEST price_to_buy_factor, price_to_sell_factor', best_price_to_buy_factor, best_price_to_sell_factor)
-                print('BEST other price to sell factors', best_price_to_sell_factor_2, best_price_to_sell_factor_3)
-                print('BEST minutes until sales', best_minutes_until_sale, best_minutes_until_sale_2, best_minutes_until_sale_3)
                 print('wins:',wins)
                 print(numpy.mean(percentage_made_win))
                 print('losses:',losses)
@@ -280,20 +247,31 @@ for step_back in range(0, 8):
                     print('wins/losses', wins/losses)
                 print()
 
-    print('###################################################################')
-    print('BEST PARAMS for step_back =', step_back)
-    print('gain:', best_gain)
-    print('price_to_buy_factor', best_price_to_buy_factor)
-    print('price_to_sell_factor', best_price_to_sell_factor)
-    print('price_to_sell_factor_2', best_price_to_sell_factor_2)
-    print('price_to_sell_factor_3', best_price_to_sell_factor_3)
-    print('lower_band_buy_factor', best_lower_band_buy_factor)
-    print('minutes_until_sale (1,2,3):', best_minutes_until_sale, best_minutes_until_sale_2, best_minutes_until_sale_3)
+    all_trades_count += trades_count
+    print('#########################')
+    print('combined results end of step back', step_back)
     pprint(combined_results)
-    print('###################################################################')
-
-print('best price to sell factors', best_price_to_sell_factor, best_price_to_sell_factor_2, best_price_to_sell_factor_3)
-print('best minutes until sales', best_minutes_until_sale, best_minutes_until_sale_2, best_minutes_until_sale_3)
-
-pprint(combined_results)
+    for key in combined_results:
+        profit = combined_results[key]
+        profit_per_step_back = profit / step_backs * (400/170)
+        profit_per_24_hours = profit_per_step_back * 24 / 6.66
+        profit_per_hour = profit_per_24_hours / 24
+        print(key, profit)
+        print('profit_per_step_back', profit_per_step_back)
+        print('profit_per_24_hours', profit_per_24_hours)
+        print('profit_per_hour', profit_per_hour)
+    print('#########################')
+print('all_trades_count', all_trades_count)
+trades_per_step_back_avg = round(float(all_trades_count) / float(step_backs) * (400/170), 3)
+print('trades_per_step_back_avg', trades_per_step_back_avg)
+trades_per_hour = trades_per_step_back_avg / 6.66
+print('trades_per_hour', trades_per_hour)
+minutes_per_trade = 60 / trades_per_hour
+print('minutes_per_trade', minutes_per_trade)
+for key in combined_results:
+    profit = combined_results[key]
+    profit_per_step_back = profit / step_backs * (400/170)
+    profit_per_24_hours = profit_per_step_back * 24 / 6.66
+    profit_per_trade = profit_per_step_back / trades_per_step_back_avg
+    print('profit_per_trade', profit_per_trade, '(for', key,')')
 print('done')

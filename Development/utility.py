@@ -183,9 +183,9 @@ def calculate_profit_and_free_coin(current_state):
     percent_profit_from_trade = (current_state['total_revenue'] - current_state['original_quantity']*current_state['original_price'])/(current_state['original_quantity']*current_state['original_price'])
     profit_from_trade = current_state['total_revenue'] - current_state['original_quantity']*current_state['original_price']
     print('profit was, absoulte profit, percent', profit_from_trade, percent_profit_from_trade, get_time())
-    append_or_create_data('./binance_' + current_state['length'] + '_trades/'+ current_state['length'] + '_trade_data', [profit_from_trade, percent_profit_from_trade, current_state['symbol'],current_state['original_buy_time_readable'], get_time()])
+    append_or_create_data('./binance_' + str(current_state['look_back']) + '_trades/'+ str(current_state['look_back']) + '_trade_data', [profit_from_trade, percent_profit_from_trade, current_state['symbol'],current_state['original_buy_time_readable'], get_time()])
     pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', False)
-    pickle_write('./binance_is_invested_' + current_state['is_invested_length'] + '/is_invested_' + current_state['is_invested_length'] + '_' + current_state['symbol'] + '.pklz', False)
+    pickle_write('./binance_is_invested_' + current_state['length'] + '/is_invested_' + current_state['length'] + '_' + current_state['symbol'] + '.pklz', False)
 
 
 def get_first_in_line_price_buying(current_state):
@@ -324,7 +324,7 @@ def buy_coin_from_state(current_state):
         if float(current_state['executedQty']) < current_state['min_quantity']:
             print('buy order canceled, was never filled, exiting')
             pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', False, '******could not write state buy from stae******')
-            pickle_write('./binance_is_invested_' + current_state['is_invested_length'] + '/is_invested_' + current_state['is_invested_length'] + '_' + current_state['symbol'] + '.pklz', False)
+            pickle_write('./binance_is_invested_' + current_state['length'] + '/is_invested_' + current_state['length'] + '_' + current_state['symbol'] + '.pklz', False)
             return
         else:
             current_state['state'] = 'selling'
@@ -365,89 +365,27 @@ def buy_coin(symbol, length, file_number, data=[]):
 
     try:
 
-        if (length == '1m'):
+        minutes = 1
 
-            minutes = 1
-            part_of_bitcoin_to_use = .4
-            price_to_start_buy = 1.003
+        part_of_bitcoin_to_use = .2
+        price_to_start_buy = 1.003
 
-            sell_price_drop_factor = .997
-            buy_price_increase_factor = 1.002
+        sell_price_drop_factor = .997
+        buy_price_increase_factor = 1.002
 
-            lower_band_buy_factor = 1.05
-            price_to_buy_factor = .978
-            datapoints_trailing = 22
+        price_to_buy_factor_array = [0,.978, .973, .97, .971, .966, .96, .955, .95, .956, .95]
+        price_to_sell_factor_array = [0,.994, .993, .996, .991, .989, .989, .983, .986, .986, .986]
+        price_to_sell_factor_2_array = [0,.984, .984, .984, .983, .984, .983, .982, .982, .982, .981]
+        price_to_sell_factor_3_array = [0,.965, .965, .965, .965, .965, .964, .964, .963, .963, .963]
+        lower_band_buy_factor_array = [0,1.04, 1.12, 1.09, 1.07, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
 
-            minutes_until_sale = 4
-            minutes_until_sale_2 = 12
-            minutes_until_sale_3 = 45
-            price_to_sell_factor = .994
-            price_to_sell_factor_2 = .984
-            price_to_sell_factor_3 = .965
+        datapoints_trailing = 230
+
+        minutes_until_sale = 4
+        minutes_until_sale_2 = 12
+        minutes_until_sale_3 = 45
 
 
-        if(length == '15m'):
-
-            minutes = 15
-            part_of_bitcoin_to_use = .4
-            price_to_start_buy = 1.003
-
-            sell_price_drop_factor = .997
-            buy_price_increase_factor = 1.002
-
-            lower_band_buy_factor = 1000000
-            price_to_buy_factor = .942
-            datapoints_trailing = 22
-
-            minutes_until_sale = 4
-            minutes_until_sale_2 = 12
-            minutes_until_sale_3 = 45
-            price_to_sell_factor = .98
-            price_to_sell_factor_2 = .98
-            price_to_sell_factor_3 = .957
-
-        if(length == '5m'):
-
-            minutes = 5
-            part_of_bitcoin_to_use = .4
-            price_to_start_buy = 1.003
-
-            sell_price_drop_factor = .997
-            buy_price_increase_factor = 1.002
-
-            lower_band_buy_factor = 1.14
-            price_to_buy_factor = .969
-            datapoints_trailing = 22
-
-            minutes_until_sale = 4
-            minutes_until_sale_2 = 12
-            minutes_until_sale_3 = 45
-            price_to_sell_factor = .989
-            price_to_sell_factor_2 = .984
-            price_to_sell_factor_3 = .965
-
-        if length == '30m':
-
-            minutes = 30
-            part_of_bitcoin_to_use = .4
-            price_to_start_buy = 1.003
-            sell_price_drop_factor = .997
-            buy_price_increase_factor = 1.002
-
-            lower_band_buy_factor = 1000000
-            price_to_buy_factor = .90
-            price_to_sell_factor = .99
-            price_to_sell_factor_2 = 0.98
-            price_to_sell_factor_3 = 0.97 # 9.18
-            minutes_until_sale = 75 # 75, 115, 155 8.22       55, 80, 100  7.33
-            minutes_until_sale_2 = 115
-            minutes_until_sale_3 = 155
-            datapoints_trailing = 22
-
-        if minutes == 1 or minutes == 5:
-            is_invested_length = '5m'
-        else:
-            is_invested_length = length
         # get candles
         # data can now be passed in to allow parallel processing, but function still works if not passed in
         if len(data) == 0:
@@ -470,32 +408,43 @@ def buy_coin(symbol, length, file_number, data=[]):
             # compare (only last candle)
             if len(trailing_movement) >= datapoints_trailing:
 
-                if lower_band_buy_factor < 100:
+                should_buy = False
+                for look_back in range(1,4):
+                    look_back = 4 - look_back
 
-                    trailing_and_current_candles = data[index-datapoints_trailing:index]
-                    trailing_and_current_candles, smart_trailing_candles = fn.add_bollinger_bands_to_candles(trailing_and_current_candles)
-                    lower_band_for_index = trailing_and_current_candles[-1][14]
-                    band_ok = float(candle[4]) < lower_band_for_index*lower_band_buy_factor*price_to_start_buy
+                    if float(candle[4]) < float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy:
 
-                else:
-                    band_ok = True
+                        if lower_band_buy_factor_array[look_back] < 100:
+                            candles_for_look_back = fn.get_n_minute_candles(look_back, data[index-22*look_back-1:index])
+                            candles_for_look_back, smart_trailing_candles = fn.add_bollinger_bands_to_candles(candles_for_look_back)
+                            lower_band_for_index = candles_for_look_back[-1][14]
+                            #print('lower_band_for_index', lower_band_for_index)
+                            band_ok_value = lower_band_for_index*lower_band_buy_factor_array[look_back]
+                            band_ok = float(candle[4]) < band_ok_value
+                        else:
+                            band_ok = True
 
-                price_to_buy_ok = float(candle[4]) < float(candle[1])*price_to_buy_factor*price_to_start_buy
-
-                should_buy = band_ok and price_to_buy_ok
+                        if band_ok:
+                            should_buy = True
+                            break
 
                 if should_buy:
+                    lower_band_buy_factor = lower_band_buy_factor_array[look_back]
+                    price_to_buy_factor = price_to_buy_factor_array[look_back]
+                    price_to_sell_factor = price_to_sell_factor_array[look_back]
+                    price_to_sell_factor_2 = price_to_sell_factor_2_array[look_back]
+                    price_to_sell_factor_3 = price_to_sell_factor_3_array[look_back]
 
                     try:
-                        is_invested = pickle_read('./binance_is_invested_' + is_invested_length +'/is_invested_'+ is_invested_length + '_' + symbol['symbol'] + '.pklz')
+                        is_invested = pickle_read('./binance_is_invested_' + length +'/is_invested_' + length + '_' + symbol['symbol'] + '.pklz')
                     except Exception as e:
                         is_invested = False
 
                     if is_invested == False:
 
-                        print('buy', symbol['symbol'])
+                        print('buy', symbol['symbol'], 'look back', look_back)
 
-                        pickle_write('./binance_is_invested_' + is_invested_length + '/is_invested_' + is_invested_length + '_' + symbol['symbol'] + '.pklz', True)
+                        pickle_write('./binance_is_invested_' + length +'/is_invested_' + length + '_' + symbol['symbol'] + '.pklz', True)
 
                         # init binance client
                         api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
@@ -503,12 +452,12 @@ def buy_coin(symbol, length, file_number, data=[]):
                         client = Client(api_key, api_secret)
 
                         if lower_band_buy_factor < 100:
-                            price_to_buy = min(lower_band_for_index*lower_band_buy_factor, float(candle[1])*price_to_buy_factor)
+                            price_to_buy = min(lower_band_for_index*lower_band_buy_factor, float(data[index-look_back][4])*price_to_buy_factor)
                         else:
-                            price_to_buy = float(candle[1])*price_to_buy_factor
-                        price_to_sell = float(candle[1])*price_to_sell_factor
-                        price_to_sell_2 = float(candle[1])*price_to_sell_factor_2
-                        price_to_sell_3 = float(candle[1])*price_to_sell_factor_3
+                            price_to_buy = float(data[index-look_back][4])*price_to_buy_factor
+                        price_to_sell = float(data[index-look_back][4])*price_to_sell_factor
+                        price_to_sell_2 = float(data[index-look_back][4])*price_to_sell_factor_2
+                        price_to_sell_3 = float(data[index-look_back][4])*price_to_sell_factor_3
 
                         amount_to_buy = part_of_bitcoin_to_use/price_to_buy
 
@@ -519,6 +468,7 @@ def buy_coin(symbol, length, file_number, data=[]):
 
                         current_state = {}
                         current_state['state'] = 'buying'
+                        current_state['look_back'] = look_back
                         current_state['sell_price_drop_factor'] = sell_price_drop_factor
                         current_state['original_amount_to_buy'] = amount_to_buy
                         current_state['original_buy_time'] = int(time.time())
@@ -534,7 +484,6 @@ def buy_coin(symbol, length, file_number, data=[]):
                         current_state['price_to_sell_2'] = price_to_sell_2
                         current_state['price_to_sell_3'] = price_to_sell_3
                         current_state['length'] = length
-                        current_state['is_invested_length'] = is_invested_length
                         current_state['file_number'] = str(file_number)
                         current_state['client'] = client
                         current_state['error_cancel_order'] = False
@@ -594,11 +543,15 @@ def buy_coin(symbol, length, file_number, data=[]):
 
                             time.sleep(1)
 
+                        # call_back_args = [symbol['symbol'],look_back]
+                        # t = Thread(target=free_coin_after_candle, args=call_back_args)
+                        # t.start()
 
-                        if float(current_state['executedQty']) == 0:
+
+                        if current_state['executedQty'] < current_state['min_quantity']:
                             print('no one bought cancel order - freeing coin', current_state['symbol'])
-                            pickle_write('./binance_is_invested_' + is_invested_length + '/is_invested_' + is_invested_length + '_' + symbol['symbol'] + '.pklz', False)
                             pickle_write('./program_state_' + length + '/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '.pklz', False, '******could not write state inside buy coin - no one bought coin******')
+                            pickle_write('./binance_is_invested_' + current_state['length'] + '/is_invested_' + current_state['length'] + '_' + symbol['symbol'] + '.pklz', False)
                             return True
 
 
@@ -606,13 +559,12 @@ def buy_coin(symbol, length, file_number, data=[]):
                         current_state['state'] = 'selling'
                         pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not update state to selling******')
 
-
                         coin_sold = sell_coin_with_order_book(current_state)
 
                         if coin_sold:
                             print('finished order - freeing coin', current_state['symbol'])
 
-                            pickle_write('./binance_is_invested_' + is_invested_length + '/is_invested_' + is_invested_length + '_' + symbol['symbol'] + '.pklz', False)
+                            pickle_write('./binance_is_invested_' + current_state['length'] + '/is_invested_' + current_state['length'] + '_' + symbol['symbol'] + '.pklz', False)
 
                             print('#########################')
 
@@ -637,9 +589,18 @@ def buy_coin(symbol, length, file_number, data=[]):
         print('some error - freeing coin:', symbol['symbol'])
         print(e)
         print_exception()
-        pickle_write('./binance_is_invested_' + is_invested_length + '/is_invested_' + is_invested_length + '_' + symbol['symbol'] + '.pklz', False)
+        pickle_write('./binance_is_invested_' + length + '/is_invested_' + length + '_' + symbol['symbol'] + '.pklz', False)
         time.sleep(60*4)
         return False
+
+def free_coin_after_candle(symbol, look_back):
+
+    while True:
+        if time.localtime().tm_sec < 2:
+            print('onto next candle freeing coin with look_back...', symbol, look_back)
+            pickle_write('./binance_is_invested_' + str(look_back) +'m/is_invested_' + str(look_back) + 'm_' + symbol + '.pklz', False)
+            return
+
 
 def load_current_state(symbol, file_number, length):
 

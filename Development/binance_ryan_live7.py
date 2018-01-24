@@ -5,7 +5,7 @@ import utility as ut
 
 file_number = 7
 total_files = 12
-overlap = 4
+overlap = 3
 length = '1m'
 
 ut.run_bot(file_number, total_files, overlap, length)

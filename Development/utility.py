@@ -23,6 +23,7 @@ import socket
 import random
 from six.moves import urllib
 global number_of_api_requests
+from binance.websockets import BinanceSocketManager
 
 
 
@@ -411,14 +412,9 @@ def buy_coin_from_state(current_state):
     sell_coin_with_order_book(current_state)
 
 
-def buy_coin(symbol, length, file_number, times_called):
+def buy_coin(symbol, length, file_number):
 
     data = []
-
-    # if (symbol['symbol'] == 'APPCBTC'):
-    #     print("started buy coin ", symbol['symbol'], get_time())
-
-    #pickle_write('./program_still_running_' +length + '/'+symbol['symbol']+,True)
 
     current_state = load_current_state(symbol['symbol'], file_number, length)
 
@@ -426,6 +422,29 @@ def buy_coin(symbol, length, file_number, times_called):
         print('loading state to sell coin..', current_state['symbol'])
         buy_coin_from_state(current_state)
         return
+
+    api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
+    api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
+    client = Client(api_key, api_secret)
+
+    bm = BinanceSocketManager(client)
+    conn_key = bm.start_depth_socket(symbol['symbol'], check_coin_price)
+    bm.start()
+
+    global candle_data
+    while True:
+        time.localtime().tm_sec < 4:
+            end_time = int(time.time())*1000
+            start_time = (end_time-60*1000*minutes*(datapoints_trailing+1))
+            url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval='+length+'&startTime='+str(start_time)+'&endTime='+str(end_time)
+            data = opener.open(url).read()
+            data = json.loads(data)
+            time.sleep(4)
+
+
+def check_coin_price(msg):
+
+
 
     try:
 
@@ -450,27 +469,8 @@ def buy_coin(symbol, length, file_number, times_called):
         minutes_until_sale_2 = 12
         minutes_until_sale_3 = 45
 
-        if times_called % 100 == 0:
-            print('checking..', symbol['symbol'])
 
 
-        if file_number == 1 or file_number ==3:
-            opener = urllib.request.build_opener(
-                urllib.request.ProxyHandler(
-                    {'http': 'http://lum-customer-hl_24be6fa3-zone-static-session-rand' +str(random.randint(1,99999)) + ':uckbsg56p77s@zproxy.luminati.io:22225'}))
-        else:
-            opener = urllib.request.build_opener(
-                urllib.request.ProxyHandler(
-                    {'http': 'http://lum-customer-hl_2b2c6ab7-zone-static-session-rand' +str(random.randint(1,99999)) + ':02xq3h9ohf0s@zproxy.luminati.io:22225'}))
-
-
-        #proxy_info = opener.open('http://lumtest.com/myip.json').read()
-        #proxy_info = json.loads(proxy_info)
-
-        #, proxy_info['ip'])
-
-        # get candles
-        # data can now be passed in to allow parallel processing, but function still works if not passed in
         if len(data) == 0:
             end_time = int(time.time())*1000
             start_time = (end_time-60*1000*minutes*(datapoints_trailing+1))
@@ -483,37 +483,58 @@ def buy_coin(symbol, length, file_number, times_called):
             print('API request failed, exiting', symbol['symbol'])
             return
 
+
         trailing_volumes = []
         trailing_movement = []
         trailing_lows = []
         trailing_highs = []
         trailing_candles = []
 
+        if first_bid > float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy:
+            return
+
         for index, candle in enumerate(data):
+
             # compare (only last candle)
             if len(trailing_movement) >= datapoints_trailing:
 
+                # init binance client
+
+
                 should_buy = False
 
-                look_back_schedule = [6,1,8,10,9,4,5,2,7]
-                # look_back_schedule = [1,2,3,4,5,6]
-                for look_back in look_back_schedule:
+                while True:
 
-                    if float(candle[4]) < float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy:
 
-                        if lower_band_buy_factor_array[look_back] < 100:
-                            candles_for_look_back = fn.get_n_minute_candles(look_back, data[index-22*look_back-1:index])
-                            candles_for_look_back, smart_trailing_candles = fn.add_bollinger_bands_to_candles(candles_for_look_back)
-                            lower_band_for_index = candles_for_look_back[-1][14]
-                            #print('lower_band_for_index', lower_band_for_index)
-                            band_ok_value = lower_band_for_index*lower_band_buy_factor_array[look_back]
-                            band_ok = float(candle[4]) < band_ok_value
-                        else:
-                            band_ok = True
+                    time.sleep(.5)
+                    if (symbol['symbol'] == 'APPCBTC'):
+                        print("start api call ", symbol['symbol'], get_time())
+                    order_book = client.get_order_book(symbol=symbol['symbol'], limit=10)
+                    first_bid = float(order_book['bids'][0][0])
 
-                        if band_ok:
-                            should_buy = True
-                            break
+                    look_back_schedule = [6,1,8,10,9,4,5,2,7,3]
+                    # look_back_schedule = [1,2,3,4,5,6]
+                    for look_back in look_back_schedule:
+
+                        if first_bid < float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy:
+
+                            if lower_band_buy_factor_array[look_back] < 100:
+                                candles_for_look_back = fn.get_n_minute_candles(look_back, data[index-22*look_back-1:index])
+                                candles_for_look_back, smart_trailing_candles = fn.add_bollinger_bands_to_candles(candles_for_look_back)
+                                lower_band_for_index = candles_for_look_back[-1][14]
+                                #print('lower_band_for_index', lower_band_for_index)
+                                band_ok_value = lower_band_for_index*lower_band_buy_factor_array[look_back]
+                                band_ok = float(candle[4]) < band_ok_value
+                            else:
+                                band_ok = True
+
+                            if band_ok:
+                                should_buy = True
+                                break
+
+                    if should_buy == True or time.localtime().tm_sec < 4:
+                        break
+
 
                 if should_buy:
                     lower_band_buy_factor = lower_band_buy_factor_array[look_back]
@@ -547,11 +568,6 @@ def buy_coin(symbol, length, file_number, times_called):
                         print('buy', symbol['symbol'], 'look back', look_back)
 
                         pickle_write('./binance_is_invested_' + length +'/is_invested_' + length + '_' + symbol['symbol'] + '.pklz', True)
-
-                        # init binance client
-                        api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
-                        api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
-                        client = Client(api_key, api_secret)
 
                         if lower_band_buy_factor < 100:
                             price_to_buy = min(lower_band_for_index*lower_band_buy_factor, float(data[index-look_back][4])*price_to_buy_factor)
@@ -704,6 +720,7 @@ def buy_coin(symbol, length, file_number, times_called):
         time.sleep(60*4)
         return False
 
+
 def free_coin_after_candle(symbol, look_back):
 
     while True:
@@ -820,15 +837,18 @@ def run_bot_parallel(file_number, total_files):
         for s in symbols:
             symbol = symbols[s]
             if float(symbol['24hourVolume']) > 450:
+                #print(symbol['symbol'])
                 total_btc_coins += 1
                 symbols_trimmed[s] = symbol
 
+        #print(total_btc_coins)
     except Exception as e:
             print(e)
             sys.exit()
 
-    file_start = file_number*total_btc_coins/total_files
-    file_end = (file_number+1)*total_btc_coins/total_files
+
+    file_start = math.ceil(file_number*total_btc_coins/total_files)
+    file_end = math.ceil((file_number+1)*total_btc_coins/total_files)
 
     loops = 0
     for s in symbols_trimmed:
@@ -850,19 +870,8 @@ def buy_coin_thread(symbol, file_number):
 
     times_called = 0
     while True:
-        current_state = load_current_state(symbol['symbol'], 1000, '1m')
+        buy_coin(symbol, '1m', file_number)
 
-        if isinstance(current_state,dict):
-            print('loading state to sell coin..', current_state['symbol'])
-            buy_coin_from_state(current_state)
-
-        buy_coin(symbol, '1m', file_number, times_called)
-
-        times_called += 1
-
-        current_state = False
-
-        time.sleep(1)
 
 
 

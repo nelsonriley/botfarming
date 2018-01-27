@@ -13,6 +13,25 @@ import datetime
 import utility as ut
 import functions_financial as fn
 
+#########################check if symbols are in our list
+symbols = ut.pickle_read('./binance_btc_symbols.pklz')
+symbol_list = []
+for s in symbols:
+    symbol = symbols[s]
+    symbol_list.append(s)
+    if float(symbol['24hourVolume']) > 450:
+        if s == 'ASTBTC':
+            print('----', s)
+print('symbol_count', len(symbol_list))
+i = 0
+symbols2 = ut.pickle_read('./binance_btc_symbols.pklz')
+for s in symbols2:
+    if symbol_list[i] != s:
+        print('wtf!', s)
+    i += 1
+####################################################
+sys.exit()
+
 
 minutes = 1
 day = '20180122'

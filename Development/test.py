@@ -23,15 +23,109 @@ import functions_financial as fn
 print('start @',  time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
 start_time = int(time.time())
 
-print(time.localtime().tm_sec)
-
-print(time.localtime())
-print(int(time.time()))
-print('time @',  time.strftime('%Y-%m-%d %H:%M:%S', int(time.time())))
 
 
+############################################ Get/View Trade History Array
+file_path_all_trades = './binance_all_trades_history/binance_all_trades_history.pklz'
+# empty our trades array
+    # ut.pickle_write(file_path_all_trades, [])
+    # sys.exit()
 
+data = ut.pickle_read(file_path_all_trades)
+print('trade count', len(data))
+profit_btc_total = 0
+trade_count = 0
+trades_negative = 0
+trades_positive = 0
+last_trade = {}
+start_time_epoch = 1516918780
+start_time_epoch = 0
+end_time_epoch = None
+end_time_epoch_is_last_trade = True
+for d in data:
+    start_good = d['time_buy_epoch'] >= start_time_epoch
+    end_good = d['time_end_epoch'] <= end_time_epoch
+    if start_good:
+        if start_time_epoch == 0:
+            start_time_epoch = d['time_buy_epoch']
+        profit_btc_total += d['profit_btc']
+        if d['profit_btc'] > 0:
+            trades_positive += 1
+        else:
+            trades_negative += 1
+        trade_count += 1
+        print('---------------------------------------------- TRADE', trade_count)
+        print('symbol', d['symbol'])
+        print('invested_btc', d['invested_btc'])
+        print('profit_btc', d['profit_btc'])
+        print('profit_percent', d['profit_percent'])
+        print('time_buy_human', d['time_buy_human'])
+        print('time_buy_epoch', d['time_buy_epoch'])
+        print('time_end_human', d['time_end_human'])
+        print('time_end_epoch', d['time_end_epoch'])
+        print('look_back', d['look_back'])
+        print('largest_bitcoin_order', d['largest_bitcoin_order'])
+        print('part_of_bitcoin_to_use', d['part_of_bitcoin_to_use'])
+        print('volume_ten_candles_btc', d['volume_ten_candles_btc'])
+        print('volume_ten_candles_ratio', d['volume_ten_candles_ratio'])
+        print('volume_twentyfour_hr_btc', d['volume_twentyfour_hr_btc'])
+        print('volume_twentyfour_hr_ratio', d['volume_twentyfour_hr_ratio'])
+        if 'price_to_buy' in d['current_state']:
+            print('price_to_buy', ut.float_to_str(d['current_state']['price_to_buy']))
+        print('price_to_sell', ut.float_to_str(d['current_state']['price_to_sell']))
+        print('price_to_sell_2', ut.float_to_str(d['current_state']['price_to_sell_2']))
+        print('price_to_sell_3', ut.float_to_str(d['current_state']['price_to_sell_3']))
+        if end_time_epoch_is_last_trade:
+            end_time_epoch = d['time_end_epoch']
 
+print('---------------------------------------------- STATS')
+profit_btc_total += 0.1 # adjust for whack trade1 14 'INSBTC'
+bitcoin_value_usd = 11000
+
+print('profit_btc_total', profit_btc_total)
+print('trade_count', trade_count)
+print('trades_positive', trades_positive)
+print('trades_negative', trades_negative)
+print('profit_dollars', profit_btc_total * bitcoin_value_usd)
+elapsed_seconds = float(end_time_epoch - start_time_epoch)
+elapsed_minutes = float(elapsed_seconds / 60.0)
+elapsed_hours = float(elapsed_seconds / 60.0 / 60.0)
+elapsed_days = float(elapsed_seconds / 60.0 / 60.0 / 24.0)
+print('elapsed_hours', elapsed_hours)
+print('elapsed_days', elapsed_days)
+profit_per_day_btc = 1 / elapsed_days * profit_btc_total
+profit_per_hour_btc = 1 / elapsed_hours * profit_btc_total
+profit_per_year_btc = profit_per_day_btc * 365
+profit_per_day_usd = profit_per_day_btc * bitcoin_value_usd
+profit_per_hour_usd = profit_per_hour_btc * bitcoin_value_usd
+profit_per_year_usd = profit_per_year_btc * bitcoin_value_usd
+print('profit_per_day_usd', profit_per_day_usd)
+print('profit_per_year_usd', profit_per_year_usd)
+
+####NEED TO FIX
+    # python 2.7.6 (default, Oct 26 2016, 20:30:19)
+    # [GCC 4.8.4]
+    # ('running bot', 0, 'of', 12, '1m')
+    # ('buy', u'INSBTC', 'look back', 4)
+    # ('max price', 0.00044920732139999995)
+    # could not cancel buy order
+    # could not cancel buy order
+    # could not cancel buy order
+    # ('selling..', u'INSBTC', '2018-01-25 19:20:56')
+    # ('selling at price level 1', u'INSBTC')
+    # ('price_to_sell_min', 0.0004561720659)
+    # ('selling at price level 2', u'INSBTC')
+    # ('price_to_sell_min', 0.0004524895467)
+    # APIError(code=-2010): Account has insufficient balance for requested action. **********************
+    # EXCEPTION IN (/home/nelsonriley/Development/utility.py, LINE 345 "sold_coin, current_state = sell_with_order_book(current_state, current_state['price_to_sell_2'], current_sta
+    # te['minutes_until_sale_2'])"): APIError(code=-2010): Account has insufficient balance for requested action.**************
+    # error selling, but account has insufficient balance, so calculating profit and freeing coin
+    # ('coin sold, calculating profit and freeing coin', u'INSBTC', '2018-01-25 19:26:57')
+    # ('profit was, absoulte profit, percent', -0.10772103699999996, -0.2303164364285631, '2018-01-25 19:26:57')
+    # file updated
+    # file updated
+    # ('finished order - freeing coin', u'INSBTC')
+    # #########################
 
 
 

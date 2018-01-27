@@ -11,14 +11,23 @@ import datetime
 from pytz import timezone
 
 ########### General
-day_folder = '20180124'
+day_folder = '20180126'
+day_folder = '20180126_a'
+day_folder = '20180126_b'
+day_folder = '20180127'
 
 ########### Start End Single File Style
+minute = 1
 start_end_style = True
 datapoints_trailing = 230
-minute = 1
-start_time = arrow.get('2018-01-23 23:00').replace(tzinfo='America/Denver')
-end_time = arrow.get('2018-01-24 11:00').replace(tzinfo='America/Denver')
+start_time = arrow.get('2018-01-25 15:10').replace(tzinfo='America/Denver') # 20180126
+end_time = arrow.get('2018-01-26 11:55').replace(tzinfo='America/Denver')
+start_time = arrow.get('2018-01-26 19:00').replace(tzinfo='America/Denver') # a
+end_time = arrow.get('2018-01-26 20:14').replace(tzinfo='America/Denver')
+start_time = arrow.get('2018-01-26 20:15').replace(tzinfo='America/Denver') # b
+end_time = arrow.get('2018-01-26 21:49').replace(tzinfo='America/Denver')
+start_time = arrow.get('2018-01-26 20:40').replace(tzinfo='America/Denver') # 20180127
+end_time = arrow.get('2018-01-27 11:36').replace(tzinfo='America/Denver')
 # file names ==> './binance_training_data/'+ day_folder + '/'+ symbol +'_data_'+str(minute)+'m.pklz'
 
 ########### Step Back Style
@@ -43,9 +52,12 @@ if start_end_style:
     print('start with datapoints_trailing', start, arrow.get(int(start/1000)).to('America/Denver'))
     end = end_time.timestamp * 1000
     stop = start + 400 * minute * 60 * 1000
+    last_loop = False
+    if stop > end:
+        stop = end
+        last_loop = True
     symbols = ut.pickle_read('./binance_btc_symbols.pklz')
     coins = {}
-    last_loop = False
     loops = 1
     while True:
         print('loop', loops)
@@ -60,12 +72,14 @@ if start_end_style:
             r = requests.get(url)
             data = r.json()
             if symbol['symbol'] == 'BQXBTC':
+                print('--------------------BQXBTC')
                 print(url)
                 print(len(data))
                 print(start, arrow.get(int(start/1000)).to('America/Denver'))
                 print(stop, arrow.get(int(stop/1000)).to('America/Denver'))
                 duration_in_minutes = int(stop - start)/(1000*60)
                 print('duration_in_minutes', duration_in_minutes)
+                print('--------------------BQXBTC')
             # watch for too many API requests
             if isinstance(data, dict):
                 print('ERROR... API Failed')
@@ -88,11 +102,13 @@ if start_end_style:
     for symbol in coins:
         data = coins[symbol]
         if symbol == 'BQXBTC':
+            print('--------------------BQXBTC')
             print('candles =', len(data), '...should be', 12 * 60 + 230)
             print('first candle')
             pprint(data[0])
             print('last candle')
             pprint(data[-1])
+            print('--------------------BQXBTC')
         ut.pickle_write('./binance_training_data/'+ day_folder + '/'+ symbol +'_data_'+str(minute)+'m.pklz', data)
 
     # end all

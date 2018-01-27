@@ -4,8 +4,8 @@ print 'python', sys.version
 import utility as ut
 
 file_number = 3
-total_files = 12
-overlap = 2
+total_files = 4
+overlap = 1
 length = '1m'
 
-ut.run_bot(file_number, total_files, overlap, length)
+ut.run_bot_parallel(file_number, total_files)

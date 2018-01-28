@@ -7,7 +7,6 @@ import os
 import pickle
 import gzip
 import datetime
-from binance.client import Client
 import json
 import math
 from urlparse import urlparse
@@ -23,6 +22,7 @@ import socket
 import random
 from six.moves import urllib
 global number_of_api_requests
+from binance.client import Client
 from binance.websockets import BinanceSocketManager
 
 
@@ -30,7 +30,11 @@ from binance.websockets import BinanceSocketManager
 # part_of_bitcoin_to_use
 
 def get_readable_time(time_to_get):
-    return datetime.datetime.fromtimestamp(int(time_to_get)-7*60*60).strftime('%Y-%m-%d %H:%M:%S')
+    stamp = int(time_to_get)-7*60*60
+    # handle millisecond time stamps (as well as seconds)
+    if len(str(time_to_get)) > 10:
+        stamp = int(int(time_to_get)/1000.0-7*60*60)
+    return datetime.datetime.fromtimestamp(stamp).strftime('%Y-%m-%d %H:%M:%S')
 
 def get_time():
     return datetime.datetime.fromtimestamp(int(time.time())-7*60*60).strftime('%Y-%m-%d %H:%M:%S')
@@ -64,8 +68,6 @@ def pickle_write(file_path, data, error_message='pickle could not write'):
         return
         #print(e)
         #print(error_message)
-
-
 
 def get_min_decimals(min_qty):
     min_price_for_decimal = str(min_qty)
@@ -104,6 +106,155 @@ def candle_to_dict(candle):
         'close': float(candle[4]),
         'volume': float(candle[5])
     }
+
+###########################################################################################
+
+
+def new_buy_and_sell_thread(buy_params):
+    # TODO !!!
+    return False
+
+
+def get_superbot_params():
+    bot_params = {
+        'minutes': 1,
+
+        'largest_bitcoin_order': .1,
+        'part_of_bitcoin_to_use': 1.0,
+        'price_to_start_buy': 1.003,
+
+        'sell_price_drop_factor': .997,
+        'buy_price_increase_factor': 1.002,
+
+        'price_to_buy_factor_array': [0,.978, .973, .97, .971, .966, .96, .955, .95, .956, .95],
+        'price_to_sell_factor_array': [0,.994, .993, .996, .991, .989, .989, .983, .986, .986, .986],
+        'price_to_sell_factor_2_array': [0,.984, .984, .984, .983, .984, .983, .982, .982, .982, .981],
+        'price_to_sell_factor_3_array': [0,.965, .965, .965, .965, .965, .964, .964, .963, .963, .963],
+        'lower_band_buy_factor_array': [0,1.04, 1.12, 1.09, 1.07, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19],
+
+        'datapoints_trailing': 230,
+
+        'minutes_until_sale': 4,
+        'minutes_until_sale_2': 12,
+        'minutes_until_sale_3': 45
+    }
+    return bot_params
+
+
+def evaluate_buy(symbol, trailing_candles, current_price):
+    trailing_volumes = []
+    trailing_movement = []
+    trailing_lows = []
+    trailing_highs = []
+    trailing_candles = []
+
+    bot_params = get_superbot_params()
+
+    data = trailing_candles
+    for index, candle in enumerate(data):
+        # compare (only last candle)
+        if len(trailing_movement) >= datapoints_trailing:
+
+            do_buy = False
+
+            ## SETTINGS ##
+            look_back_schedule = [6,1,8,10,9,4,5,2,7]
+            # look_back_schedule = [1,2,3,4,5,6]
+            for look_back in look_back_schedule:
+
+                if float(current_price) < float(data[index-look_back][4])*bot_params['price_to_buy_factor_array'][look_back]*bot_params['price_to_start_buy']:
+
+                    if lower_band_buy_factor_array[look_back] < 100:
+                        candles_for_look_back = fn.get_n_minute_candles(look_back, data[index-22*look_back-1:index])
+                        candles_for_look_back, smart_trailing_candles = fn.add_bollinger_bands_to_candles(candles_for_look_back)
+                        lower_band_for_index = candles_for_look_back[-1][14]
+                        band_ok_value = lower_band_for_index*bot_params['lower_band_buy_factor_array'][look_back]
+                        band_ok = float(candle[4]) < band_ok_value
+                    else:
+                        band_ok = True
+
+                    if band_ok:
+                        do_buy = True
+                        break
+                if do_buy:
+                    lower_band_buy_factor = bot_params['lower_band_buy_factor_array'][look_back]
+                    price_to_buy_factor = bot_params['price_to_buy_factor_array'][look_back]
+                    price_to_sell_factor = bot_params['price_to_sell_factor_array'][look_back]
+                    price_to_sell_factor_2 = bot_params['price_to_sell_factor_2_array'][look_back]
+                    price_to_sell_factor_3 = bot_params['price_to_sell_factor_3_array'][look_back]
+
+                    try:
+                        is_invested = pickle_read('./binance_is_invested_1m/is_invested_1m_' + symbol + '.pklz')
+                    except Exception as e:
+                        is_invested = False
+
+                    if lower_band_buy_factor < 100:
+                        price_to_buy = min(bot_params['lower_band_for_index']*lower_band_buy_factor, float(data[index-look_back][4])*price_to_buy_factor)
+                    else:
+                        price_to_buy = float(data[index-look_back][4])*price_to_buy_factor
+
+
+                    if is_invested == False:
+                        print('buy', symbol, 'look back', look_back)
+                        pickle_write('./binance_is_invested_' + length +'/is_invested_' + length + '_' + symbol + '.pklz', True)
+                        buy_qty = bot_params['part_of_bitcoin_to_use']/price_to_buy
+                    else:
+                        do_buy = False
+
+    buy_params = {
+        'do_buy': do_buy,
+        'price_to_buy': price_to_buy,
+        'buy_qty': buy_qty
+    }
+    return buy_params
+
+
+def process_socket_pushes_order_book(msg):
+    if 'e' in msg and msg['e'] == 'error':
+        # close and restart the socket, if socket can't reconnect itself
+        print('restarting process_socket_pushes(msg)')
+        global bm
+        bm.close()
+        conn_key = bm.start_multiplex_socket(socket_list, process_socket_pushes)
+        bm.start()
+    else:
+        # if 'kline_1m' in msg['stream']:
+        #     print('--------------------------------------', msg['stream'], ut.get_time())
+        #     pprint(msg['data'])
+        #     print('--------------------------------------')
+        if 'depth' in msg['stream']:
+            # print('--------------------------------------', msg['stream'], ut.get_time())
+            # # pprint(msg['data'])
+            # # available: asks + bids
+            # # 'asks': [[u'0.01264000', u'18.92000000', []],
+            # #          [u'0.01265300', u'0.20000000', []],
+            # print('--------------------------------------')
+            symbol = msg['stream'].split('@')[0].upper()
+            ut.pickle_write('./recent_order_book/'+symbol+'.pklz', msg['data'])
+
+def update_symbol_list():
+    # save symbol list daily since API sometimes fail when getting live
+    symbol_data = requests.get("https://api.binance.com/api/v1/exchangeInfo").json()
+    ticker_data = requests.get("https://api.binance.com/api/v1/ticker/24hr").json()
+
+    symbols_for_save = {}
+    for symbol in symbol_data['symbols']:
+        if symbol['quoteAsset'] == 'BTC':
+            symbols_for_save[symbol['symbol']] = symbol
+    for symbol in ticker_data:
+        if 'BTC' in symbol['symbol'] and not 'BTC' in symbol['symbol'][:3]:
+            symbols_for_save[symbol['symbol']]['24hourVolume'] = symbol['quoteVolume']
+            symbols_for_save[symbol['symbol']]['24priceChangePercent'] = symbol['priceChangePercent']
+
+    # print('---------------ETHBTC')
+    # pprint(symbols_for_save['ETHBTC'])
+    # print('---------------ETHBTC')
+
+    print('btc symbols found:', len(symbols_for_save))
+    pickle_write('./binance_btc_symbols.pklz', symbols_for_save)
+
+    symbols_saved = pickle_read('./binance_btc_symbols.pklz')
+    print('btc symbols saved:', len(symbols_saved))
 
 
 def sleep_but_check_order(current_state, time_to_sleep):
@@ -412,9 +563,14 @@ def buy_coin_from_state(current_state):
     sell_coin_with_order_book(current_state)
 
 
-def buy_coin(symbol, length, file_number):
+def buy_coin(symbol, length, file_number, times_called):
 
     data = []
+
+    # if (symbol['symbol'] == 'APPCBTC'):
+    #     print("started buy coin ", symbol['symbol'], get_time())
+
+    #pickle_write('./program_still_running_' +length + '/'+symbol['symbol']+,True)
 
     current_state = load_current_state(symbol['symbol'], file_number, length)
 
@@ -422,29 +578,6 @@ def buy_coin(symbol, length, file_number):
         print('loading state to sell coin..', current_state['symbol'])
         buy_coin_from_state(current_state)
         return
-
-    api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
-    api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
-    client = Client(api_key, api_secret)
-
-    bm = BinanceSocketManager(client)
-    conn_key = bm.start_depth_socket(symbol['symbol'], check_coin_price)
-    bm.start()
-
-    global candle_data
-    while True:
-        time.localtime().tm_sec < 4:
-            end_time = int(time.time())*1000
-            start_time = (end_time-60*1000*minutes*(datapoints_trailing+1))
-            url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval='+length+'&startTime='+str(start_time)+'&endTime='+str(end_time)
-            data = opener.open(url).read()
-            data = json.loads(data)
-            time.sleep(4)
-
-
-def check_coin_price(msg):
-
-
 
     try:
 
@@ -469,8 +602,27 @@ def check_coin_price(msg):
         minutes_until_sale_2 = 12
         minutes_until_sale_3 = 45
 
+        if times_called % 100 == 0:
+            print('checking..', symbol['symbol'])
 
 
+        if file_number == 1 or file_number ==3:
+            opener = urllib.request.build_opener(
+                urllib.request.ProxyHandler(
+                    {'http': 'http://lum-customer-hl_24be6fa3-zone-static-session-rand' +str(random.randint(1,99999)) + ':uckbsg56p77s@zproxy.luminati.io:22225'}))
+        else:
+            opener = urllib.request.build_opener(
+                urllib.request.ProxyHandler(
+                    {'http': 'http://lum-customer-hl_2b2c6ab7-zone-static-session-rand' +str(random.randint(1,99999)) + ':02xq3h9ohf0s@zproxy.luminati.io:22225'}))
+
+
+        #proxy_info = opener.open('http://lumtest.com/myip.json').read()
+        #proxy_info = json.loads(proxy_info)
+
+        #, proxy_info['ip'])
+
+        # get candles
+        # data can now be passed in to allow parallel processing, but function still works if not passed in
         if len(data) == 0:
             end_time = int(time.time())*1000
             start_time = (end_time-60*1000*minutes*(datapoints_trailing+1))
@@ -483,58 +635,37 @@ def check_coin_price(msg):
             print('API request failed, exiting', symbol['symbol'])
             return
 
-
         trailing_volumes = []
         trailing_movement = []
         trailing_lows = []
         trailing_highs = []
         trailing_candles = []
 
-        if first_bid > float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy:
-            return
-
         for index, candle in enumerate(data):
-
             # compare (only last candle)
             if len(trailing_movement) >= datapoints_trailing:
 
-                # init binance client
-
-
                 should_buy = False
 
-                while True:
+                look_back_schedule = [6,1,8,10,9,4,5,2,7]
+                # look_back_schedule = [1,2,3,4,5,6]
+                for look_back in look_back_schedule:
 
+                    if float(candle[4]) < float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy:
 
-                    time.sleep(.5)
-                    if (symbol['symbol'] == 'APPCBTC'):
-                        print("start api call ", symbol['symbol'], get_time())
-                    order_book = client.get_order_book(symbol=symbol['symbol'], limit=10)
-                    first_bid = float(order_book['bids'][0][0])
+                        if lower_band_buy_factor_array[look_back] < 100:
+                            candles_for_look_back = fn.get_n_minute_candles(look_back, data[index-22*look_back-1:index])
+                            candles_for_look_back, smart_trailing_candles = fn.add_bollinger_bands_to_candles(candles_for_look_back)
+                            lower_band_for_index = candles_for_look_back[-1][14]
+                            #print('lower_band_for_index', lower_band_for_index)
+                            band_ok_value = lower_band_for_index*lower_band_buy_factor_array[look_back]
+                            band_ok = float(candle[4]) < band_ok_value
+                        else:
+                            band_ok = True
 
-                    look_back_schedule = [6,1,8,10,9,4,5,2,7,3]
-                    # look_back_schedule = [1,2,3,4,5,6]
-                    for look_back in look_back_schedule:
-
-                        if first_bid < float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy:
-
-                            if lower_band_buy_factor_array[look_back] < 100:
-                                candles_for_look_back = fn.get_n_minute_candles(look_back, data[index-22*look_back-1:index])
-                                candles_for_look_back, smart_trailing_candles = fn.add_bollinger_bands_to_candles(candles_for_look_back)
-                                lower_band_for_index = candles_for_look_back[-1][14]
-                                #print('lower_band_for_index', lower_band_for_index)
-                                band_ok_value = lower_band_for_index*lower_band_buy_factor_array[look_back]
-                                band_ok = float(candle[4]) < band_ok_value
-                            else:
-                                band_ok = True
-
-                            if band_ok:
-                                should_buy = True
-                                break
-
-                    if should_buy == True or time.localtime().tm_sec < 4:
-                        break
-
+                        if band_ok:
+                            should_buy = True
+                            break
 
                 if should_buy:
                     lower_band_buy_factor = lower_band_buy_factor_array[look_back]
@@ -568,6 +699,11 @@ def check_coin_price(msg):
                         print('buy', symbol['symbol'], 'look back', look_back)
 
                         pickle_write('./binance_is_invested_' + length +'/is_invested_' + length + '_' + symbol['symbol'] + '.pklz', True)
+
+                        # init binance client
+                        api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
+                        api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
+                        client = Client(api_key, api_secret)
 
                         if lower_band_buy_factor < 100:
                             price_to_buy = min(lower_band_for_index*lower_band_buy_factor, float(data[index-look_back][4])*price_to_buy_factor)
@@ -720,7 +856,6 @@ def check_coin_price(msg):
         time.sleep(60*4)
         return False
 
-
 def free_coin_after_candle(symbol, look_back):
 
     while True:
@@ -837,18 +972,15 @@ def run_bot_parallel(file_number, total_files):
         for s in symbols:
             symbol = symbols[s]
             if float(symbol['24hourVolume']) > 450:
-                #print(symbol['symbol'])
                 total_btc_coins += 1
                 symbols_trimmed[s] = symbol
 
-        #print(total_btc_coins)
     except Exception as e:
             print(e)
             sys.exit()
 
-
-    file_start = math.ceil(file_number*total_btc_coins/total_files)
-    file_end = math.ceil((file_number+1)*total_btc_coins/total_files)
+    file_start = file_number*total_btc_coins/total_files
+    file_end = (file_number+1)*total_btc_coins/total_files
 
     loops = 0
     for s in symbols_trimmed:
@@ -870,8 +1002,19 @@ def buy_coin_thread(symbol, file_number):
 
     times_called = 0
     while True:
-        buy_coin(symbol, '1m', file_number)
+        current_state = load_current_state(symbol['symbol'], 1000, '1m')
 
+        if isinstance(current_state,dict):
+            print('loading state to sell coin..', current_state['symbol'])
+            buy_coin_from_state(current_state)
+
+        buy_coin(symbol, '1m', file_number, times_called)
+
+        times_called += 1
+
+        current_state = False
+
+        time.sleep(1)
 
 
 

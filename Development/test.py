@@ -24,83 +24,144 @@ print('start @',  time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
 start_time = int(time.time())
 
 
+############################################ How to Exit Threads
+# def testexit():
+#     while True:
+#         print('testexit 1')
+#         time.sleep(2)
+#         print('testexit 2')
+#         sys.exit()
+#         print('post thread exit')
+
+# t = Thread(target=testexit)
+# tt = Thread(target=testexit)
+# t.start()
+# tt.start()
+# # t.join() # join is bad, makes it run as if it was synchronous not asynchronous
+# # tt.join()
+# print "pre main exit, post thread exit"
+# time.sleep(6)
+# sys.exit()
+# print "post main exit"
+
+
+
+############################################ Detect Milliseconds vs Seconds for Time Stamp
+# stamp = 1517159488
+# stamp2 = 1517159488 * 1000
+# if len(str(stamp2)) > 10:
+#     print 'stamp2 is milliseconds'
+# if len(str(stamp)) > 10:
+#     print 'stamp is milliseconds'
+# sys.exit()
+
+
+
+############################################ Get/Save Candles for Muliple Symbols every minute on the minute
+
+def worker_get_klines_on_the_minute(interval, symbol_list, datapoints_trailing):
+    while True:
+        minutes = 1
+        secs = time.localtime().tm_sec
+        delay = 60 - secs
+        print 'start threads to fetch klines in', delay, 'seconds'
+        time.sleep(delay)
+        end_time = int(time.time())*1000
+        start_time = (end_time-60*1000*minutes*(datapoints_trailing+1))
+        print 'start threads to fetch klines now', ut.get_time()
+        for s in symbol_list:
+            t = Thread(target=worker_get_and_save_klines, args=[interval, s, start_time, end_time])
+            t.start()
+        time.sleep(5)
+
+def worker_get_and_save_klines(interval, symbol, start_time, end_time):
+    url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol +'&interval='+interval+'&startTime='+str(start_time)+'&endTime='+str(end_time)
+    data = requests.get(url).json()
+    ut.pickle_write('./recent_klines/'+symbol+'_'+interval+'.pklz', data)
+    # print first candle open & last candle open as readable
+        # print('-------------candle 0')
+        # print symbol, ut.get_readable_time(data[0][0])
+        # print('-------------candle -1')
+        # print symbol, ut.get_readable_time(data[-1][0])
+    sys.exit() # exit the thread
+
+t = Thread(target=worker_get_klines_on_the_minute, args=['1m', ['NEOBTC', 'WINGSBTC'], 230])
+t.start()
+
 
 ############################################ Get/View Trade History Array
-file_path_all_trades = './binance_all_trades_history/binance_all_trades_history.pklz'
-# empty our trades array
-    # ut.pickle_write(file_path_all_trades, [])
-    # sys.exit()
+# file_path_all_trades = './binance_all_trades_history/binance_all_trades_history.pklz'
+# # empty our trades array
+#     # ut.pickle_write(file_path_all_trades, [])
+#     # sys.exit()
 
-data = ut.pickle_read(file_path_all_trades)
-print('trade count', len(data))
-profit_btc_total = 0
-trade_count = 0
-trades_negative = 0
-trades_positive = 0
-last_trade = {}
-start_time_epoch = 1516918780
-start_time_epoch = 0
-end_time_epoch = None
-end_time_epoch_is_last_trade = True
-for d in data:
-    start_good = d['time_buy_epoch'] >= start_time_epoch
-    end_good = d['time_end_epoch'] <= end_time_epoch
-    if start_good:
-        if start_time_epoch == 0:
-            start_time_epoch = d['time_buy_epoch']
-        profit_btc_total += d['profit_btc']
-        if d['profit_btc'] > 0:
-            trades_positive += 1
-        else:
-            trades_negative += 1
-        trade_count += 1
-        print('---------------------------------------------- TRADE', trade_count)
-        print('symbol', d['symbol'])
-        print('invested_btc', d['invested_btc'])
-        print('profit_btc', d['profit_btc'])
-        print('profit_percent', d['profit_percent'])
-        print('time_buy_human', d['time_buy_human'])
-        print('time_buy_epoch', d['time_buy_epoch'])
-        print('time_end_human', d['time_end_human'])
-        print('time_end_epoch', d['time_end_epoch'])
-        print('look_back', d['look_back'])
-        print('largest_bitcoin_order', d['largest_bitcoin_order'])
-        print('part_of_bitcoin_to_use', d['part_of_bitcoin_to_use'])
-        print('volume_ten_candles_btc', d['volume_ten_candles_btc'])
-        print('volume_ten_candles_ratio', d['volume_ten_candles_ratio'])
-        print('volume_twentyfour_hr_btc', d['volume_twentyfour_hr_btc'])
-        print('volume_twentyfour_hr_ratio', d['volume_twentyfour_hr_ratio'])
-        if 'price_to_buy' in d['current_state']:
-            print('price_to_buy', ut.float_to_str(d['current_state']['price_to_buy']))
-        print('price_to_sell', ut.float_to_str(d['current_state']['price_to_sell']))
-        print('price_to_sell_2', ut.float_to_str(d['current_state']['price_to_sell_2']))
-        print('price_to_sell_3', ut.float_to_str(d['current_state']['price_to_sell_3']))
-        if end_time_epoch_is_last_trade:
-            end_time_epoch = d['time_end_epoch']
+# data = ut.pickle_read(file_path_all_trades)
+# print('trade count', len(data))
+# profit_btc_total = 0
+# trade_count = 0
+# trades_negative = 0
+# trades_positive = 0
+# last_trade = {}
+# start_time_epoch = 1516918780
+# end_time_epoch = None
+# end_time_epoch_is_last_trade = True
+# for d in data:
+#     start_good = d['time_buy_epoch'] >= start_time_epoch
+#     end_good = d['time_end_epoch'] <= end_time_epoch
+#     if start_good:
+#         profit_btc_total += d['profit_btc']
+#         if d['profit_btc'] > 0:
+#             trades_positive += 1
+#         else:
+#             trades_negative += 1
+#         trade_count += 1
+#         print('---------------------------------------------- TRADE', trade_count)
+#         print('symbol', d['symbol'])
+#         print('invested_btc', d['invested_btc'])
+#         print('profit_btc', d['profit_btc'])
+#         print('profit_percent', d['profit_percent'])
+#         print('time_buy_human', d['time_buy_human'])
+#         print('time_buy_epoch', d['time_buy_epoch'])
+#         print('time_end_human', d['time_end_human'])
+#         print('time_end_epoch', d['time_end_epoch'])
+#         print('look_back', d['look_back'])
+#         print('largest_bitcoin_order', d['largest_bitcoin_order'])
+#         print('part_of_bitcoin_to_use', d['part_of_bitcoin_to_use'])
+#         print('volume_ten_candles_btc', d['volume_ten_candles_btc'])
+#         print('volume_ten_candles_ratio', d['volume_ten_candles_ratio'])
+#         print('volume_twentyfour_hr_btc', d['volume_twentyfour_hr_btc'])
+#         print('volume_twentyfour_hr_ratio', d['volume_twentyfour_hr_ratio'])
+#         if 'price_to_buy' in d['current_state']:
+#             print('price_to_buy', ut.float_to_str(d['current_state']['price_to_buy']))
+#         print('price_to_sell', ut.float_to_str(d['current_state']['price_to_sell']))
+#         print('price_to_sell_2', ut.float_to_str(d['current_state']['price_to_sell_2']))
+#         print('price_to_sell_3', ut.float_to_str(d['current_state']['price_to_sell_3']))
+#         if end_time_epoch_is_last_trade:
+#             end_time_epoch = d['time_end_epoch']
 
-print('---------------------------------------------- STATS')
-profit_btc_total += 0.1 # adjust for whack trade1 14 'INSBTC'
-bitcoin_value_usd = 11000
+# print('---------------------------------------------- STATS')
+# profit_btc_total += 0.1 # adjust for whack trade1 14 'INSBTC'
+# bitcoin_value_usd = 11000
 
-print('profit_btc_total', profit_btc_total)
-print('trade_count', trade_count)
-print('trades_positive', trades_positive)
-print('trades_negative', trades_negative)
-print('profit_dollars', profit_btc_total * bitcoin_value_usd)
-elapsed_seconds = float(end_time_epoch - start_time_epoch)
-elapsed_minutes = float(elapsed_seconds / 60.0)
-elapsed_hours = float(elapsed_seconds / 60.0 / 60.0)
-elapsed_days = float(elapsed_seconds / 60.0 / 60.0 / 24.0)
-print('elapsed_hours', elapsed_hours)
-print('elapsed_days', elapsed_days)
-profit_per_day_btc = 1 / elapsed_days * profit_btc_total
-profit_per_hour_btc = 1 / elapsed_hours * profit_btc_total
-profit_per_year_btc = profit_per_day_btc * 365
-profit_per_day_usd = profit_per_day_btc * bitcoin_value_usd
-profit_per_hour_usd = profit_per_hour_btc * bitcoin_value_usd
-profit_per_year_usd = profit_per_year_btc * bitcoin_value_usd
-print('profit_per_day_usd', profit_per_day_usd)
-print('profit_per_year_usd', profit_per_year_usd)
+# print('profit_btc_total', profit_btc_total)
+# print('trade_count', trade_count)
+# print('trades_positive', trades_positive)
+# print('trades_negative', trades_negative)
+# print('profit_dollars', profit_btc_total * bitcoin_value_usd)
+# elapsed_seconds = float(end_time_epoch - start_time_epoch)
+# elapsed_minutes = float(elapsed_seconds / 60.0)
+# elapsed_hours = float(elapsed_seconds / 60.0 / 60.0)
+# elapsed_days = float(elapsed_seconds / 60.0 / 60.0 / 24.0)
+# print('elapsed_hours', elapsed_hours)
+# print('elapsed_days', elapsed_days)
+# profit_per_day_btc = 1 / elapsed_days * profit_btc_total
+# profit_per_hour_btc = 1 / elapsed_hours * profit_btc_total
+# profit_per_year_btc = profit_per_day_btc * 365
+# profit_per_day_usd = profit_per_day_btc * bitcoin_value_usd
+# profit_per_hour_usd = profit_per_hour_btc * bitcoin_value_usd
+# profit_per_year_usd = profit_per_year_btc * bitcoin_value_usd
+# print('profit_per_day_usd', profit_per_day_usd)
+# print('profit_per_year_usd', profit_per_year_usd)
 
 ####NEED TO FIX
     # python 2.7.6 (default, Oct 26 2016, 20:30:19)

@@ -10,27 +10,32 @@ import arrow
 import datetime
 from pytz import timezone
 
-########### General
-day_folder = '20180126'
-day_folder = '20180126_a'
-day_folder = '20180126_b'
-day_folder = '20180127'
+## Save data here, backtest in binance_ryan.py
+
+settings = ['20180126', '2018-01-25 15:10', '2018-01-26 11:55']
+settings = ['20180126_a', '2018-01-26 19:00', '2018-01-26 20:14']
+settings = ['20180126_b', '2018-01-26 20:15', '2018-01-26 21:49']
+settings = ['20180127', '2018-01-26 20:40', '2018-01-27 11:36']
+settings = ['20180130', '2018-01-29 11:00', '2018-01-30 11:00']
+settings = ['20180130_a', '2018-01-30 16:00', '2018-01-30 19:41']
+settings = ['20180130_b', '2018-01-30 20:00', '2018-01-30 20:29']
+settings = ['20180131', '2018-01-30 20:00', '2018-01-31 16:00']
+settings = ['20180131_a', '2018-01-31 18:00', '2018-01-31 20:03']
+# settings = ['20180131_b', '2018-01-30 13:55', '2018-01-31 18:03']
 
 ########### Start End Single File Style
-minute = 1
 start_end_style = True
+minute = 1
 datapoints_trailing = 230
-start_time = arrow.get('2018-01-25 15:10').replace(tzinfo='America/Denver') # 20180126
-end_time = arrow.get('2018-01-26 11:55').replace(tzinfo='America/Denver')
-start_time = arrow.get('2018-01-26 19:00').replace(tzinfo='America/Denver') # a
-end_time = arrow.get('2018-01-26 20:14').replace(tzinfo='America/Denver')
-start_time = arrow.get('2018-01-26 20:15').replace(tzinfo='America/Denver') # b
-end_time = arrow.get('2018-01-26 21:49').replace(tzinfo='America/Denver')
-start_time = arrow.get('2018-01-26 20:40').replace(tzinfo='America/Denver') # 20180127
-end_time = arrow.get('2018-01-27 11:36').replace(tzinfo='America/Denver')
+min_volume = 450
+
+day_folder = settings[0]
+start_time = arrow.get(settings[1]).replace(tzinfo='America/Denver')
+end_time = arrow.get(settings[2]).replace(tzinfo='America/Denver')
 # file names ==> './binance_training_data/'+ day_folder + '/'+ symbol +'_data_'+str(minute)+'m.pklz'
 
 ########### Step Back Style
+# day_folder = '20180126'
 minutes = [1]
 step_backs = [2]
 
@@ -62,36 +67,37 @@ if start_end_style:
     while True:
         print('loop', loops)
         loops += 1
-        # Test: symbols = { 'BQXBTC': { 'symbol': 'BQXBTC' } }
         for s in symbols:
             symbol = symbols[s]
-            if not symbol['symbol'] in coins:
-                coins[symbol['symbol']] = []
-            # get data from binance
-            url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval='+str(minute)+'m&startTime='+str(start)+'&endTime='+str(stop)
-            r = requests.get(url)
-            data = r.json()
-            if symbol['symbol'] == 'BQXBTC':
-                print('--------------------BQXBTC')
-                print(url)
-                print(len(data))
-                print(start, arrow.get(int(start/1000)).to('America/Denver'))
-                print(stop, arrow.get(int(stop/1000)).to('America/Denver'))
-                duration_in_minutes = int(stop - start)/(1000*60)
-                print('duration_in_minutes', duration_in_minutes)
-                print('--------------------BQXBTC')
-            # watch for too many API requests
-            if isinstance(data, dict):
-                print('ERROR... API Failed')
-                print(url)
-                pprint(data)
-                break
-            # add to coins[symbol] array
-            for candle in data:
-                coins[symbol['symbol']].append(candle)
+            if float(symbol['24hourVolume']) > min_volume:
+                if not symbol['symbol'] in coins:
+                    coins[symbol['symbol']] = []
+                # get data from binance
+                url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval='+str(minute)+'m&startTime='+str(start)+'&endTime='+str(stop)
+                r = requests.get(url)
+                data = r.json()
+                if symbol['symbol'] == 'ETHBTC':
+                    print('--------------------ETHBTC')
+                    print(url)
+                    print(len(data))
+                    print(start, arrow.get(int(start/1000)).to('America/Denver'))
+                    print(stop, arrow.get(int(stop/1000)).to('America/Denver'))
+                    duration_in_minutes = int(stop - start)/(1000*60)
+                    print('duration_in_minutes', duration_in_minutes)
+                    print('--------------------ETHBTC')
+                # watch for too many API requests
+                if isinstance(data, dict):
+                    print('ERROR... API Failed')
+                    print(url)
+                    pprint(data)
+                    break
+                # add to coins[symbol] array
+                for candle in data:
+                    coins[symbol['symbol']].append(candle)
+        print('symbol_count =', len(coins))
         if last_loop:
             break
-        # update times for next API request
+        # update times for next round of API requests
         start = stop
         stop = start + 400 * minute * 60 * 1000
         if stop > end:
@@ -101,14 +107,14 @@ if start_end_style:
     # save continuous data for each coin to disk
     for symbol in coins:
         data = coins[symbol]
-        if symbol == 'BQXBTC':
-            print('--------------------BQXBTC')
+        if symbol == 'ETHBTC':
+            print('--------------------ETHBTC')
             print('candles =', len(data), '...should be', 12 * 60 + 230)
             print('first candle')
             pprint(data[0])
             print('last candle')
             pprint(data[-1])
-            print('--------------------BQXBTC')
+            print('--------------------ETHBTC')
         ut.pickle_write('./binance_training_data/'+ day_folder + '/'+ symbol +'_data_'+str(minute)+'m.pklz', data)
 
     # end all

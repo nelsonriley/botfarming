@@ -17,6 +17,8 @@ bot_trades_attempts = ut.pickle_read('./binance_all_trades_history/binance_all_t
 
 total_trades_attempts = 0
 start_epoch = 1517024439
+start_epoch = 1517353200
+start_epoch = 1517367600 # jan 30 8pm
 
 for bot_trade in bot_trades_attempts:
     if bot_trade['time_epoch'] >= start_epoch :

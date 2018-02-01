@@ -18,31 +18,77 @@ import httplib
 from Queue import Queue
 import requests
 import functions_financial as fn
+import math
 
 # start
 print('start @',  time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
 start_time = int(time.time())
 
 
+
+
+
+
+
+
+# file_path = './binance_all_trades_history/binance_all_trades_history_attempts.pklz'
+# ut.pickle_write(file_path, [])
+# file_path = './binance_all_trades_history/binance_all_trades_history.pklz'
+# ut.pickle_write(file_path, [])
+# print(ut.pickle_read(file_path))
+
+
+# print(datetime.datetime.fromtimestamp(int(time.time())-7*60*60).strftime('%Y-%m-%d %H:%M:%S'), int(time.time()))
+# print(datetime.datetime.fromtimestamp(math.floor(time.time())-7*60*60).strftime('%Y-%m-%d %H:%M:%S'), int(time.time()))
+
+# while True:
+#     datapoints_trailing = 230
+#     minutes = 1
+#     end_time = int(time.time())*1000
+#     start_time = (end_time-60*1000*minutes*(datapoints_trailing+1))
+#     url = 'https://api.binance.com/api/v1/klines?symbol=NEOBTC&interval=1m&startTime='+str(start_time)+'&endTime='+str(end_time)
+#     data = requests.get(url).json()
+#     print(ut.get_time(), ut.get_readable_time(data[-1][0]), ut.get_readable_time(data[-1][6]))
+#     time.sleep(0.2)
+
+
+
+# while True:
+#     order_book = globals()['ETHBTC_order_book']
+#     print('order_book', order_book)
+#     current_price = float(order_book['bids'][0][0])
+#     print('current_price', current_price)
+#     time.sleep(2)
+
+
 ############################################ How to Exit Threads
+
+# def testexit_b():
+#     while True:
+#         print('---B')
+#         sys.exit()
+
 # def testexit():
 #     while True:
-#         print('testexit 1')
+#         print('---1')
 #         time.sleep(2)
-#         print('testexit 2')
-#         sys.exit()
-#         print('post thread exit')
+#         print('---2')
+#         testexit_b()
+#         time.sleep(2)
+#         # sys.exit()
 
 # t = Thread(target=testexit)
-# tt = Thread(target=testexit)
 # t.start()
-# tt.start()
+# # tt = Thread(target=testexit)
+# # tt.start()
 # # t.join() # join is bad, makes it run as if it was synchronous not asynchronous
 # # tt.join()
-# print "pre main exit, post thread exit"
-# time.sleep(6)
+# print '-------------Sub thread started'
+# time.sleep(7)
+# print '-------------Exiting main thread'
 # sys.exit()
-# print "post main exit"
+
+
 
 
 
@@ -57,36 +103,46 @@ start_time = int(time.time())
 
 
 
+
+
+
+
 ############################################ Get/Save Candles for Muliple Symbols every minute on the minute
 
-def worker_get_klines_on_the_minute(interval, symbol_list, datapoints_trailing):
-    while True:
-        minutes = 1
-        secs = time.localtime().tm_sec
-        delay = 60 - secs
-        print 'start threads to fetch klines in', delay, 'seconds'
-        time.sleep(delay)
-        end_time = int(time.time())*1000
-        start_time = (end_time-60*1000*minutes*(datapoints_trailing+1))
-        print 'start threads to fetch klines now', ut.get_time()
-        for s in symbol_list:
-            t = Thread(target=worker_get_and_save_klines, args=[interval, s, start_time, end_time])
-            t.start()
-        time.sleep(5)
+# def worker_get_klines_on_the_minute(interval, symbol_list, datapoints_trailing):
+#     while True:
+#         minutes = 1
+#         secs = time.localtime().tm_sec
+#         delay = 60 - secs
+#         print 'start threads to fetch klines in', delay, 'seconds'
+#         time.sleep(delay)
+#         end_time = int(time.time())*1000
+#         start_time = (end_time-60*1000*minutes*(datapoints_trailing+1))
+#         print 'start threads to fetch klines now', ut.get_time()
+#         for s in symbol_list:
+#             t = Thread(target=worker_get_and_save_klines, args=[interval, s, start_time, end_time])
+#             t.start()
+#         time.sleep(5)
 
-def worker_get_and_save_klines(interval, symbol, start_time, end_time):
-    url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol +'&interval='+interval+'&startTime='+str(start_time)+'&endTime='+str(end_time)
-    data = requests.get(url).json()
-    ut.pickle_write('./recent_klines/'+symbol+'_'+interval+'.pklz', data)
-    # print first candle open & last candle open as readable
-        # print('-------------candle 0')
-        # print symbol, ut.get_readable_time(data[0][0])
-        # print('-------------candle -1')
-        # print symbol, ut.get_readable_time(data[-1][0])
-    sys.exit() # exit the thread
+# def worker_get_and_save_klines(interval, symbol, start_time, end_time):
+#     url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol +'&interval='+interval+'&startTime='+str(start_time)+'&endTime='+str(end_time)
+#     data = requests.get(url).json()
+#     ut.pickle_write('./recent_klines/'+symbol+'_'+interval+'.pklz', data)
+#     # print first candle open & last candle open as readable
+#         # print('-------------candle 0')
+#         # print symbol, ut.get_readable_time(data[0][0])
+#         # print('-------------candle -1')
+#         # print symbol, ut.get_readable_time(data[-1][0])
+#     sys.exit() # exit the thread
 
-t = Thread(target=worker_get_klines_on_the_minute, args=['1m', ['NEOBTC', 'WINGSBTC'], 230])
-t.start()
+# t = Thread(target=worker_get_klines_on_the_minute, args=['1m', ['NEOBTC', 'WINGSBTC'], 230])
+# t.start()
+
+
+
+
+
+
 
 
 ############################################ Get/View Trade History Array

@@ -9,7 +9,6 @@ import gzip
 import datetime
 import json
 import math
-from urlparse import urlparse
 from threading import Thread
 import threading
 import httplib
@@ -65,9 +64,9 @@ def pickle_write(file_path, data, error_message='pickle could not write'):
         pickle.dump(data,f)
         f.close()
     except Exception as e:
+        print(e)
+        print(error_message)
         return
-        #print(e)
-        #print(error_message)
 
 def get_min_decimals(min_qty):
     min_price_for_decimal = str(min_qty)
@@ -118,22 +117,17 @@ def new_buy_and_sell_thread(buy_params):
 def get_superbot_params():
     bot_params = {
         'minutes': 1,
-
         'largest_bitcoin_order': .1,
         'part_of_bitcoin_to_use': 1.0,
         'price_to_start_buy': 1.003,
-
         'sell_price_drop_factor': .997,
         'buy_price_increase_factor': 1.002,
-
         'price_to_buy_factor_array': [0,.978, .973, .97, .971, .966, .96, .955, .95, .956, .95],
         'price_to_sell_factor_array': [0,.994, .993, .996, .991, .989, .989, .983, .986, .986, .986],
         'price_to_sell_factor_2_array': [0,.984, .984, .984, .983, .984, .983, .982, .982, .982, .981],
         'price_to_sell_factor_3_array': [0,.965, .965, .965, .965, .965, .964, .964, .963, .963, .963],
         'lower_band_buy_factor_array': [0,1.04, 1.12, 1.09, 1.07, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19],
-
         'datapoints_trailing': 230,
-
         'minutes_until_sale': 4,
         'minutes_until_sale_2': 12,
         'minutes_until_sale_3': 45
@@ -142,6 +136,7 @@ def get_superbot_params():
 
 
 def evaluate_buy(symbol, trailing_candles, current_price):
+
     trailing_volumes = []
     trailing_movement = []
     trailing_lows = []
@@ -213,24 +208,32 @@ def process_socket_pushes_order_book(msg):
     if 'e' in msg and msg['e'] == 'error':
         # close and restart the socket, if socket can't reconnect itself
         print('restarting process_socket_pushes(msg)')
+        global socket_list
         global bm
         bm.close()
-        conn_key = bm.start_multiplex_socket(socket_list, process_socket_pushes)
+        conn_key = bm.start_multiplex_socket(socket_list, process_socket_pushes_order_book)
         bm.start()
     else:
         # if 'kline_1m' in msg['stream']:
-        #     print('--------------------------------------', msg['stream'], ut.get_time())
+        #     print('--------------------------------------', msg['stream'], get_time())
         #     pprint(msg['data'])
         #     print('--------------------------------------')
         if 'depth' in msg['stream']:
-            # print('--------------------------------------', msg['stream'], ut.get_time())
+            # print('--------------------------------------', msg['stream'], get_time())
             # # pprint(msg['data'])
             # # available: asks + bids
             # # 'asks': [[u'0.01264000', u'18.92000000', []],
             # #          [u'0.01265300', u'0.20000000', []],
-            # print('--------------------------------------')
+            # print('--------------------------------------', process_socket_pushes_order_book(msg))
             symbol = msg['stream'].split('@')[0].upper()
-            ut.pickle_write('./recent_order_book/'+symbol+'.pklz', msg['data'])
+            pickle_write('./recent_order_books/'+symbol+'.pklz', msg['data'])
+
+            if symbol == 'ETHBTC' and (time.localtime().tm_sec == 1 or time.localtime().tm_sec == 2):
+                print('process_socket_pushes_order_book() ETHBTC', msg['data']['bids'][0][0], get_time())
+
+            # globals()[symbol + '_order_book'] = msg['data']
+
+
 
 def update_symbol_list():
     # save symbol list daily since API sometimes fail when getting live
@@ -255,6 +258,33 @@ def update_symbol_list():
 
     symbols_saved = pickle_read('./binance_btc_symbols.pklz')
     print('btc symbols saved:', len(symbols_saved))
+
+
+def worker_get_klines_on_the_minute(interval, symbol_list, datapoints_trailing):
+    while True:
+        minutes = 1
+        secs = time.localtime().tm_sec
+        delay = 60 - secs
+        print('start threads to fetch klines in', delay, 'seconds')
+        time.sleep(delay)
+        end_time = int(time.time())*1000
+        start_time = (end_time-60*1000*minutes*(datapoints_trailing+1))
+        print('start threads to fetch klines now', get_time())
+        for s in symbol_list:
+            t = Thread(target=worker_get_and_save_klines, args=[interval, s, start_time, end_time])
+            t.start()
+        time.sleep(5)
+
+def worker_get_and_save_klines(interval, symbol, start_time, end_time):
+    url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol +'&interval='+interval+'&startTime='+str(start_time)+'&endTime='+str(end_time)
+    data = requests.get(url).json()
+    pickle_write('./recent_klines/'+symbol+'_'+interval+'.pklz', data)
+    # print first candle open & last candle open as readable
+        # print('-------------candle 0')
+        # print symbol, get_readable_time(data[0][0])
+        # print('-------------candle -1')
+        # print symbol, get_readable_time(data[-1][0])
+    sys.exit() # exit the thread
 
 
 def sleep_but_check_order(current_state, time_to_sleep):
@@ -357,8 +387,8 @@ def calculate_profit_and_free_coin(current_state):
 
     # save trade stats
     # OLD WAY: writing each file path unique to look back
-    data_to_save = [profit_from_trade, percent_profit_from_trade, current_state['original_quantity']*current_state['original_price'], current_state['symbol'],current_state['original_buy_time_readable'], get_time()]
-    append_or_create_data('./binance_' + str(current_state['look_back']) + '_trades/'+ str(current_state['look_back']) + '_trade_data', data_to_save)
+        # data_to_save = [profit_from_trade, percent_profit_from_trade, current_state['original_quantity']*current_state['original_price'], current_state['symbol'],current_state['original_buy_time_readable'], get_time()]
+        # append_or_create_data('./binance_' + str(current_state['look_back']) + '_trades/'+ str(current_state['look_back']) + '_trade_data', data_to_save)
     # NEW WAY: keep one array, use dict not array, record volume data (24hr + past 10 trades)
     volume_ten_candles_btc = .01
     if 'trailing_volumes' in current_state and len(current_state['trailing_volumes']) > 10:
@@ -398,12 +428,12 @@ def calculate_profit_and_free_coin(current_state):
         'current_state': current_state
     }
     file_path_all_trades = './binance_all_trades_history/binance_all_trades_history.pklz'
-    append_or_create_data(file_path_all_trades, recorded_trade)
+    append_data(file_path_all_trades, recorded_trade)
 
     # update program state
     pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', False)
     pickle_write('./binance_is_invested_' + current_state['length'] + '/is_invested_' + current_state['length'] + '_' + current_state['symbol'] + '.pklz', False)
-
+    print('################## wrote profit and freed coin....', current_state['symbol'])
 
 def get_first_in_line_price_buying(current_state):
     order_book = current_state['client'].get_order_book(symbol=current_state['symbol'], limit=10)
@@ -563,14 +593,23 @@ def buy_coin_from_state(current_state):
     sell_coin_with_order_book(current_state)
 
 
-def buy_coin(symbol, length, file_number, times_called):
+def buy_coin(symbol, length, file_number):
 
-    data = []
+    # if (symbol['symbol'] == 'ETHBTC') and (time.localtime().tm_min%2 == 0 and time.localtime().tm_sec == 1 or time.localtime().tm_sec == 2):
+    #     print('buy_coin() still alive', symbol['symbol'], get_time())
 
-    # if (symbol['symbol'] == 'APPCBTC'):
-    #     print("started buy coin ", symbol['symbol'], get_time())
+    if time.localtime().tm_min == 2:
+        print("started buy coin ", symbol['symbol'], get_time())
+        order_book = pickle_read('./recent_order_books/'+symbol['symbol'] +'.pklz')
+        try:
+            print("current price:", order_book['bids'][0][0], symbol['symbol'], get_time())
+        except Exception as e:
+            print('symbol does not have a price:', symbol['symbol'])
+            print(e)
 
-    #pickle_write('./program_still_running_' +length + '/'+symbol['symbol']+,True)
+    api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
+    api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
+    client = Client(api_key, api_secret)
 
     current_state = load_current_state(symbol['symbol'], file_number, length)
 
@@ -584,14 +623,14 @@ def buy_coin(symbol, length, file_number, times_called):
         minutes = 1
 
         largest_bitcoin_order = .1
-        part_of_bitcoin_to_use = 1.0
-        price_to_start_buy = 1.003
+        part_of_bitcoin_to_use = 1
+        price_to_start_buy_factor = 1.003
 
         sell_price_drop_factor = .997
         buy_price_increase_factor = 1.002
 
-        price_to_buy_factor_array = [0,.978, .973, .97, .971, .966, .96, .955, .95, .956, .95]
-        price_to_sell_factor_array = [0,.994, .993, .996, .991, .989, .989, .983, .986, .986, .986]
+        price_to_buy_factor_array = [0,.976, .973, .973, .962, .962, .96, .958, .95, .956, .95]
+        price_to_sell_factor_array = [0,.996, .991, .987, .99, .992, .989, .991, .986, .986, .986]
         price_to_sell_factor_2_array = [0,.984, .984, .984, .983, .984, .983, .982, .982, .982, .981]
         price_to_sell_factor_3_array = [0,.965, .965, .965, .965, .965, .964, .964, .963, .963, .963]
         lower_band_buy_factor_array = [0,1.04, 1.12, 1.09, 1.07, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
@@ -602,35 +641,16 @@ def buy_coin(symbol, length, file_number, times_called):
         minutes_until_sale_2 = 12
         minutes_until_sale_3 = 45
 
-        if times_called % 100 == 0:
-            print('checking..', symbol['symbol'])
+        while time.localtime().tm_sec < 3:
+            time.sleep(.1)
 
+        data = []
 
-        if file_number == 1 or file_number ==3:
-            opener = urllib.request.build_opener(
-                urllib.request.ProxyHandler(
-                    {'http': 'http://lum-customer-hl_24be6fa3-zone-static-session-rand' +str(random.randint(1,99999)) + ':uckbsg56p77s@zproxy.luminati.io:22225'}))
-        else:
-            opener = urllib.request.build_opener(
-                urllib.request.ProxyHandler(
-                    {'http': 'http://lum-customer-hl_2b2c6ab7-zone-static-session-rand' +str(random.randint(1,99999)) + ':02xq3h9ohf0s@zproxy.luminati.io:22225'}))
+        end_time = int(time.time())*1000
+        start_time = (end_time-60*1000*minutes*(datapoints_trailing+1))
+        url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval='+length+'&startTime='+str(start_time)+'&endTime='+str(end_time)
+        data = requests.get(url).json()
 
-
-        #proxy_info = opener.open('http://lumtest.com/myip.json').read()
-        #proxy_info = json.loads(proxy_info)
-
-        #, proxy_info['ip'])
-
-        # get candles
-        # data can now be passed in to allow parallel processing, but function still works if not passed in
-        if len(data) == 0:
-            end_time = int(time.time())*1000
-            start_time = (end_time-60*1000*minutes*(datapoints_trailing+1))
-            url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval='+length+'&startTime='+str(start_time)+'&endTime='+str(end_time)
-            data = opener.open(url).read()
-            data = json.loads(data)
-            #pprint(data)
-            # TODO data = get_smart_candles(data)
         if isinstance(data, basestring):
             print('API request failed, exiting', symbol['symbol'])
             return
@@ -640,70 +660,78 @@ def buy_coin(symbol, length, file_number, times_called):
         trailing_lows = []
         trailing_highs = []
         trailing_candles = []
-
         for index, candle in enumerate(data):
-            # compare (only last candle)
             if len(trailing_movement) >= datapoints_trailing:
+                break
+            trailing_volumes.append(float(candle[7])) # 5 is symbol volume, 7 is quote asset volume (BTC)
+            trailing_movement.append(abs(float(candle[4])-float(candle[1])))
+            trailing_highs.append(float(candle[2]))
+            trailing_lows.append(float(candle[3]))
+            trailing_candles.append(candle)
 
-                should_buy = False
 
-                look_back_schedule = [6,1,8,10,9,4,5,2,7]
-                # look_back_schedule = [1,2,3,4,5,6]
-                for look_back in look_back_schedule:
+        while time.localtime().tm_sec < 1 or time.localtime().tm_sec > 2:
 
-                    if float(candle[4]) < float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy:
+            order_book = pickle_read('./recent_order_books/'+symbol['symbol'] +'.pklz')
 
-                        if lower_band_buy_factor_array[look_back] < 100:
-                            candles_for_look_back = fn.get_n_minute_candles(look_back, data[index-22*look_back-1:index])
-                            candles_for_look_back, smart_trailing_candles = fn.add_bollinger_bands_to_candles(candles_for_look_back)
-                            lower_band_for_index = candles_for_look_back[-1][14]
-                            #print('lower_band_for_index', lower_band_for_index)
-                            band_ok_value = lower_band_for_index*lower_band_buy_factor_array[look_back]
-                            band_ok = float(candle[4]) < band_ok_value
-                        else:
-                            band_ok = True
+            if order_book == False:
+                time.sleep(.1)
+                continue
 
-                        if band_ok:
-                            should_buy = True
-                            break
+            time.sleep(.3)
+            current_price = float(order_book['bids'][0][0])
 
-                if should_buy:
-                    lower_band_buy_factor = lower_band_buy_factor_array[look_back]
-                    price_to_buy_factor = price_to_buy_factor_array[look_back]
-                    price_to_sell_factor = price_to_sell_factor_array[look_back]
-                    price_to_sell_factor_2 = price_to_sell_factor_2_array[look_back]
-                    price_to_sell_factor_3 = price_to_sell_factor_3_array[look_back]
+            # if (symbol['symbol'] == 'ETHBTC'):
+            #     print('about to check lookback', symbol['symbol'], 'current_price',  current_price, get_time())
 
-                    try:
-                        is_invested = pickle_read('./binance_is_invested_' + length +'/is_invested_' + length + '_' + symbol['symbol'] + '.pklz')
-                    except Exception as e:
-                        is_invested = False
+            look_back_schedule = [4,2,1]
 
-                    # record attempts to buy, not just complete trades
-                    if lower_band_buy_factor < 100:
-                        price_to_buy = min(lower_band_for_index*lower_band_buy_factor, float(data[index-look_back][4])*price_to_buy_factor)
+            for look_back in look_back_schedule:
+
+                price_to_start_buy = float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy_factor
+
+                if current_price <= price_to_start_buy:
+
+                    should_buy = False
+
+                    if lower_band_buy_factor_array[look_back] < 100:
+                        candles_for_look_back = fn.get_n_minute_candles(look_back, data[index-22*look_back-1:index])
+                        candles_for_look_back, smart_trailing_candles = fn.add_bollinger_bands_to_candles(candles_for_look_back)
+                        lower_band_for_index = candles_for_look_back[-1][14]
+                        band_ok_value = lower_band_for_index*lower_band_buy_factor_array[look_back]
+                        band_ok = current_price < band_ok_value
+
                     else:
-                        price_to_buy = float(data[index-look_back][4])*price_to_buy_factor
-                    recorded_trade_attempt = {
-                        'symbol': symbol['symbol'],
-                        'price_to_buy': price_to_buy,
-                        'time_human': get_time(),
-                        'time_epoch': int(time.time()),
-                        'look_back': look_back
-                    }
-                    file_path_all_trades_attempts = './binance_all_trades_history/binance_all_trades_history_attempts.pklz'
-                    append_or_create_data(file_path_all_trades_attempts, recorded_trade_attempt)
+                        band_ok = True
 
-                    if is_invested == False:
+                    if band_ok:
+                        should_buy = True
 
-                        print('buy', symbol['symbol'], 'look back', look_back)
+                    if should_buy:
 
-                        pickle_write('./binance_is_invested_' + length +'/is_invested_' + length + '_' + symbol['symbol'] + '.pklz', True)
+                        lower_band_buy_factor = lower_band_buy_factor_array[look_back]
+                        price_to_buy_factor = price_to_buy_factor_array[look_back]
+                        price_to_sell_factor = price_to_sell_factor_array[look_back]
+                        price_to_sell_factor_2 = price_to_sell_factor_2_array[look_back]
+                        price_to_sell_factor_3 = price_to_sell_factor_3_array[look_back]
 
-                        # init binance client
-                        api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
-                        api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
-                        client = Client(api_key, api_secret)
+
+                        # record attempts to buy, not just complete trades
+                        if lower_band_buy_factor < 100:
+                            price_to_buy = min(lower_band_for_index*lower_band_buy_factor, float(data[index-look_back][4])*price_to_buy_factor)
+                        else:
+                            price_to_buy = float(data[index-look_back][4])*price_to_buy_factor
+                        recorded_trade_attempt = {
+                            'symbol': symbol['symbol'],
+                            'price_to_buy': price_to_buy,
+                            'time_human': get_time(),
+                            'time_epoch': int(time.time()),
+                            'look_back': look_back
+                        }
+                        file_path_all_trades_attempts = './binance_all_trades_history/binance_all_trades_history_attempts.pklz'
+                        append_data(file_path_all_trades_attempts, recorded_trade_attempt)
+
+                        print('-------------------buy!', symbol['symbol'], 'look_back', look_back, price_to_buy, get_time())
 
                         if lower_band_buy_factor < 100:
                             price_to_buy = min(lower_band_for_index*lower_band_buy_factor, float(data[index-look_back][4])*price_to_buy_factor)
@@ -730,9 +758,9 @@ def buy_coin(symbol, length, file_number, times_called):
                         current_state['part_of_bitcoin_to_use'] = part_of_bitcoin_to_use
                         current_state['largest_buy_segment'] = largest_buy_segment
                         current_state['original_buy_time'] = int(time.time())
+                        current_state['original_buy_time_readable'] = get_time()
                         current_state['symbol'] = symbol['symbol']
                         current_state['orderId'] = False
-                        current_state['original_buy_time_readable'] = get_time()
                         current_state['executedQty'] = 0
                         current_state['total_revenue'] = 0
                         current_state['minutes_until_sale'] = minutes_until_sale
@@ -756,11 +784,10 @@ def buy_coin(symbol, length, file_number, times_called):
                         pickle_write('./program_state_' + length + '/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '.pklz', current_state, '******could not write state******')
 
 
-
                         time_to_give_up = int(time.time()) + 60
                         price_to_buy_max = price_to_buy*buy_price_increase_factor
                         amount_to_stop_buying = part_of_bitcoin_to_use/price_to_buy_max
-                        print('max price', price_to_buy_max)
+                        print('max price for', symbol['symbol'], price_to_buy_max)
                         while True:
                             if current_state['orderId'] != False:
                                 buy_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
@@ -804,13 +831,9 @@ def buy_coin(symbol, length, file_number, times_called):
 
                             time.sleep(.1)
 
-                        # call_back_args = [symbol['symbol'],look_back]
-                        # t = Thread(target=free_coin_after_candle, args=call_back_args)
-                        # t.start()
-
 
                         if current_state['executedQty'] < current_state['min_quantity']:
-                            print('no one bought cancel order - freeing coin', current_state['symbol'])
+                            print('[last line reached] no one bought cancel order - freeing coin', current_state['symbol'], get_time())
                             pickle_write('./program_state_' + length + '/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '.pklz', False, '******could not write state inside buy coin - no one bought coin******')
                             pickle_write('./binance_is_invested_' + current_state['length'] + '/is_invested_' + current_state['length'] + '_' + symbol['symbol'] + '.pklz', False)
                             return True
@@ -829,27 +852,13 @@ def buy_coin(symbol, length, file_number, times_called):
 
                             print('#########################')
 
-                        return True
+                            return True
 
-                    else:
-                        print('coin invested skipping..', symbol['symbol'])
+                        return False
 
-
-            # update
-            if len(trailing_movement) <= datapoints_trailing:
-                trailing_volumes.append(float(candle[7])) # 5 is symbol volume, 7 is quote asset volume (BTC)
-                trailing_movement.append(abs(float(candle[4])-float(candle[1])))
-                trailing_highs.append(float(candle[2]))
-                trailing_lows.append(float(candle[3]))
-                trailing_candles.append(candle)
-            if len(trailing_movement) > datapoints_trailing:
-                break
-
-        return True
 
     except Exception as e:
         print('some error - freeing coin:', symbol['symbol'])
-        print('number_of_api_requests', number_of_api_requests)
         print(e)
         print_exception()
         pickle_write('./binance_is_invested_' + length + '/is_invested_' + length + '_' + symbol['symbol'] + '.pklz', False)
@@ -963,17 +972,25 @@ def run_bot_parallel(file_number, total_files):
     s.connect(("8.8.8.8", 80))
     print(s.getsockname()[0])
     s.close()
+
+
     try:
+        update_symbol_list()
         symbols = pickle_read('./binance_btc_symbols.pklz')
 
         total_btc_coins = 0
         symbols_trimmed = {}
-
+        min_symbol_volume = 450
+        global socket_list
+        socket_list = []
         for s in symbols:
             symbol = symbols[s]
-            if float(symbol['24hourVolume']) > 450:
+            if float(symbol['24hourVolume']) > min_symbol_volume:
+                socket_list.append(symbol['symbol'].lower() + '@depth20')
                 total_btc_coins += 1
                 symbols_trimmed[s] = symbol
+
+        print('total_btc_coins with volume >', min_symbol_volume, '---', total_btc_coins)
 
     except Exception as e:
             print(e)
@@ -993,43 +1010,65 @@ def run_bot_parallel(file_number, total_files):
         loops += 1
 
 
+def process_socket_pushes_order_book_single(msg):
+    # if 'e' in msg and msg['e'] == 'error':
+    #     # close and restart the socket, if socket can't reconnect itself
+    #     print('------------------------------- restarting process_socket_pushes(msg)')
+    #     global socket_list
+    #     global bm
+    #     bm.close()
+    #     conn_key = bm.start_multiplex_socket(socket_list, process_socket_pushes_order_book_single)
+    #     bm.start()
+    # else:
+    symbol = msg['stream'].split('@')[0].upper()
+    globals()[symbol+'_order_book'] = msg['data']
+    if symbol == 'ETCBTC':
+        print(symbol, 'price', msg['data']['bids'][0][0], get_time())
+    # print('process_socket_pushes_order_book >>', symbol)
+
+def process_depth_socket(msg):
+    print('process_depth_socket----------------------')
+    pprint(msg)
+
+    # if symbol == 'ETCBTC':
+    #     print(symbol, 'price', order_book['bids'][0][0])
+    # globals()[symbol+'_order_book'] = order_book
+
 
 # "worker"
 def buy_coin_thread(symbol, file_number):
 
-    global number_of_api_requests
-    number_of_api_requests = 0
+    # api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
+    # api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
+    # client = Client(api_key, api_secret)
+    # bm = BinanceSocketManager(client)
+    # conn_key = bm.start_depth_socket(symbol['symbol'], process_depth_socket, depth=BinanceSocketManager.WEBSOCKET_DEPTH_5)
+    # #socket_list = [symbol['symbol'].lower() + '@depth20']
+    # #conn_key = bm.start_multiplex_socket(socket_list, process_socket_pushes_order_book_single)
+    # bm.start()
 
-    times_called = 0
     while True:
-        current_state = load_current_state(symbol['symbol'], 1000, '1m')
 
-        if isinstance(current_state,dict):
-            print('loading state to sell coin..', current_state['symbol'])
-            buy_coin_from_state(current_state)
-
-        buy_coin(symbol, '1m', file_number, times_called)
-
-        times_called += 1
-
-        current_state = False
-
-        time.sleep(1)
-
+        buy_coin(symbol, '1m', file_number)
 
 
 # file_path = './binance_30m_trades/30m_trades.pklz'
+def append_data(file_path, data):
+    data_points = pickle_read(file_path)
+    data_points.append(data)
+    pickle_write(file_path, data_points)
+
 def append_or_create_data(file_path, data):
     is_file = os.path.isfile(file_path)
     if is_file:
         data_points = pickle_read(file_path)
         data_points.append(data)
         pickle_write(file_path, data_points)
-        print('file updated')
+        #print('file updated')
     else:
         #save the file first time
         pickle_write(file_path, [data])
-        print('file created')
+        #print('file created')
 
 def buy_coin_test(symbol):
     print('hi')

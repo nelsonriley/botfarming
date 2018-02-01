@@ -623,7 +623,7 @@ def buy_coin(symbol, length, file_number):
         minutes = 1
 
         largest_bitcoin_order = .1
-        part_of_bitcoin_to_use = 1
+        part_of_bitcoin_to_use = .6
         price_to_start_buy_factor = 1.003
 
         sell_price_drop_factor = .997

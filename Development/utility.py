@@ -312,13 +312,20 @@ def cancel_buy_order(current_state):
     except Exception as e:
         print('could not cancel buy order')
 
-    buy_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
-    current_state['state'] = 'buying'
-    current_state['orderId'] = False
-    current_state['executedQty'] = current_state['executedQty'] + float(buy_order_info['executedQty'])
-    if float(buy_order_info['price']) != 0:
-        current_state['original_price'] = float(buy_order_info['price'])
-    pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state******')
+    try:
+        buy_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
+        current_state['state'] = 'buying'
+        current_state['orderId'] = False
+        current_state['executedQty'] = current_state['executedQty'] + float(buy_order_info['executedQty'])
+        if float(buy_order_info['price']) != 0:
+            current_state['original_price'] = float(buy_order_info['price'])
+        pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state******')
+    except Exception as e:
+        print('could not get buy_order_info')
+        current_state['state'] = 'buying'
+        current_state['orderId'] = False
+        pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state******')
+
 
     return current_state
 
@@ -383,50 +390,51 @@ def calculate_profit_and_free_coin(current_state):
     percent_profit_from_trade = (current_state['total_revenue'] - current_state['original_quantity']*current_state['original_price'])/(current_state['original_quantity']*current_state['original_price'])
     profit_from_trade = current_state['total_revenue'] - current_state['original_quantity']*current_state['original_price']
     invested_btc = current_state['original_quantity']*current_state['original_price']
-    print('profit was, absoulte profit, percent', profit_from_trade, percent_profit_from_trade, get_time())
+    print('for ', current_state['symbol'] ,'profit was, absoulte profit, percent profit, amount invested', profit_from_trade, percent_profit_from_trade,invested_btc, get_time())
 
-    # save trade stats
-    # OLD WAY: writing each file path unique to look back
-        # data_to_save = [profit_from_trade, percent_profit_from_trade, current_state['original_quantity']*current_state['original_price'], current_state['symbol'],current_state['original_buy_time_readable'], get_time()]
-        # append_or_create_data('./binance_' + str(current_state['look_back']) + '_trades/'+ str(current_state['look_back']) + '_trade_data', data_to_save)
-    # NEW WAY: keep one array, use dict not array, record volume data (24hr + past 10 trades)
-    volume_ten_candles_btc = .01
-    if 'trailing_volumes' in current_state and len(current_state['trailing_volumes']) > 10:
-        trailing_volumes = current_state['trailing_volumes']
-        volume_ten_candles_btc = float(numpy.sum(trailing_volumes[-10:]))
-        # print('-------Debug')
-        # print('trailing_volumes', len(current_state['trailing_volumes']), current_state['trailing_volumes'])
-        # print('sum', float(numpy.sum(trailing_volumes[-10:])))
-    volume_twentyfour_hr_btc = .01
-    try:
-        # ie: https://www.binance.com/api/v1/ticker/24hr?symbol=ETHBTC
-        url = "https://api.binance.com/api/v1/ticker/24hr?symbol=" + current_state['symbol']
-        data = requests.get(url).json()
-        volume_twentyfour_hr_btc = float(data['quoteVolume'])
-    except Exception as e:
-        print('could not get volume_twentyfour_hr_btc for', current_state['symbol'])
-        print(e)
-        sys.exit()
-    volume_twentyfour_hr_ratio = invested_btc / volume_twentyfour_hr_btc
-    volume_ten_candles_ratio = invested_btc / volume_ten_candles_btc
-    recorded_trade = {
-        'symbol': current_state['symbol'],
-        'invested_btc': invested_btc,
-        'profit_btc': profit_from_trade,
-        'profit_percent': percent_profit_from_trade,
-        'time_buy_human': current_state['original_buy_time_readable'],
-        'time_buy_epoch': current_state['original_buy_time'],
-        'time_end_human': get_time(),
-        'time_end_epoch': int(time.time()),
-        'look_back': current_state['look_back'],
-        'largest_bitcoin_order': current_state['largest_bitcoin_order'],
-        'part_of_bitcoin_to_use': current_state['part_of_bitcoin_to_use'],
-        'volume_ten_candles_btc': volume_ten_candles_btc,
-        'volume_ten_candles_ratio': volume_ten_candles_ratio,
-        'volume_twentyfour_hr_btc': volume_twentyfour_hr_btc,
-        'volume_twentyfour_hr_ratio': volume_twentyfour_hr_ratio,
-        'current_state': current_state
-    }
+    # # save trade stats
+    # # OLD WAY: writing each file path unique to look back
+    #     # data_to_save = [profit_from_trade, percent_profit_from_trade, current_state['original_quantity']*current_state['original_price'], current_state['symbol'],current_state['original_buy_time_readable'], get_time()]
+    #     # append_or_create_data('./binance_' + str(current_state['look_back']) + '_trades/'+ str(current_state['look_back']) + '_trade_data', data_to_save)
+    # # NEW WAY: keep one array, use dict not array, record volume data (24hr + past 10 trades)
+    # volume_ten_candles_btc = .01
+    # if 'trailing_volumes' in current_state and len(current_state['trailing_volumes']) > 10:
+    #     trailing_volumes = current_state['trailing_volumes']
+    #     volume_ten_candles_btc = float(numpy.sum(trailing_volumes[-10:]))
+    #     # print('-------Debug')
+    #     # print('trailing_volumes', len(current_state['trailing_volumes']), current_state['trailing_volumes'])
+    #     # print('sum', float(numpy.sum(trailing_volumes[-10:])))
+    # volume_twentyfour_hr_btc = .01
+    # try:
+    #     # ie: https://www.binance.com/api/v1/ticker/24hr?symbol=ETHBTC
+    #     url = "https://api.binance.com/api/v1/ticker/24hr?symbol=" + current_state['symbol']
+    #     data = requests.get(url).json()
+    #     volume_twentyfour_hr_btc = float(data['quoteVolume'])
+    # except Exception as e:
+    #     print('could not get volume_twentyfour_hr_btc for', current_state['symbol'])
+    #     print(e)
+    #     sys.exit()
+    # volume_twentyfour_hr_ratio = invested_btc / volume_twentyfour_hr_btc
+    # volume_ten_candles_ratio = invested_btc / volume_ten_candles_btc
+    # recorded_trade = {
+    #     'symbol': current_state['symbol'],
+    #     'invested_btc': invested_btc,
+    #     'profit_btc': profit_from_trade,
+    #     'profit_percent': percent_profit_from_trade,
+    #     'time_buy_human': current_state['original_buy_time_readable'],
+    #     'time_buy_epoch': current_state['original_buy_time'],
+    #     'time_end_human': get_time(),
+    #     'time_end_epoch': int(time.time()),
+    #     'look_back': current_state['look_back'],
+    #     'largest_bitcoin_order': current_state['largest_bitcoin_order'],
+    #     'part_of_bitcoin_to_use': current_state['part_of_bitcoin_to_use'],
+    #     'volume_ten_candles_btc': volume_ten_candles_btc,
+    #     'volume_ten_candles_ratio': volume_ten_candles_ratio,
+    #     'volume_twentyfour_hr_btc': volume_twentyfour_hr_btc,
+    #     'volume_twentyfour_hr_ratio': volume_twentyfour_hr_ratio,
+    #     'current_state': current_state
+    # }
+    recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['original_buy_time']]
     file_path_all_trades = './binance_all_trades_history/binance_all_trades_history.pklz'
     append_data(file_path_all_trades, recorded_trade)
 
@@ -434,6 +442,9 @@ def calculate_profit_and_free_coin(current_state):
     pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', False)
     pickle_write('./binance_is_invested_' + current_state['length'] + '/is_invested_' + current_state['length'] + '_' + current_state['symbol'] + '.pklz', False)
     print('################## wrote profit and freed coin....', current_state['symbol'])
+
+    if profit_from_trade < -.01:
+        time.sleep(60*60*12)
 
 def get_first_in_line_price_buying(current_state):
     order_book = current_state['client'].get_order_book(symbol=current_state['symbol'], limit=10)
@@ -623,23 +634,23 @@ def buy_coin(symbol, length, file_number):
         minutes = 1
 
         largest_bitcoin_order = .1
-        part_of_bitcoin_to_use = .6
+        part_of_bitcoin_to_use = .35
         price_to_start_buy_factor = 1.003
 
         sell_price_drop_factor = .997
         buy_price_increase_factor = 1.002
 
-        price_to_buy_factor_array = [0,.976, .973, .973, .962, .962, .96, .958, .95, .956, .95]
-        price_to_sell_factor_array = [0,.996, .991, .987, .99, .992, .989, .991, .986, .986, .986]
-        price_to_sell_factor_2_array = [0,.984, .984, .984, .983, .984, .983, .982, .982, .982, .981]
-        price_to_sell_factor_3_array = [0,.965, .965, .965, .965, .965, .964, .964, .963, .963, .963]
-        lower_band_buy_factor_array = [0,1.04, 1.12, 1.09, 1.07, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
+        price_to_buy_factor_array = [0,.977, .969, .973, .965, .962, .96, .958, .95, .956, .95]
+        price_to_sell_factor_array = [0,.995, .993, .987, .995, .992, .989, .991, .986, .986, .986]
+        price_to_sell_factor_2_array = [0,.982, .98, .984, .985, .984, .983, .982, .982, .982, .981]
+        price_to_sell_factor_3_array = [0,.965, .974, .965, .971, .965, .964, .964, .963, .963, .963]
+        lower_band_buy_factor_array = [0,1.01, 1.15, 1.09, 1.055, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
+        minutes_until_sale_array = [0,6,6,4,6,4,4,4,4,4]
+        minutes_until_sale_2_array = [0,20,24,12,22,12,12,12,12,12]
+        minutes_until_sale_3 = 45
 
         datapoints_trailing = 230
 
-        minutes_until_sale = 4
-        minutes_until_sale_2 = 12
-        minutes_until_sale_3 = 45
 
         while time.localtime().tm_sec < 3:
             time.sleep(.1)
@@ -684,7 +695,7 @@ def buy_coin(symbol, length, file_number):
             # if (symbol['symbol'] == 'ETHBTC'):
             #     print('about to check lookback', symbol['symbol'], 'current_price',  current_price, get_time())
 
-            look_back_schedule = [4,2,1]
+            look_back_schedule = [4,1,2]
 
             for look_back in look_back_schedule:
 
@@ -714,6 +725,8 @@ def buy_coin(symbol, length, file_number):
                         price_to_sell_factor = price_to_sell_factor_array[look_back]
                         price_to_sell_factor_2 = price_to_sell_factor_2_array[look_back]
                         price_to_sell_factor_3 = price_to_sell_factor_3_array[look_back]
+                        minutes_until_sale = minutes_until_sale_array[look_back]
+                        minutes_until_sale_2 = minutes_until_sale_2_array[look_back]
 
 
                         # record attempts to buy, not just complete trades
@@ -975,7 +988,7 @@ def run_bot_parallel(file_number, total_files):
 
 
     try:
-        update_symbol_list()
+
         symbols = pickle_read('./binance_btc_symbols.pklz')
 
         total_btc_coins = 0

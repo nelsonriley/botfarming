@@ -27,6 +27,8 @@ day = '20180130_b'
 day = '20180131'
 day = '20180131_a'
 day = '20180131_b'
+day = '20180201'
+day = '20180201_b'
 step_backs = 1
 continuous_mode = True
 continous_length = 1
@@ -67,11 +69,11 @@ best_minutes_until_sale_3 = 0
 sell_price_drop_factor = .997
 buy_price_increase_factor = 1.002
 
-price_to_buy_factor_array = [0,.976, .973, .973, .962, .962, .96, .958, .95, .956, .95]
-price_to_sell_factor_array = [0,.996, .991, .987, .99, .992, .989, .991, .986, .986, .986]
+price_to_buy_factor_array = [0,.977, .969, .973, .964, .962, .96, .958, .95, .956, .95]
+price_to_sell_factor_array = [0,.995, .993, .987, .989, .992, .989, .991, .986, .986, .986]
 price_to_sell_factor_2_array = [0,.984, .984, .984, .983, .984, .983, .982, .982, .982, .981]
 price_to_sell_factor_3_array = [0,.965, .965, .965, .965, .965, .964, .964, .963, .963, .963]
-lower_band_buy_factor_array = [0,1.04, 1.12, 1.09, 1.07, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
+lower_band_buy_factor_array = [0,1.04, 1.15, 1.09, 1.07, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
 
 minutes_until_sale = 4
 minutes_until_sale_2 = 12

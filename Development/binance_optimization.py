@@ -27,10 +27,14 @@ day = '20180130_a'
 day = '20180130_b'
 day = '20180131'
 day = '20180131_b'
+day = '20180201'
+day = '20180201_a'
+day = '20180201_c'
 step_backs = 1
 continuous_mode = True
 continous_length = 1
 datapoints_trailing = 230
+step_back = 0
 
 
 trailing_and_current_candles_array = {}
@@ -64,15 +68,15 @@ best_minutes_until_sale_3 = 0
 sell_price_drop_factor = .997
 buy_price_increase_factor = 1.002
 
-price_to_buy_factor_array = [0,.976, .973, .973, .962, .962, .96, .958, .95, .956, .95]
-price_to_sell_factor_array = [0,.996, .991, .987, .99, .992, .989, .991, .986, .986, .986]
-price_to_sell_factor_2_array = [0,.984, .984, .984, .983, .984, .983, .982, .982, .982, .981]
-price_to_sell_factor_3_array = [0,.965, .965, .965, .965, .965, .964, .964, .963, .963, .963]
-lower_band_buy_factor_array = [0,1.04, 1.12, 1.09, 1.07, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
+price_to_buy_factor_array = [0,.977, .969, .973, .965, .962, .96, .958, .95, .956, .95]
+price_to_sell_factor_array = [0,.995, .993, .987, .995, .992, .989, .991, .986, .986, .986]
+price_to_sell_factor_2_array = [0,.982, .98, .984, .985, .984, .983, .982, .982, .982, .981]
+price_to_sell_factor_3_array = [0,.965, .974, .965, .971, .965, .964, .964, .963, .963, .963]
+lower_band_buy_factor_array = [0,1.01, 1.15, 1.09, 1.055, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
+minutes_until_sale_array = [0,6,6,4,6,4,4,4,4,4]
+minutes_until_sale_2_array = [0,20,24,12,22,12,12,12,12,12]
 
 
-minutes_until_sale = 4
-minutes_until_sale_2 = 12
 minutes_until_sale_3 = 45
 
 combined_results = {}
@@ -80,217 +84,341 @@ combined_results = {}
 trades = {}
 trades_started = {}
 
+optimizing = 1
 all_trades_count = 0
-for step_back in range(0, step_backs):
-    for a in range(0, 1):
-        #price_to_buy_factor_array[9] = .955 + .005*a
-        for b in range(0, 1):
-            #price_to_sell_factor_array[9] = .986 + .001*b
+best_gain = -999999
+optimal_buy_factor = 0
+optimal_sell_factor = 0
 
-            trades_count = 0
+optimizing_array= [2]
+for optimizing in optimizing_array:
 
-            wins = 0
-            losses = 0
-            current_gain = 0
+    best_gain = -999999
+    optimal_buy_factor = price_to_buy_factor_array[optimizing]
+    optimal_sell_factor = price_to_sell_factor_array[optimizing]
+    optimal_band_factor = lower_band_buy_factor_array[optimizing]
+    optimal_minutes_until_sale = minutes_until_sale_array[optimizing]
+    optimal_minutes_until_sale_2 = minutes_until_sale_2_array[optimizing]
+    optimal_sell_factor_2 = price_to_sell_factor_2_array[optimizing]
+    optimal_sell_factor_3 = price_to_sell_factor_3_array[optimizing]
 
-            current_movement_win = []
-            current_movement_loss = []
 
-            percentage_made_win = []
-            percentage_made_loss = []
+    #for iteration in range(0,2):
+    for iteration in range(3,7):
+        print('##################################### New Iteration', iteration, '###########')
+        print('optimizing:', optimizing ,'optimal_buy_factor, optimal_sell_factor, optimal_band_factor,', optimal_buy_factor, optimal_sell_factor, optimal_band_factor)
+        print('minutes_until_sale, minutes_until_sale_2', optimal_minutes_until_sale, optimal_minutes_until_sale_2)
+        print('optimal_sell_factor_2, optimal_sell_factor_3', optimal_sell_factor_2, optimal_sell_factor_3)
+        print('##################################### New Iteration', iteration, '###########')
 
-            #pprint(symbol_data)
-            #symbol_data['symbols'] = [{'quoteAsset': 'BTC', 'symbol': 'SNGLSBTC'}]
-            for s in symbols_trimmed:
-                symbol = symbols_trimmed[s]
+        price_to_buy_factor_array[optimizing] = optimal_buy_factor
+        price_to_sell_factor_array[optimizing] = optimal_sell_factor
+        lower_band_buy_factor_array[optimizing] = optimal_band_factor
+        minutes_until_sale_array[optimizing] = optimal_minutes_until_sale
+        minutes_until_sale_2_array[optimizing] = optimal_minutes_until_sale_2
+        price_to_sell_factor_2_array[optimizing] = optimal_sell_factor_2
+        price_to_sell_factor_3_array[optimizing] = optimal_sell_factor_3
 
-                if continuous_mode:
-                    data = ut.pickle_read('./binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m.pklz')
-                    if data == False:
-                        print('no data for symbol', symbol['symbol'])
-                        continue
-                    continous_length = len(data)
-                else:
-                    data = ut.pickle_read('./binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz')
+        if iteration == 0:
+            a_range = 3
+            b_range = 3
+            change_size = .002
+            starting_buy_factor =  optimal_buy_factor - change_size
+            starting_sell_factor = optimal_sell_factor - change_size
+        elif iteration == 1 or iteration == 4:
+            a_range = 3
+            b_range = 3
+            change_size = .001
+            starting_buy_factor =  optimal_buy_factor - change_size
+            starting_sell_factor = optimal_sell_factor - change_size
+        elif iteration == 2:
+            a_range = 1
+            b_range = 7
+            change_size = .015
+            starting_band = optimal_band_factor - .045
+        elif iteration == 3 or iteration == 6:
+            starting_minutes_until_sale = optimal_minutes_until_sale - 2
+            starting_minutes_until_sale_2 = optimal_minutes_until_sale_2 - 4
+            a_range = 3
+            b_range = 3
+        elif iteration == 5:
+            starting_sell_factor_2 = optimal_sell_factor_2 - .003
+            starting_sell_factor_3 = optimal_sell_factor_3 - .003
+            a_range = 4
+            b_range = 4
 
-                # if data != False:
-                #     print(path)
-                if not data:
+
+        for a in range(0, a_range):
+            if iteration == 0 or iteration == 1 or iteration == 4:
+                price_to_buy_factor_array[optimizing] = starting_buy_factor + change_size*a
+            elif iteration == 3 or iteration == 6:
+                minutes_until_sale_array[optimizing] = starting_minutes_until_sale + a*2
+            elif iteration == 5:
+                price_to_sell_factor_3_array[optimizing] = starting_sell_factor_3 + .002*a
+
+            for b in range(0, b_range):
+                if iteration == 0 or iteration == 1 or iteration == 4:
+                    price_to_sell_factor_array[optimizing] = starting_sell_factor + change_size*b
+                elif iteration == 2:
+                    lower_band_buy_factor_array[optimizing] = starting_band + change_size*b
+                elif iteration == 3 or iteration == 6:
+                    minutes_until_sale_2_array[optimizing] = starting_minutes_until_sale_2 + b*4
+                elif iteration == 5:
+                    price_to_sell_factor_2_array[optimizing] = starting_sell_factor_2 + .002*b
+
+                #minutes_until_sale = 2
+
+                #print('********', minutes_until_sale_2_array[optimizing])
+
+                if minutes_until_sale_array[optimizing] >= minutes_until_sale_2_array[optimizing] or minutes_until_sale_array[optimizing] < 2:
                     continue
 
-                trailing_closes = []
-                trailing_volumes = []
-                trailing_movement = []
-                trailing_lows = []
-                trailing_highs = []
+                trades_count = 0
 
+                wins = 0
+                losses = 0
+                current_gain = 0
 
-                first = True
-                sale_time = 0
-                for index, candle in enumerate(data):
+                current_movement_win = []
+                current_movement_loss = []
 
-                    #print(symbol['symbol'])
+                percentage_made_win = []
+                percentage_made_loss = []
 
-                    # prevent bots buying at same time
-                    if float(candle[0]) < float(sale_time):
+                #pprint(symbol_data)
+                #symbol_data['symbols'] = [{'quoteAsset': 'BTC', 'symbol': 'SNGLSBTC'}]
+                for s in symbols_trimmed:
+                    symbol = symbols_trimmed[s]
+
+                    if continuous_mode:
+                        data = ut.pickle_read('./binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m.pklz')
+                        if data == False:
+                            print('no data for symbol', symbol['symbol'])
+                            continue
+                        continous_length = len(data)
+                    else:
+                        data = ut.pickle_read('./binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz')
+
+                    # if data != False:
+                    #     print(path)
+                    if not data:
                         continue
 
-                    #**cuts approx 45 min off whatever data is made available
-                    try:
-                        gotdata = data[index + minutes_until_sale_3+1]
-                    except IndexError:
-                        break
+                    trailing_closes = []
+                    trailing_volumes = []
+                    trailing_movement = []
+                    trailing_lows = []
+                    trailing_highs = []
 
-                    # compare
-                    if index > datapoints_trailing:
 
-                        # if symbol['symbol'] == 'ETHBTC':
-                        #     print('---------------------->', ut.get_readable_time(candle[0]/1000))
+                    first = True
+                    sale_time = 0
+                    for index, candle in enumerate(data):
 
-                        will_buy = False
+                        #print(symbol['symbol'])
 
-                        #look back schedule 4,2,1 or 5,2,1
-                        look_back_schedule = [4,2,1]
-                        #look_back_schedule = [6,1,8,10,9,4,5,2,7,3]
+                        # prevent bots buying at same time
+                        if float(candle[0]) < float(sale_time):
+                            continue
 
-                        current_look_back = 0
-                        for look_back in look_back_schedule:
+                        #**cuts approx 45 min off whatever data is made available
+                        try:
+                            gotdata = data[index + minutes_until_sale_3+1]
+                        except IndexError:
+                            break
 
-                            compare_price = float(data[index-look_back][4])
-                            buy_price = compare_price*price_to_buy_factor_array[look_back]
+                        # compare
+                        if index > datapoints_trailing:
 
-                            if float(candle[3]) < buy_price:
+                            # if symbol['symbol'] == 'ETHBTC':
+                            #     print('---------------------->', ut.get_readable_time(candle[0]/1000))
 
-                                # print('symbol,', symbol['symbol'])
+                            will_buy = False
+
+                            #look back schedule 4,2,1 or 5,2,1
+                            look_back_schedule = [4,1,2]
+                            #look_back_schedule = [6,1,8,10,9,4,5,2,7,3]
+
+                            current_look_back = 0
+                            for look_back in look_back_schedule:
+
+                                compare_price = float(data[index-look_back][4])
+                                buy_price = compare_price*price_to_buy_factor_array[look_back]
+
+                                if float(candle[3]) < buy_price:
+
+                                    # print('symbol,', symbol['symbol'])
+
+                                    if lower_band_buy_factor_array[look_back] < 100:
+                                        candles_for_look_back = fn.get_n_minute_candles(look_back, data[index-22*look_back-1:index])
+                                        candles_for_look_back, smart_trailing_candles = fn.add_bollinger_bands_to_candles(candles_for_look_back)
+                                        lower_band_for_index = candles_for_look_back[-1][14]
+                                        #print('lower_band_for_index', lower_band_for_index)
+                                        band_ok_value = lower_band_for_index*lower_band_buy_factor_array[look_back]
+                                        band_ok = float(candle[3]) < band_ok_value
+                                    else:
+                                        band_ok = True
+
+                                    if band_ok:
+                                        #print(symbol['symbol'])
+                                        will_buy = True
+                                        current_look_back = look_back
+                                        break
+
+                            if will_buy:
 
                                 if lower_band_buy_factor_array[look_back] < 100:
-                                    candles_for_look_back = fn.get_n_minute_candles(look_back, data[index-22*look_back-1:index])
-                                    candles_for_look_back, smart_trailing_candles = fn.add_bollinger_bands_to_candles(candles_for_look_back)
-                                    lower_band_for_index = candles_for_look_back[-1][14]
-                                    #print('lower_band_for_index', lower_band_for_index)
-                                    band_ok_value = lower_band_for_index*lower_band_buy_factor_array[look_back]
-                                    band_ok = float(candle[3]) < band_ok_value
+                                    buy_price = min(band_ok_value,buy_price)
                                 else:
-                                    band_ok = True
+                                    buy_price = buy_price
 
-                                if band_ok:
-                                    #print(symbol['symbol'])
-                                    will_buy = True
-                                    current_look_back = look_back
-                                    break
+                                data_for_sale = data
+                                index_for_sale = index
 
-                        if will_buy:
+                                trades_started[ut.get_readable_time(candle[0]/1000)] = [symbol['symbol'], look_back, buy_price]
 
-                            if lower_band_buy_factor_array[look_back] < 100:
-                                buy_price = min(band_ok_value,buy_price)
-                            else:
-                                buy_price = buy_price
+                                #selling coin
+                                sold_it = False
 
-                            data_for_sale = data
-                            index_for_sale = index
-
-                            trades_started[ut.get_readable_time(candle[0]/1000)] = [symbol['symbol'], look_back, buy_price]
-
-                            #selling coin
-                            sold_it = False
-
-                            try:
-                                gotdata = data[index + minutes_until_sale+1]
-                            except IndexError:
-                                print('no data for sale_1', symbol['symbol'])
-                                break
-
-                            for i in range(1,minutes_until_sale):
-                                sale_price = compare_price*price_to_sell_factor_array[look_back]
-                                if float(data_for_sale[index_for_sale + i][2]) > sale_price:
-                                    sale_index = index_for_sale + i
-                                    sold_it = True
-                                    break
-
-                            if sold_it == False:
                                 try:
-                                    gotdata = data[index + minutes_until_sale_2+1]
+                                    gotdata = data[index + minutes_until_sale_array[look_back]+1]
                                 except IndexError:
-                                    print('no data for sale_2', symbol['symbol'])
+                                    print('no data for sale_1', symbol['symbol'])
                                     break
-                                for i in range(minutes_until_sale, minutes_until_sale_2):
-                                    sale_price = compare_price*price_to_sell_factor_2_array[look_back]
+
+                                for i in range(1,minutes_until_sale_array[look_back]):
+                                    sale_price = compare_price*price_to_sell_factor_array[look_back]
                                     if float(data_for_sale[index_for_sale + i][2]) > sale_price:
                                         sale_index = index_for_sale + i
                                         sold_it = True
                                         break
 
-                            if sold_it == False:
-                                try:
-                                    gotdata = data[index + minutes_until_sale_3+1]
-                                except IndexError:
-                                    print('no data for sale_3', symbol['symbol'])
-                                    break
-                                for i in range(minutes_until_sale_2, minutes_until_sale_3):
-                                    sale_price = compare_price*price_to_sell_factor_3_array[look_back]
-                                    if float(data_for_sale[index_for_sale + i][2]) > sale_price:
-                                        sale_index = index_for_sale + i
-                                        sold_it = True
+                                if sold_it == False:
+                                    try:
+                                        gotdata = data[index + minutes_until_sale_2_array[look_back]+1]
+                                    except IndexError:
+                                        print('no data for sale_2', symbol['symbol'])
                                         break
+                                    for i in range(minutes_until_sale_array[look_back], minutes_until_sale_2_array[look_back]):
+                                        sale_price = compare_price*price_to_sell_factor_2_array[look_back]
+                                        if float(data_for_sale[index_for_sale + i][2]) > sale_price:
+                                            sale_index = index_for_sale + i
+                                            sold_it = True
+                                            break
 
-                            if sold_it == False:
-                                sale_price = float(data_for_sale[index_for_sale + minutes_until_sale_3][4])*.98
-                                sale_index = index_for_sale + minutes_until_sale_3
+                                if sold_it == False:
+                                    try:
+                                        gotdata = data[index + minutes_until_sale_3+1]
+                                    except IndexError:
+                                        print('no data for sale_3', symbol['symbol'])
+                                        break
+                                    for i in range(minutes_until_sale_2_array[look_back], minutes_until_sale_3):
+                                        sale_price = compare_price*price_to_sell_factor_3_array[look_back]
+                                        if float(data_for_sale[index_for_sale + i][2]) > sale_price:
+                                            sale_index = index_for_sale + i
+                                            sold_it = True
+                                            break
+
+                                if sold_it == False:
+                                    sale_price = float(data_for_sale[index_for_sale + minutes_until_sale_3][4])*.98
+                                    sale_index = index_for_sale + minutes_until_sale_3
 
 
-                            percentage_made = (sale_price*sell_price_drop_factor-buy_price*buy_price_increase_factor)/buy_price*buy_price_increase_factor
+                                percentage_made = (sale_price*sell_price_drop_factor-buy_price*buy_price_increase_factor)/buy_price*buy_price_increase_factor
+
+                                sale_time = data_for_sale[sale_index][0]
+
+                                ####### so far this seems to be an improvement, need to test again tomorrow, then put live if good
+                                # if percentage_made < -.012:
+                                #       sale_time += 2*60*60*1000
 
 
-                            if percentage_made > 0:
-                                #current_movement_win.append(current_movement_percentage)
-                                percentage_made_win.append(percentage_made)
-                                #print('win')
-                                wins += 1
-                            else:
-                                #current_movement_loss.append(current_movement_percentage)
-                                percentage_made_loss.append(percentage_made)
-                                #print('loss')
-                                losses += 1
 
-                    # update
-                    if len(trailing_volumes) <= datapoints_trailing:
-                        trailing_volumes.append(float(candle[5]))
-                        trailing_movement.append(abs(float(candle[4])-float(candle[1])))
-                        trailing_highs.append(float(candle[2]))
-                        trailing_lows.append(float(candle[3]))
-                        trailing_closes.append(float(candle[4]))
-                    if len(trailing_volumes) > datapoints_trailing:
-                        del trailing_volumes[0]
-                        del trailing_movement[0]
-                        del trailing_highs[0]
-                        del trailing_lows[0]
-                        del trailing_closes[0]
+                                if percentage_made > 0:
+                                    #current_movement_win.append(current_movement_percentage)
+                                    percentage_made_win.append(percentage_made)
+                                    #print('win')
+                                    wins += 1
+                                else:
+                                    #current_movement_loss.append(current_movement_percentage)
+                                    percentage_made_loss.append(percentage_made)
+                                    #print('loss')
+                                    losses += 1
 
-            # end symbol_loop, calc results
-            current_gain = numpy.sum(percentage_made_win)+numpy.sum(percentage_made_loss)
+                        # update
+                        if len(trailing_volumes) <= datapoints_trailing:
+                            trailing_volumes.append(float(candle[5]))
+                            trailing_movement.append(abs(float(candle[4])-float(candle[1])))
+                            trailing_highs.append(float(candle[2]))
+                            trailing_lows.append(float(candle[3]))
+                            trailing_closes.append(float(candle[4]))
+                        if len(trailing_volumes) > datapoints_trailing:
+                            del trailing_volumes[0]
+                            del trailing_movement[0]
+                            del trailing_highs[0]
+                            del trailing_lows[0]
+                            del trailing_closes[0]
 
-            the_key = str(price_to_buy_factor_array[look_back]) + '_' + str(price_to_sell_factor_array[look_back]) + '_' + str(lower_band_buy_factor_array[look_back])
-            if the_key in combined_results:
-                combined_results[the_key] += current_gain
-            else:
+                # end symbol_loop, calc results
+                current_gain = numpy.sum(percentage_made_win)+numpy.sum(percentage_made_loss)
+
+
+                if current_gain > best_gain:
+                    best_gain = current_gain
+                    optimal_buy_factor = price_to_buy_factor_array[optimizing]
+                    optimal_sell_factor = price_to_sell_factor_array[optimizing]
+                    optimal_band_factor = lower_band_buy_factor_array[optimizing]
+                    optimal_minutes_until_sale = minutes_until_sale_array[optimizing]
+                    optimal_minutes_until_sale_2 = minutes_until_sale_2_array[optimizing]
+                    optimal_sell_factor_2 = price_to_sell_factor_2_array[optimizing]
+                    optimal_sell_factor_3 = price_to_sell_factor_3_array[optimizing]
+                    print('###################NEW OPTIMAL for ', optimizing ,' optimal_buy_factor, optimal_sell_factor', optimal_buy_factor, optimal_sell_factor, optimal_band_factor)
+                    print('###################NEW OPTIMAL for ', optimizing ,' optimal_minutes_until_sale, optimal_minutes_until_sale_2', optimal_minutes_until_sale, optimal_minutes_until_sale_2)
+                    print('###################NEW OPTIMAL for ', optimizing ,' optimal_sell_factor_2, optimal_sell_factor_3', optimal_sell_factor_2, optimal_sell_factor_3)
+
+
+                the_key = str(price_to_buy_factor_array[optimizing]) + '_' + str(price_to_sell_factor_array[optimizing]) + '_' + str(lower_band_buy_factor_array[optimizing])
                 combined_results[the_key] = current_gain
 
-            trades_count += wins + losses
-            print('----------------------------------------------')
-            print('trades_count', trades_count)
-            print("gain", current_gain)
-            print('step_back', step_back)
-            print('lower_band_buy_factor', lower_band_buy_factor_array[look_back])
-            print('price_to_buy_factor, price to sell factors', price_to_buy_factor_array[look_back], price_to_sell_factor_array[look_back])
-            print('other price to sell factors', price_to_sell_factor_2_array[look_back], price_to_sell_factor_3_array[look_back])
-            print('minutes until sales', minutes_until_sale, minutes_until_sale_2, minutes_until_sale_3)
-            print('wins:',wins)
-            print(numpy.mean(percentage_made_win))
-            print('losses:',losses)
-            print(numpy.mean(percentage_made_loss))
-            if losses != 0:
-                print('wins/losses', wins/losses)
-            print()
+
+                trades_count += wins + losses
+                print('----------------------------------------------')
+                print('trades_count', trades_count)
+                print("gain", current_gain)
+                print('step_back', step_back)
+                print('lower_band_buy_factor', lower_band_buy_factor_array[optimizing])
+                print('price_to_buy_factor, price to sell factors', price_to_buy_factor_array[optimizing], price_to_sell_factor_array[optimizing])
+                print('other price to sell factors', price_to_sell_factor_2_array[optimizing], price_to_sell_factor_3_array[optimizing])
+                print('minutes until sales', minutes_until_sale_array[optimizing], minutes_until_sale_2_array[optimizing], minutes_until_sale_3)
+                print('wins:',wins)
+                print(numpy.mean(percentage_made_win))
+                print('losses:',losses)
+                print(numpy.mean(percentage_made_loss))
+                if losses != 0:
+                    print('wins/losses', wins/losses)
+                print()
+
+    price_to_buy_factor_array[optimizing] = optimal_buy_factor
+    price_to_sell_factor_array[optimizing] = optimal_sell_factor
+    lower_band_buy_factor_array[optimizing] = optimal_band_factor
+    minutes_until_sale_array[optimizing] = optimal_minutes_until_sale
+    minutes_until_sale_2_array[optimizing] = optimal_minutes_until_sale_2
+    price_to_sell_factor_2_array[optimizing] = optimal_sell_factor_2
+    price_to_sell_factor_3_array[optimizing] = optimal_sell_factor_3
+    print('###################################################################')
+    print('###################################################################')
+    print('###################################################################')
+    print('###################################################################')
+    print('###################################################################')
+    print('results for', optimizing,'optimal buy, optimal sell, optimal band,', optimal_buy_factor, optimal_sell_factor,optimal_band_factor)
+    print('optimal minutes, optimal minutes 2', optimal_minutes_until_sale, optimal_minutes_until_sale_2)
+    print('optimal sell 2, optimal sell 3', optimal_sell_factor_2, optimal_sell_factor_3)
+    print('###################################################################')
+    print('###################################################################')
+    print('###################################################################')
+    print('###################################################################')
+    print('###################################################################')
 
 
+print('optimal_buy_factor,optimal_sell_factor, optimal_band_factor', optimal_buy_factor, optimal_sell_factor, optimal_band_factor)
 pprint(combined_results)

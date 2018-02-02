@@ -21,6 +21,7 @@ bm = BinanceSocketManager(client)
 
 # limit symbols by 24hr volume
 min_volume = 450
+ut.update_symbol_list()
 symbol_path = './binance_btc_symbols.pklz'
 symbols = ut.pickle_read(symbol_path)
 total_btc_coins = 0

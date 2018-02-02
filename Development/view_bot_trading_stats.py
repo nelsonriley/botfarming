@@ -16,21 +16,37 @@ import math
 path = './binance_all_trades_history/binance_all_trades_history.pklz'
 bot_trades = ut.pickle_read(path)
 # if bot_trades == False:
-#     ut.pickle_write(path, [])
-#     bot_trades = ut.pickle_read(path)
+# ut.pickle_write(path, [])
+# bot_trades = ut.pickle_read(path)
 
 total_profit = 0
 total_trades = 0
+profit_with_limit = 0
+profit_with_limit_2 = 0
+profit_with_limit_3 = 0
+profit_with_limit_4 = 0
 # start_epoch = 1517024439
 # start_epoch = 1517353200
+
+
 
 for bot_trade in bot_trades:
     print(bot_trade['time_buy_epoch'], bot_trade['time_buy_human'], bot_trade['symbol'], bot_trade['profit_btc'], bot_trade['profit_percent'], bot_trade['invested_btc'], bot_trade['look_back'], bot_trade['volume_ten_candles_btc'], bot_trade['volume_twentyfour_hr_btc'])
     total_profit += bot_trade['profit_btc']
     total_trades += 1
+    profit_with_limit += bot_trade['profit_percent']*min(.35,bot_trade['invested_btc'])
+    profit_with_limit_2 += bot_trade['profit_percent']*min(.4,bot_trade['invested_btc'])
+    profit_with_limit_3 += bot_trade['profit_percent']*min(.45,bot_trade['invested_btc'])
+    profit_with_limit_4 += bot_trade['profit_percent']*min(.5,bot_trade['invested_btc'])
+
 
 print(total_profit)
 print(total_trades)
+print(profit_with_limit)
+print(profit_with_limit_2)
+print(profit_with_limit_3)
+print(profit_with_limit_4)
+
 # global total_trades_overall
 # total_trades_overall = 0
 

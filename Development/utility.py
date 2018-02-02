@@ -549,6 +549,19 @@ def buy_coin(symbol, length, file_number):
 
         datapoints_trailing = 230
 
+        look_back_schedule = [2,4,1]
+
+        for look_back in look_back_schedule:
+            look_back_optimized = pickle_read('./optimization_factors/optimal_for_' + str(look_back) + '.pklz')
+            price_to_buy_factor_array[look_back] = look_back_optimized[1]
+            price_to_sell_factor_array[look_back] = look_back_optimized[2]
+            price_to_sell_factor_2_array[look_back] = look_back_optimized[3]
+            price_to_sell_factor_3_array[look_back] = look_back_optimized[4]
+            minutes_until_sale_array[look_back] = look_back_optimized[5]
+            minutes_until_sale_2_array[look_back] = look_back_optimized[6]
+            lower_band_buy_factor_array[look_back] = look_back_optimized[7]
+
+
 
         while time.localtime().tm_sec < 3:
             time.sleep(.1)
@@ -588,8 +601,6 @@ def buy_coin(symbol, length, file_number):
 
             # if (symbol['symbol'] == 'ETHBTC'):
             #     print('about to check lookback', symbol['symbol'], 'current_price',  current_price, get_time())
-
-            look_back_schedule = [4,1,2]
 
             for look_back in look_back_schedule:
 

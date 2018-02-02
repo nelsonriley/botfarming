@@ -15,13 +15,9 @@ import math
 
 length = '1m'
 
-file_path = './binance_1m_trades/1m_trade_data'
-f = gzip.open(file_path,'rb')
-data_points = pickle.load(f)
-pprint(data_points)
-f.close()
+result = ut.pickle_read('./optimization_factors/optimal_for_2.pklz')
 
-
+pprint(result)
 
 
 # file_path = './program_state_30m/program_state_30m_0_GXSBTC.pklz'

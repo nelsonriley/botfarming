@@ -30,6 +30,8 @@ day = '20180131_b'
 day = '20180201'
 day = '20180201_a'
 day = '20180201_c'
+day = '20180202'
+
 step_backs = 1
 continuous_mode = True
 continous_length = 1
@@ -90,7 +92,19 @@ best_gain = -999999
 optimal_buy_factor = 0
 optimal_sell_factor = 0
 
-optimizing_array= [4,1,2]
+optimizing_array= [2,4,1]
+
+for look_back in optimizing_array:
+    look_back_optimized = ut.pickle_read('./optimization_factors/optimal_for_' + str(look_back) + '.pklz')
+    price_to_buy_factor_array[look_back] = look_back_optimized[1]
+    price_to_sell_factor_array[look_back] = look_back_optimized[2]
+    price_to_sell_factor_2_array[look_back] = look_back_optimized[3]
+    price_to_sell_factor_3_array[look_back] = look_back_optimized[4]
+    minutes_until_sale_array[look_back] = look_back_optimized[5]
+    minutes_until_sale_2_array[look_back] = look_back_optimized[6]
+    lower_band_buy_factor_array[look_back] = look_back_optimized[7]
+
+
 for optimizing in optimizing_array:
 
     best_gain = -999999
@@ -235,8 +249,8 @@ for optimizing in optimizing_array:
 
                             will_buy = False
 
-                            #look back schedule 4,2,1 or 5,2,1
-                            look_back_schedule = [4,1,2]
+                            #look back schedule 2,1,4 or 2,4,1
+                            look_back_schedule = [2,4,1]
                             #look_back_schedule = [6,1,8,10,9,4,5,2,7,3]
 
                             current_look_back = 0
@@ -413,6 +427,8 @@ for optimizing in optimizing_array:
     print('results for', optimizing,'optimal buy, optimal sell, optimal band,', optimal_buy_factor, optimal_sell_factor,optimal_band_factor)
     print('optimal minutes, optimal minutes 2', optimal_minutes_until_sale, optimal_minutes_until_sale_2)
     print('optimal sell 2, optimal sell 3', optimal_sell_factor_2, optimal_sell_factor_3)
+    optimization_factors = [optimizing, optimal_buy_factor, optimal_sell_factor, optimal_sell_factor_2, optimal_sell_factor_3, optimal_minutes_until_sale, optimal_minutes_until_sale_2, optimal_band_factor]
+    ut.pickle_write('./optimization_factors/optimal_for_' + str(optimizing) + '.pklz', optimization_factors)
     print('###################################################################')
     print('###################################################################')
     print('###################################################################')

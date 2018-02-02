@@ -114,94 +114,20 @@ def new_buy_and_sell_thread(buy_params):
     return False
 
 
-def get_superbot_params():
-    bot_params = {
-        'minutes': 1,
-        'largest_bitcoin_order': .1,
-        'part_of_bitcoin_to_use': 1.0,
-        'price_to_start_buy': 1.003,
-        'sell_price_drop_factor': .997,
-        'buy_price_increase_factor': 1.002,
-        'price_to_buy_factor_array': [0,.978, .973, .97, .971, .966, .96, .955, .95, .956, .95],
-        'price_to_sell_factor_array': [0,.994, .993, .996, .991, .989, .989, .983, .986, .986, .986],
-        'price_to_sell_factor_2_array': [0,.984, .984, .984, .983, .984, .983, .982, .982, .982, .981],
-        'price_to_sell_factor_3_array': [0,.965, .965, .965, .965, .965, .964, .964, .963, .963, .963],
-        'lower_band_buy_factor_array': [0,1.04, 1.12, 1.09, 1.07, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19],
-        'datapoints_trailing': 230,
-        'minutes_until_sale': 4,
-        'minutes_until_sale_2': 12,
-        'minutes_until_sale_3': 45
-    }
-    return bot_params
-
-
-def evaluate_buy(symbol, trailing_candles, current_price):
-
-    trailing_volumes = []
-    trailing_movement = []
-    trailing_lows = []
-    trailing_highs = []
-    trailing_candles = []
-
-    bot_params = get_superbot_params()
-
-    data = trailing_candles
-    for index, candle in enumerate(data):
-        # compare (only last candle)
-        if len(trailing_movement) >= datapoints_trailing:
-
-            do_buy = False
-
-            ## SETTINGS ##
-            look_back_schedule = [6,1,8,10,9,4,5,2,7]
-            # look_back_schedule = [1,2,3,4,5,6]
-            for look_back in look_back_schedule:
-
-                if float(current_price) < float(data[index-look_back][4])*bot_params['price_to_buy_factor_array'][look_back]*bot_params['price_to_start_buy']:
-
-                    if lower_band_buy_factor_array[look_back] < 100:
-                        candles_for_look_back = fn.get_n_minute_candles(look_back, data[index-22*look_back-1:index])
-                        candles_for_look_back, smart_trailing_candles = fn.add_bollinger_bands_to_candles(candles_for_look_back)
-                        lower_band_for_index = candles_for_look_back[-1][14]
-                        band_ok_value = lower_band_for_index*bot_params['lower_band_buy_factor_array'][look_back]
-                        band_ok = float(candle[4]) < band_ok_value
-                    else:
-                        band_ok = True
-
-                    if band_ok:
-                        do_buy = True
-                        break
-                if do_buy:
-                    lower_band_buy_factor = bot_params['lower_band_buy_factor_array'][look_back]
-                    price_to_buy_factor = bot_params['price_to_buy_factor_array'][look_back]
-                    price_to_sell_factor = bot_params['price_to_sell_factor_array'][look_back]
-                    price_to_sell_factor_2 = bot_params['price_to_sell_factor_2_array'][look_back]
-                    price_to_sell_factor_3 = bot_params['price_to_sell_factor_3_array'][look_back]
-
-                    try:
-                        is_invested = pickle_read('./binance_is_invested_1m/is_invested_1m_' + symbol + '.pklz')
-                    except Exception as e:
-                        is_invested = False
-
-                    if lower_band_buy_factor < 100:
-                        price_to_buy = min(bot_params['lower_band_for_index']*lower_band_buy_factor, float(data[index-look_back][4])*price_to_buy_factor)
-                    else:
-                        price_to_buy = float(data[index-look_back][4])*price_to_buy_factor
-
-
-                    if is_invested == False:
-                        print('buy', symbol, 'look back', look_back)
-                        pickle_write('./binance_is_invested_' + length +'/is_invested_' + length + '_' + symbol + '.pklz', True)
-                        buy_qty = bot_params['part_of_bitcoin_to_use']/price_to_buy
-                    else:
-                        do_buy = False
-
-    buy_params = {
-        'do_buy': do_buy,
-        'price_to_buy': price_to_buy,
-        'buy_qty': buy_qty
-    }
-    return buy_params
+def buy_coin_socket(msg):
+    if 'e' in msg and msg['e'] == 'error':
+        # close and restart the socket, if socket can't reconnect itself
+        print('restarting process_socket_pushes(msg)')
+        global socket_list
+        global bm
+        bm.close()
+        conn_key = bm.start_multiplex_socket(socket_list, buy_coin_socket)
+        bm.start()
+    else:
+        if 'depth' in msg['stream']:
+            symbol = msg['stream'].split('@')[0].upper()
+            print(symbol,  msg['data']['bids'][0][0], get_time())
+            time.sleep(5)
 
 
 def process_socket_pushes_order_book(msg):
@@ -259,51 +185,6 @@ def update_symbol_list():
     symbols_saved = pickle_read('./binance_btc_symbols.pklz')
     print('btc symbols saved:', len(symbols_saved))
 
-
-def worker_get_klines_on_the_minute(interval, symbol_list, datapoints_trailing):
-    while True:
-        minutes = 1
-        secs = time.localtime().tm_sec
-        delay = 60 - secs
-        print('start threads to fetch klines in', delay, 'seconds')
-        time.sleep(delay)
-        end_time = int(time.time())*1000
-        start_time = (end_time-60*1000*minutes*(datapoints_trailing+1))
-        print('start threads to fetch klines now', get_time())
-        for s in symbol_list:
-            t = Thread(target=worker_get_and_save_klines, args=[interval, s, start_time, end_time])
-            t.start()
-        time.sleep(5)
-
-def worker_get_and_save_klines(interval, symbol, start_time, end_time):
-    url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol +'&interval='+interval+'&startTime='+str(start_time)+'&endTime='+str(end_time)
-    data = requests.get(url).json()
-    pickle_write('./recent_klines/'+symbol+'_'+interval+'.pklz', data)
-    # print first candle open & last candle open as readable
-        # print('-------------candle 0')
-        # print symbol, get_readable_time(data[0][0])
-        # print('-------------candle -1')
-        # print symbol, get_readable_time(data[-1][0])
-    sys.exit() # exit the thread
-
-
-def sleep_but_check_order(current_state, time_to_sleep):
-
-    if time_to_sleep <= 0:
-        return
-
-    for i in range(0, time_to_sleep):
-        time.sleep(60)
-        try:
-            sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
-            if sale_order_info['status'] == 'FILLED':
-                return
-        except Exception as e:
-            print('sleep_but_check_order() could not get sale_order_info, retrying in 60s... error:')
-            print(e)
-            time.sleep(60)
-            sleep_but_check_order(current_state, time_to_sleep - i)
-            return
 
 def cancel_buy_order(current_state):
 
@@ -448,8 +329,17 @@ def calculate_profit_and_free_coin(current_state):
         pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state******')
         time.sleep(60*60*12)
 
+def get_order_book_local(symbol):
+    while True:
+        order_book = pickle_read('./recent_order_books/'+symbol +'.pklz')
+        if order_book == False:
+            time.sleep(.1)
+            continue
+        return order_book
+
 def get_first_in_line_price_buying(current_state):
-    order_book = current_state['client'].get_order_book(symbol=current_state['symbol'], limit=10)
+
+    order_book = get_order_book_local(current_state['symbol'])
     # pprint(order_book)
     # bids & asks.... 0=price, 1=qty
     first_bid = float(order_book['bids'][0][0])
@@ -462,7 +352,7 @@ def get_first_in_line_price_buying(current_state):
 
 
 def get_first_in_line_price(current_state):
-    order_book = current_state['client'].get_order_book(symbol=current_state['symbol'], limit=10)
+    order_book = get_order_book_local(current_state['symbol'])
     # pprint(order_book)
     # bids & asks.... 0=price, 1=qty
     first_ask = float(order_book['asks'][0][0])
@@ -526,7 +416,7 @@ def sell_with_order_book(current_state, price_to_sell, minutes_until_sale):
             else:
                 current_state = create_sale_order(current_state, first_in_line_price)
 
-        time.sleep(.1)
+        time.sleep(.03)
 
 
 
@@ -691,11 +581,7 @@ def buy_coin(symbol, length, file_number):
 
         while time.localtime().tm_sec < 1 or time.localtime().tm_sec > 2:
 
-            order_book = pickle_read('./recent_order_books/'+symbol['symbol'] +'.pklz')
-
-            if order_book == False:
-                time.sleep(.1)
-                continue
+            order_book = get_order_book_local(symbol['symbol'])
 
             time.sleep(.3)
             current_price = float(order_book['bids'][0][0])
@@ -850,7 +736,7 @@ def buy_coin(symbol, length, file_number):
                                 else:
                                     current_state = create_buy_order(current_state, first_in_line_price)
 
-                            time.sleep(.1)
+                            time.sleep(.03)
 
 
                         if current_state['executedQty'] < current_state['min_quantity']:
@@ -906,85 +792,6 @@ def load_current_state(symbol, file_number, length):
 
     return current_state
 
-def run_bot(file_number, total_files, overlap, length):
-    print('running bot', file_number, 'of', total_files, length)
-    try:
-        symbols = pickle_read('./binance_btc_symbols.pklz')
-
-        total_btc_coins = 0
-        symbols_trimmed = {}
-
-        for s in symbols:
-            symbol = symbols[s]
-            if float(symbol['24hourVolume']) > 450:
-                total_btc_coins += 1
-                symbols_trimmed[s] = symbol
-
-    except Exception as e:
-            print(e)
-            sys.exit()
-
-    symbol_back_up = symbols_trimmed
-    current_state = []
-
-    while True:
-
-            symbols_trimmed = symbol_back_up
-        #try:
-            loops = 0
-
-            file_start_index = file_number
-            file_end_index = (file_number+overlap)%total_files
-            if file_end_index == 0:
-                file_end_index = total_files
-
-            file_start_number = math.floor(total_btc_coins/total_files)*file_start_index
-            file_end_number = file_end_index*math.floor(total_btc_coins/total_files)
-
-            for s in symbols_trimmed:
-                symbol = symbols_trimmed[s]
-                if file_end_index < overlap:
-                    if loops >= file_start_number or loops < file_end_number:
-                        current_state = load_current_state(symbol['symbol'], file_number, length)
-                else:
-                    if loops >= file_start_number and loops < file_end_number:
-                        current_state = load_current_state(symbol['symbol'], file_number, length)
-                loops += 1
-
-                if isinstance(current_state,dict):
-                    print('loading state to sell coin..', current_state['symbol'])
-                    buy_coin_from_state(current_state)
-
-                current_state = False
-
-            symbols_trimmed = symbol_back_up
-
-            loops = 0
-
-            for s in symbols_trimmed:
-                symbol = symbols_trimmed[s]
-
-                if file_end_index < overlap:
-                    if loops >= file_start_number or loops < file_end_number:
-                        buy_coin(symbol, length, file_number)
-                else:
-                    if loops >= file_start_number and loops < file_end_number:
-                        buy_coin(symbol, length, file_number)
-
-                loops += 1
-                #time.sleep(.1)
-                # if length == '1m':
-                #     time.sleep(.25)
-                # elif length == '5m':
-                #     time.sleep(.5)
-                # else:
-                #     time.sleep(1)
-
-        # except Exception as e:
-        #     print('error in wrapper')
-        #     print(e)
-        #     print_exception()
-        #     continue
 
 def run_bot_parallel(file_number, total_files):
 
@@ -1029,31 +836,6 @@ def run_bot_parallel(file_number, total_files):
             t.start()
 
         loops += 1
-
-
-def process_socket_pushes_order_book_single(msg):
-    # if 'e' in msg and msg['e'] == 'error':
-    #     # close and restart the socket, if socket can't reconnect itself
-    #     print('------------------------------- restarting process_socket_pushes(msg)')
-    #     global socket_list
-    #     global bm
-    #     bm.close()
-    #     conn_key = bm.start_multiplex_socket(socket_list, process_socket_pushes_order_book_single)
-    #     bm.start()
-    # else:
-    symbol = msg['stream'].split('@')[0].upper()
-    globals()[symbol+'_order_book'] = msg['data']
-    if symbol == 'ETCBTC':
-        print(symbol, 'price', msg['data']['bids'][0][0], get_time())
-    # print('process_socket_pushes_order_book >>', symbol)
-
-def process_depth_socket(msg):
-    print('process_depth_socket----------------------')
-    pprint(msg)
-
-    # if symbol == 'ETCBTC':
-    #     print(symbol, 'price', order_book['bids'][0][0])
-    # globals()[symbol+'_order_book'] = order_book
 
 
 # "worker"

@@ -444,6 +444,8 @@ def calculate_profit_and_free_coin(current_state):
     print('################## wrote profit and freed coin....', current_state['symbol'])
 
     if profit_from_trade < -.01:
+        current_state['state'] = 'sleeping'
+        pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state******')
         time.sleep(60*60*12)
 
 def get_first_in_line_price_buying(current_state):
@@ -572,6 +574,12 @@ def buy_coin_from_state(current_state):
 
     print('buy coin from state', current_state['symbol'])
 
+    if (current_state['state'] == 'sleeping'):
+        print('sleeping...', current_state['symbol'])
+        time.sleep(60*60*10)
+        pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', False, '******could not write state buy from stae******')
+        return
+
     if (current_state['state'] == 'buying'):
 
         if current_state['orderId'] != False:
@@ -637,13 +645,13 @@ def buy_coin(symbol, length, file_number):
         part_of_bitcoin_to_use = .35
         price_to_start_buy_factor = 1.003
 
-        sell_price_drop_factor = .997
+        sell_price_drop_factor = .996
         buy_price_increase_factor = 1.002
 
         price_to_buy_factor_array = [0,.977, .969, .973, .965, .962, .96, .958, .95, .956, .95]
         price_to_sell_factor_array = [0,.995, .993, .987, .995, .992, .989, .991, .986, .986, .986]
         price_to_sell_factor_2_array = [0,.982, .98, .984, .985, .984, .983, .982, .982, .982, .981]
-        price_to_sell_factor_3_array = [0,.965, .974, .965, .971, .965, .964, .964, .963, .963, .963]
+        price_to_sell_factor_3_array = [0,.96, .969, .965, .966, .965, .964, .964, .963, .963, .963]
         lower_band_buy_factor_array = [0,1.01, 1.15, 1.09, 1.055, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
         minutes_until_sale_array = [0,6,6,4,6,4,4,4,4,4]
         minutes_until_sale_2_array = [0,20,24,12,22,12,12,12,12,12]

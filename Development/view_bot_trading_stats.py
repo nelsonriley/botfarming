@@ -31,21 +31,19 @@ profit_with_limit_4 = 0
 
 
 for bot_trade in bot_trades:
-    print(bot_trade['time_buy_epoch'], bot_trade['time_buy_human'], bot_trade['symbol'], bot_trade['profit_btc'], bot_trade['profit_percent'], bot_trade['invested_btc'], bot_trade['look_back'], bot_trade['volume_ten_candles_btc'], bot_trade['volume_twentyfour_hr_btc'])
-    total_profit += bot_trade['profit_btc']
+    print(bot_trade[0], bot_trade[1], bot_trade[2], bot_trade[3], bot_trade[4], bot_trade[5])
+
+    # print(bot_trade['time_buy_epoch'], bot_trade['time_buy_human'], bot_trade['symbol'], bot_trade['profit_btc'], bot_trade['profit_percent'], bot_trade['invested_btc'], bot_trade['look_back'], bot_trade['volume_ten_candles_btc'], bot_trade['volume_twentyfour_hr_btc'])
+    total_profit += bot_trade[2]
     total_trades += 1
-    profit_with_limit += bot_trade['profit_percent']*min(.35,bot_trade['invested_btc'])
-    profit_with_limit_2 += bot_trade['profit_percent']*min(.4,bot_trade['invested_btc'])
-    profit_with_limit_3 += bot_trade['profit_percent']*min(.45,bot_trade['invested_btc'])
-    profit_with_limit_4 += bot_trade['profit_percent']*min(.5,bot_trade['invested_btc'])
+    # profit_with_limit += bot_trade['profit_percent']*min(.35,bot_trade['invested_btc'])
+    # profit_with_limit_2 += bot_trade['profit_percent']*min(.4,bot_trade['invested_btc'])
+    # profit_with_limit_3 += bot_trade['profit_percent']*min(.45,bot_trade['invested_btc'])
+    # profit_with_limit_4 += bot_trade['profit_percent']*min(.5,bot_trade['invested_btc'])
 
 
 print(total_profit)
 print(total_trades)
-print(profit_with_limit)
-print(profit_with_limit_2)
-print(profit_with_limit_3)
-print(profit_with_limit_4)
 
 # global total_trades_overall
 # total_trades_overall = 0

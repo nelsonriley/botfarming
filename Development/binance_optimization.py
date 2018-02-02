@@ -90,7 +90,7 @@ best_gain = -999999
 optimal_buy_factor = 0
 optimal_sell_factor = 0
 
-optimizing_array= [2]
+optimizing_array= [4,1,2]
 for optimizing in optimizing_array:
 
     best_gain = -999999
@@ -104,7 +104,7 @@ for optimizing in optimizing_array:
 
 
     #for iteration in range(0,2):
-    for iteration in range(3,7):
+    for iteration in range(0,7):
         print('##################################### New Iteration', iteration, '###########')
         print('optimizing:', optimizing ,'optimal_buy_factor, optimal_sell_factor, optimal_band_factor,', optimal_buy_factor, optimal_sell_factor, optimal_band_factor)
         print('minutes_until_sale, minutes_until_sale_2', optimal_minutes_until_sale, optimal_minutes_until_sale_2)

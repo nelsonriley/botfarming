@@ -10,6 +10,7 @@ from pprint import pprint
 import utility as ut
 import numpy
 from binance.client import Client
+from binance.websockets import BinanceSocketManager
 
 from urlparse import urlparse
 from threading import Thread
@@ -26,11 +27,68 @@ start_time = int(time.time())
 
 
 
+################################################################################ TEST TICKER WEB SOCKET (is it current price?)
+api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
+api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
+client = Client(api_key, api_secret)
+bm = BinanceSocketManager(client)
+
+def process_ticker_socket(msg):
+    print('-----------------------------------')
+    print(msg['stream'], msg['data']['c'])
+
+conn_key = bm.start_multiplex_socket(['neobtc@ticker'], process_ticker_socket)
+bm.start()
 
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+################################################################################ GET KLINES FROM BINANCE API
+# end_time = int(time.time())*1000
+# start_time = (end_time-60*1000*2)
+# s = 'ETHBTC'
+# interval = '1m'
+# url = 'https://api.binance.com/api/v1/klines?symbol='+ s +'&interval='+interval+'&startTime='+str(start_time)+'&endTime='+str(end_time)
+# print(url)
+# # data = requests.get(url).json()
+
+
+
+
+
+
+################################################# save 24hr data & make folder
+# epoch_now = int(time.time())
+# epoch_24hrs_ago = epoch_now - 24*60*60
+# end = epoch_now
+# start = epoch_24hrs_ago - datapoints_trailing*60
+# readable_time_now = datetime.datetime.fromtimestamp(epoch_now-7*60*60).strftime('%Y-%m-%d_%H:%M')
+# readable_time_24hrs_ago = datetime.datetime.fromtimestamp(epoch_24hrs_ago-7*60*60).strftime('%Y-%m-%d_%H:%M')
+# folder = readable_time_24hrs_ago + '_to_' + readable_time_now
+# print(folder)
+
+
+
+
+
+################################################# STUFF
 # file_path = './binance_all_trades_history/binance_all_trades_history_attempts.pklz'
 # ut.pickle_write(file_path, [])
 # file_path = './binance_all_trades_history/binance_all_trades_history.pklz'
@@ -59,6 +117,10 @@ start_time = int(time.time())
 #     current_price = float(order_book['bids'][0][0])
 #     print('current_price', current_price)
 #     time.sleep(2)
+
+
+
+
 
 
 ############################################ How to Exit Threads

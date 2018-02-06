@@ -23,6 +23,7 @@ from six.moves import urllib
 global number_of_api_requests
 from binance.client import Client
 from binance.websockets import BinanceSocketManager
+import utility_2 as ut2
 
 
 
@@ -89,10 +90,10 @@ def get_min_decimals_new(min_notional):
         price_decimals = len(parts2[0]) + 1
     return price_decimals
 
-def float_to_str(f):
+def float_to_str(f, precision=20):
     import decimal
     ctx = decimal.Context()
-    ctx.prec = 20
+    ctx.prec = precision
     d1 = ctx.create_decimal(repr(f))
     return format(d1, 'f')
 
@@ -124,10 +125,14 @@ def buy_coin_socket(msg):
         conn_key = bm.start_multiplex_socket(socket_list, buy_coin_socket)
         bm.start()
     else:
-        if 'depth' in msg['stream']:
-            symbol = msg['stream'].split('@')[0].upper()
-            print(symbol,  msg['data']['bids'][0][0], get_time())
-            time.sleep(5)
+        if 'stream' in msg:
+            if 'depth' in msg['stream']:
+                symbol = msg['stream'].split('@')[0].upper()
+                print(symbol,  msg['data']['bids'][0][0], get_time())
+                time.sleep(5)
+        else:
+            print('socket msg has no stream key, printing whole msg so we can figure out what the response is')
+            pprint(msg)
 
 
 def process_socket_pushes_order_book(msg):
@@ -191,7 +196,7 @@ def cancel_buy_order(current_state):
     try:
         buy_canceled_order = current_state['client'].cancel_order(symbol=current_state['symbol'], orderId=current_state['orderId'])
     except Exception as e:
-        print('could not cancel buy order')
+        print('could not cancel buy order (no order id exists any longer)')
 
     try:
         buy_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
@@ -219,16 +224,16 @@ def cancel_sale_order(current_state):
     except Exception as e:
         print('could not cancel sale order')
 
-
     current_state['state'] = 'selling'
     current_state['orderId'] = False
-    pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state******')
+    current_state_path = './program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz'
+    pickle_write(current_state_path, current_state, '******could not write state******')
 
     sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=order_id_of_current_state)
 
     current_state['executedQty'] = current_state['executedQty'] - float(sale_order_info['executedQty'])
     current_state['total_revenue'] += float(sale_order_info['executedQty']) * float(sale_order_info['price'])
-    pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state******')
+    pickle_write(current_state_path, current_state, '******could not write state******')
 
     return current_state
 
@@ -238,7 +243,10 @@ def create_buy_order(current_state, price_to_buy):
     maximum_possible_buy = float_to_str(round(current_state['original_amount_to_buy'] - current_state['executedQty'], current_state['quantity_decimals']))
     quantity_to_buy = min(float(maximum_order_to_buy), float(maximum_possible_buy))
 
-    buy_order = current_state['client'].order_limit_buy(symbol=current_state['symbol'],quantity=quantity_to_buy,price=price_to_buy)
+    # DEBUGGER
+    # print('qty', quantity_to_buy, 'price', price_to_buy)
+
+    buy_order = current_state['client'].order_limit_buy(symbol=current_state['symbol'], quantity=quantity_to_buy, price=price_to_buy)
 
     current_state['state'] = 'buying'
     current_state['orderId'] = buy_order['orderId']
@@ -246,7 +254,7 @@ def create_buy_order(current_state, price_to_buy):
 
     return current_state
 
-def create_sale_order(current_state, price_to_sell):
+def create_sale_order(current_state, price_to_sell, market=False):
     #print('in create sale order', price_to_sell)
 
     if not 'largest_bitcoin_order' in current_state:
@@ -256,22 +264,27 @@ def create_sale_order(current_state, price_to_sell):
 
     max_quantity = float_to_str(round(current_state['largest_bitcoin_order']/float(price_to_sell),current_state['quantity_decimals']))
     order_size = min(float(max_quantity), float(current_state['executedQty']))
-    sale_order = current_state['client'].order_limit_sell(symbol=current_state['symbol'],quantity=order_size,price=price_to_sell)
+
+    if market:
+        sale_order = current_state['client'].order_market_sell(symbol=current_state['symbol'], quantity=order_size)
+    else:
+        sale_order = current_state['client'].order_limit_sell(symbol=current_state['symbol'], quantity=order_size, price=price_to_sell)
 
     current_state['state'] = 'selling'
     current_state['orderId'] = sale_order['orderId']
-    pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state 2nd sell******')
+    current_state_path = './program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz'
+    pickle_write(current_state_path, current_state, '******could not write state 2nd sell******')
 
     return current_state
 
-def calculate_profit_and_free_coin(current_state):
+def calculate_profit_and_free_coin(current_state, strategy='ryan'):
     # also save trade to trade history
 
     print('coin sold, calculating profit and freeing coin', current_state['symbol'],get_time())
     percent_profit_from_trade = (current_state['total_revenue'] - current_state['original_quantity']*current_state['original_price'])/(current_state['original_quantity']*current_state['original_price'])
     profit_from_trade = current_state['total_revenue'] - current_state['original_quantity']*current_state['original_price']
     invested_btc = current_state['original_quantity']*current_state['original_price']
-    print('for ', current_state['symbol'] ,'profit was, absoulte profit, percent profit, amount invested', profit_from_trade, percent_profit_from_trade,invested_btc, get_time())
+    print('PROFIT', current_state['symbol'] ,'profit was, absoulte profit, percent profit, amount invested', float_to_str(profit_from_trade, 8), float_to_str(percent_profit_from_trade, 5), float_to_str(invested_btc,8), get_time())
 
     # # save trade stats
     # # OLD WAY: writing each file path unique to look back
@@ -315,15 +328,25 @@ def calculate_profit_and_free_coin(current_state):
     #     'volume_twentyfour_hr_ratio': volume_twentyfour_hr_ratio,
     #     'current_state': current_state
     # }
-    recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['original_buy_time']]
+    if strategy == 'ryan':
+        recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['original_buy_time']]
+    if strategy == '24hr_1min_drop':
+        recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['original_buy_time']]
+
     file_path_all_trades = './binance_all_trades_history/binance_all_trades_history.pklz'
+    if strategy == '24hr_1min_drop':
+        file_path_all_trades = './binance_all_trades_history/binance_all_trades_history_24hr_1min_drop.pklz'
     append_data(file_path_all_trades, recorded_trade)
 
     # update program state
-    pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', False)
-    pickle_write('./binance_is_invested_' + current_state['length'] + '/is_invested_' + current_state['length'] + '_' + current_state['symbol'] + '.pklz', False)
+    current_state_path = './program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz'
+    pickle_write(current_state_path, False)
+    if strategy == 'ryan':
+        is_invested_path = './binance_is_invested_' + current_state['length'] + '/is_invested_' + current_state['length'] + '_' + current_state['symbol'] + '.pklz',
+        pickle_write(is_invested_path, False)
     print('################## wrote profit and freed coin....', current_state['symbol'])
 
+    # ignore trades we have big losses on for 12 hours
     if profit_from_trade < -.01:
         current_state['state'] = 'sleeping'
         pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state******')
@@ -460,14 +483,15 @@ def sell_coin_with_order_book(current_state):
         print('error selling')
         return False
 
-def buy_coin_from_state(current_state):
+def buy_coin_from_state(current_state, strategy='ryan'):
 
-    print('buy coin from state', current_state['symbol'])
+    print('buy coin from state', current_state['symbol'], 'strategy', strategy)
+    current_state_path = './program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz'
 
     if (current_state['state'] == 'sleeping'):
         print('sleeping...', current_state['symbol'])
         time.sleep(60*60*10)
-        pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', False, '******could not write state buy from stae******')
+        pickle_write(current_state_path, False, '******could not write state buy from stae******')
         return
 
     if (current_state['state'] == 'buying'):
@@ -475,16 +499,16 @@ def buy_coin_from_state(current_state):
         if current_state['orderId'] != False:
             current_state = cancel_buy_order(current_state)
 
-
         if float(current_state['executedQty']) < current_state['min_quantity']:
             print('buy order canceled, was never filled, exiting')
-            pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', False, '******could not write state buy from stae******')
-            pickle_write('./binance_is_invested_' + current_state['length'] + '/is_invested_' + current_state['length'] + '_' + current_state['symbol'] + '.pklz', False)
+            pickle_write(current_state_path, False, '******could not write state buy from stae******')
+            if strategy == 'ryan':
+                pickle_write(current_state_path, False)
             return
         else:
             current_state['state'] = 'selling'
             current_state['original_quantity'] = current_state['executedQty']
-            pickle_write('./program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state******')
+            pickle_write(current_state_path, current_state, '******could not write state******')
 
 
     ##are selling...
@@ -498,8 +522,11 @@ def buy_coin_from_state(current_state):
             calculate_profit_and_free_coin(current_state)
             return
 
-    print('buy_coin_from_state() no open orders, selling coin..', current_state['symbol'])
-    sell_coin_with_order_book(current_state)
+    print('buy_coin_from_state() no open orders, selling coin..', current_state['symbol'], 'strategy', strategy)
+    if strategy == 'ryan':
+        sell_coin_with_order_book(current_state)
+    if strategy == '24hr_1min_drop':
+        ut2.sell_for_24hr_1min_drop(current_state)
 
 
 def buy_coin(symbol, length, file_number):
@@ -507,14 +534,14 @@ def buy_coin(symbol, length, file_number):
     # if (symbol['symbol'] == 'ETHBTC') and (time.localtime().tm_min%2 == 0 and time.localtime().tm_sec == 1 or time.localtime().tm_sec == 2):
     #     print('buy_coin() still alive', symbol['symbol'], get_time())
 
-    if time.localtime().tm_min == 2:
-        print("started buy coin ", symbol['symbol'], get_time())
-        order_book = pickle_read('./recent_order_books/'+symbol['symbol'] +'.pklz')
-        try:
-            print("current price:", order_book['bids'][0][0], symbol['symbol'], get_time())
-        except Exception as e:
-            print('symbol does not have a price:', symbol['symbol'])
-            print(e)
+    # if time.localtime().tm_min == 2:
+    #     print("started buy coin ", symbol['symbol'], get_time())
+    #     order_book = pickle_read('./recent_order_books/'+symbol['symbol'] +'.pklz')
+    #     try:
+    #         print("current price:", order_book['bids'][0][0], symbol['symbol'], get_time())
+    #     except Exception as e:
+    #         print('symbol does not have a price:', symbol['symbol'])
+    #         print(e)
 
     api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
     api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
@@ -634,20 +661,23 @@ def buy_coin(symbol, length, file_number):
                         minutes_until_sale_2 = minutes_until_sale_2_array[look_back]
 
 
-                        # record attempts to buy, not just complete trades
+
                         if lower_band_buy_factor < 100:
                             price_to_buy = min(lower_band_for_index*lower_band_buy_factor, float(data[index-look_back][4])*price_to_buy_factor)
                         else:
                             price_to_buy = float(data[index-look_back][4])*price_to_buy_factor
-                        recorded_trade_attempt = {
-                            'symbol': symbol['symbol'],
-                            'price_to_buy': price_to_buy,
-                            'time_human': get_time(),
-                            'time_epoch': int(time.time()),
-                            'look_back': look_back
-                        }
-                        file_path_all_trades_attempts = './binance_all_trades_history/binance_all_trades_history_attempts.pklz'
-                        append_data(file_path_all_trades_attempts, recorded_trade_attempt)
+
+
+                        # # record attempts to buy, not just complete trades
+                        # recorded_trade_attempt = {
+                        #     'symbol': symbol['symbol'],
+                        #     'price_to_buy': price_to_buy,
+                        #     'time_human': get_time(),
+                        #     'time_epoch': int(time.time()),
+                        #     'look_back': look_back
+                        # }
+                        # file_path_all_trades_attempts = './binance_all_trades_history/binance_all_trades_history_attempts.pklz'
+                        # append_data(file_path_all_trades_attempts, recorded_trade_attempt)
 
                         print('-------------------buy!', symbol['symbol'], 'look_back', look_back, price_to_buy, get_time())
 

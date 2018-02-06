@@ -11,6 +11,7 @@ import pickle
 import gzip
 import datetime
 import utility as ut
+import utility_2 as ut2
 import functions_financial as fn
 
 print('starting..')
@@ -35,9 +36,26 @@ day = '20180202'
 step_backs = 1
 continuous_mode = True
 continous_length = 1
-datapoints_trailing = 230
 step_back = 0
+datapoints_trailing = 230
+min_volume = 0
+minutes = 1
 
+# get previous 24 hours data
+epoch_now = int(time.time())
+epoch_24hrs_ago = epoch_now - 24*60*60
+readable_time_now = datetime.datetime.fromtimestamp(epoch_now-7*60*60).strftime('%Y-%m-%d %H:%M')
+readable_time_24hrs_ago = datetime.datetime.fromtimestamp(epoch_24hrs_ago-7*60*60).strftime('%Y-%m-%d %H:%M')
+readable_time_now_folder = datetime.datetime.fromtimestamp(epoch_now-7*60*60).strftime('%Y%m%d_%H:%M')
+readable_time_24hrs_ago_folder = datetime.datetime.fromtimestamp(epoch_24hrs_ago-7*60*60).strftime('%Y%m%d_%H:%M')
+day = readable_time_24hrs_ago_folder + '_to_' + readable_time_now_folder
+print('fetching previous 24hrs of data', day)
+save_params = [
+    [day, readable_time_24hrs_ago, readable_time_now]
+]
+ut2.save_data(save_params, datapoints_trailing, min_volume, minutes)
+
+################################################################################ RUN OPTIMIZER
 
 trailing_and_current_candles_array = {}
 smart_trailing_candles_array = {}

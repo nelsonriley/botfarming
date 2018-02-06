@@ -20,7 +20,7 @@ global bm
 bm = BinanceSocketManager(client)
 
 # limit symbols by 24hr volume
-min_volume = 0 # 450
+min_volume = 450
 ut.update_symbol_list()
 symbol_path = './binance_btc_symbols.pklz'
 symbols = ut.pickle_read(symbol_path)
@@ -39,5 +39,5 @@ for s in symbols:
 print('symbols with volume > ', min_volume, '=', len(socket_list))
 
 # start order_book web socket > call back saves most recent data to disk
-conn_key = bm.start_multiplex_socket(socket_list, ut.process_socket_pushes_order_book)
+conn_key = bm.start_multiplex_socket(socket_list, ut.buy_coin_socket)
 bm.start()

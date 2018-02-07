@@ -19,7 +19,7 @@ file_name = 'OrderHistory.csv'
 file_name = '20180110_12.csv'
 
 # setup dictionary for every symbol traded
-f = open('./'+file_name, 'rb')
+f = open('/home/ec2-user/environment/botfarming/Development/'+file_name, 'rb')
 reader = csv.reader(f)
 symbols = {}
 symbols_traded = {}
@@ -37,7 +37,7 @@ for row in reader:
 f.close()
 
 # track buys + sells total / filled
-f = open('./'+file_name, 'rb')
+f = open('/home/ec2-user/environment/botfarming/Development/'+file_name, 'rb')
 reader = csv.reader(f)
 for row in reader:
     status = row[8]

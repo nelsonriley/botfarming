@@ -42,7 +42,7 @@ for step_back in range(0, step_backs + 1):
     for symbol in symbol_data['symbols']:
         if symbol['quoteAsset'] == 'BTC':
             # python 2 pickle can not load the file dumped by python 3 pickle
-            f = gzip.open('./binance_data/'+ symbol['symbol'] +'_data_30m_p'+str(step_back)+'.pklz','rb')
+            f = gzip.open('/home/ec2-user/environment/botfarming/Development/binance_data/'+ symbol['symbol'] +'_data_30m_p'+str(step_back)+'.pklz','rb')
             data = pickle.load(f)
             f.close()
 

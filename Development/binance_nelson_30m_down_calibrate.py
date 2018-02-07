@@ -50,7 +50,7 @@ for dt in dt_tests:
 
                 if symbol['quoteAsset'] == 'BTC':
 
-                    f = gzip.open('./binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz','rb')
+                    f = gzip.open('/home/ec2-user/environment/botfarming/Development/binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz','rb')
                     data = pickle.load(f)
                     f.close()
 

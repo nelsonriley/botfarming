@@ -15,22 +15,22 @@ import math
 
 length = '1m'
 
-result = ut.pickle_read('./botfarming/Development/optimization_factors/optimal_for_2.pklz')
+result = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_2.pklz')
 
 pprint(result)
 
 
-# file_path = './botfarming/Development/program_state_30m/program_state_30m_0_GXSBTC.pklz'
+# file_path = '/home/ec2-user/environment/botfarming/Development/program_state_30m/program_state_30m_0_GXSBTC.pklz'
 # f = gzip.open(file_path,'rb')
 # data_points = pickle.load(f)
 # pprint(data_points)
 # f.close()
 
 
-#ut.append_or_create_data('./binance_' + length + '_trades/'+ length + '_trade_data', [.5,'YOMAMA',ut.get_time()])
+#ut.append_or_create_data('/home/ec2-user/environment/botfarming/Development/binance_' + length + '_trades/'+ length + '_trade_data', [.5,'YOMAMA',ut.get_time()])
 
 
-# file_path = './botfarming/Development/binance_30m_trades/30m_trade_data'
+# file_path = '/home/ec2-user/environment/botfarming/Development/binance_30m_trades/30m_trade_data'
 # f = gzip.open(file_path,'rb')
 # data_points = pickle.load(f)
 # pprint(data_points)

@@ -28,7 +28,7 @@ step_back = 0
 trailing_and_current_candles_array = {}
 smart_trailing_candles_array = {}
 
-symbols = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
+symbols = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_btc_symbols.pklz')
 
 total_btc_coins = 0
 symbols_trimmed = {}
@@ -87,13 +87,13 @@ for optimizing in optimizing_array:
             symbol = symbols_trimmed[s]
 
             if continuous_mode:
-                data = ut.pickle_read('./botfarming/Development/binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m.pklz')
+                data = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m.pklz')
                 if data == False:
                     print('no data for symbol', symbol['symbol'])
                     continue
                 continous_length = len(data)
             else:
-                data = ut.pickle_read('./botfarming/Development/binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz')
+                data = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz')
 
             # if data != False:
             #     print(path)

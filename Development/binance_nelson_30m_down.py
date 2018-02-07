@@ -50,7 +50,7 @@ for step_back in range(0, step_backs + 1):
         test_symbols = True or symbol['symbol'] == 'ARNBTC'
         if symbol['quoteAsset'] == 'BTC' and test_symbols:
             # python 2 pickle can not load the file dumped by python 3 pickle
-            f = gzip.open('./binance_data/'+ symbol['symbol'] +'_data_30m_p'+str(step_back)+'.pklz','rb')
+            f = gzip.open('/home/ec2-user/environment/botfarming/Development/binance_data/'+ symbol['symbol'] +'_data_30m_p'+str(step_back)+'.pklz','rb')
             data = pickle.load(f)
             f.close()
 

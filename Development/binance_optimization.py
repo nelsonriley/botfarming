@@ -17,26 +17,10 @@ import functions_financial as fn
 print('starting..')
 
 minutes = 1
-day = '20180122'
-step_backs = 8
-day = '20180126'
-day = '20180126_a'
-day = '20180126_b'
-day = '20180127'
-day = '20180130'
-day = '20180130_a'
-day = '20180130_b'
-day = '20180131'
-day = '20180131_b'
-day = '20180201'
-day = '20180201_a'
-day = '20180201_c'
-day = '20180202'
 
-step_backs = 1
+
 continuous_mode = True
 continous_length = 1
-step_back = 0
 datapoints_trailing = 230
 min_volume = 0
 minutes = 1
@@ -55,14 +39,14 @@ save_params = [
 ]
 ut2.save_data(save_params, datapoints_trailing, min_volume, minutes)
 
-#day = '20180205_14:04_to_20180206_14:04'
+#day = '20180205_19:52_to_20180206_19:52'
 
 ################################################################################ RUN OPTIMIZER
 
 trailing_and_current_candles_array = {}
 smart_trailing_candles_array = {}
 
-symbols = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
+symbols = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_btc_symbols.pklz')
 
 total_btc_coins = 0
 symbols_trimmed = {}
@@ -114,125 +98,139 @@ optimal_sell_factor = 0
 
 optimizing_array= [4,2,1]
 
-for look_back in optimizing_array:
-    look_back_optimized = ut.pickle_read('./botfarming/Development/optimization_factors/optimal_for_' + str(look_back) + '.pklz')
-    price_to_buy_factor_array[look_back] = look_back_optimized[1]
-    price_to_sell_factor_array[look_back] = look_back_optimized[2]
-    price_to_sell_factor_2_array[look_back] = look_back_optimized[3]
-    price_to_sell_factor_3_array[look_back] = look_back_optimized[4]
-    minutes_until_sale_array[look_back] = look_back_optimized[5]
-    minutes_until_sale_2_array[look_back] = look_back_optimized[6]
-    lower_band_buy_factor_array[look_back] = look_back_optimized[7]
+for s in symbols_trimmed:
+    symbol = symbols_trimmed[s]
+    print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
+    print('starting', symbol['symbol'])
+    print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
 
-
-for optimizing in optimizing_array:
-
-    best_gain = -999999
-    optimal_buy_factor = price_to_buy_factor_array[optimizing]
-    optimal_sell_factor = price_to_sell_factor_array[optimizing]
-    optimal_band_factor = lower_band_buy_factor_array[optimizing]
-    optimal_minutes_until_sale = minutes_until_sale_array[optimizing]
-    optimal_minutes_until_sale_2 = minutes_until_sale_2_array[optimizing]
-    optimal_sell_factor_2 = price_to_sell_factor_2_array[optimizing]
-    optimal_sell_factor_3 = price_to_sell_factor_3_array[optimizing]
-
-
-    #for iteration in range(0,2):
-    for iteration in range(0,7):
-        print('##################################### New Iteration', iteration, '###########')
-        print('optimizing:', optimizing ,'optimal_buy_factor, optimal_sell_factor, optimal_band_factor,', optimal_buy_factor, optimal_sell_factor, optimal_band_factor)
-        print('minutes_until_sale, minutes_until_sale_2', optimal_minutes_until_sale, optimal_minutes_until_sale_2)
-        print('optimal_sell_factor_2, optimal_sell_factor_3', optimal_sell_factor_2, optimal_sell_factor_3)
-        print('##################################### New Iteration', iteration, '###########')
-
-        price_to_buy_factor_array[optimizing] = optimal_buy_factor
-        price_to_sell_factor_array[optimizing] = optimal_sell_factor
-        lower_band_buy_factor_array[optimizing] = optimal_band_factor
-        minutes_until_sale_array[optimizing] = optimal_minutes_until_sale
-        minutes_until_sale_2_array[optimizing] = optimal_minutes_until_sale_2
-        price_to_sell_factor_2_array[optimizing] = optimal_sell_factor_2
-        price_to_sell_factor_3_array[optimizing] = optimal_sell_factor_3
-
-        if iteration == 0:
-            a_range = 3
-            b_range = 3
-            change_size = .002
-            starting_buy_factor =  optimal_buy_factor - change_size
-            starting_sell_factor = optimal_sell_factor - change_size
-        elif iteration == 1 or iteration == 4:
-            a_range = 3
-            b_range = 3
-            change_size = .001
-            starting_buy_factor =  optimal_buy_factor - change_size
-            starting_sell_factor = optimal_sell_factor - change_size
-        elif iteration == 2:
-            a_range = 1
-            b_range = 7
-            change_size = .015
-            starting_band = optimal_band_factor - .045
-        elif iteration == 3 or iteration == 6:
-            starting_minutes_until_sale = optimal_minutes_until_sale - 2
-            starting_minutes_until_sale_2 = optimal_minutes_until_sale_2 - 4
-            a_range = 3
-            b_range = 3
-        elif iteration == 5:
-            starting_sell_factor_2 = optimal_sell_factor_2 - .003
-            starting_sell_factor_3 = optimal_sell_factor_3 - .003
-            a_range = 4
-            b_range = 4
-
-
-        for a in range(0, a_range):
-            if iteration == 0 or iteration == 1 or iteration == 4:
-                price_to_buy_factor_array[optimizing] = starting_buy_factor + change_size*a
+    for look_back in optimizing_array:
+        
+        look_back_optimized = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
+        if look_back_optimized != False:
+            price_to_buy_factor_array[look_back] = look_back_optimized[1]
+            price_to_sell_factor_array[look_back] = look_back_optimized[2]
+            price_to_sell_factor_2_array[look_back] = look_back_optimized[3]
+            price_to_sell_factor_3_array[look_back] = look_back_optimized[4]
+            minutes_until_sale_array[look_back] = look_back_optimized[5]
+            minutes_until_sale_2_array[look_back] = look_back_optimized[6]
+            lower_band_buy_factor_array[look_back] = look_back_optimized[7]
+        else:
+            price_to_buy_factor_array = [0,.978, .968, .973, .962, .962, .96, .958, .95, .956, .95]
+            price_to_sell_factor_array = [0,.992, .991, .987, .994, .992, .989, .991, .986, .986, .986]
+            price_to_sell_factor_2_array = [0,.983, .977, .984, .988, .984, .983, .982, .982, .982, .981]
+            price_to_sell_factor_3_array = [0,.968, .971, .965, .974, .965, .964, .964, .963, .963, .963]
+            lower_band_buy_factor_array = [0,1.025, 1.12, 1.09, 1.04, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
+            minutes_until_sale_array = [0,8,8,4,6,4,4,4,4,4]
+            minutes_until_sale_2_array = [0,16,20,12,22,12,12,12,12,12]
+    
+    for optimizing in optimizing_array:
+    
+        best_gain = -999999
+        best_wins = 0
+        best_losses = 0
+        optimal_buy_factor = price_to_buy_factor_array[optimizing]
+        optimal_sell_factor = price_to_sell_factor_array[optimizing]
+        optimal_band_factor = lower_band_buy_factor_array[optimizing]
+        optimal_minutes_until_sale = minutes_until_sale_array[optimizing]
+        optimal_minutes_until_sale_2 = minutes_until_sale_2_array[optimizing]
+        optimal_sell_factor_2 = price_to_sell_factor_2_array[optimizing]
+        optimal_sell_factor_3 = price_to_sell_factor_3_array[optimizing]
+        
+    
+        #for iteration in range(0,2):
+        for iteration in range(0,6):
+            print('##################################### New Iteration', iteration, '###########')
+            print('optimizing:', optimizing ,'optimal_buy_factor, optimal_sell_factor, optimal_band_factor,', optimal_buy_factor, optimal_sell_factor, optimal_band_factor)
+            print('minutes_until_sale, minutes_until_sale_2', optimal_minutes_until_sale, optimal_minutes_until_sale_2)
+            print('optimal_sell_factor_2, optimal_sell_factor_3', optimal_sell_factor_2, optimal_sell_factor_3)
+            print('##################################### New Iteration', iteration, '###########')
+    
+            price_to_buy_factor_array[optimizing] = optimal_buy_factor
+            price_to_sell_factor_array[optimizing] = optimal_sell_factor
+            lower_band_buy_factor_array[optimizing] = optimal_band_factor
+            minutes_until_sale_array[optimizing] = optimal_minutes_until_sale
+            minutes_until_sale_2_array[optimizing] = optimal_minutes_until_sale_2
+            price_to_sell_factor_2_array[optimizing] = optimal_sell_factor_2
+            price_to_sell_factor_3_array[optimizing] = optimal_sell_factor_3
+    
+            if iteration == 0:
+                a_range = 3
+                b_range = 3
+                change_size = .002
+                starting_buy_factor =  optimal_buy_factor - change_size
+                starting_sell_factor = optimal_sell_factor - change_size
+            elif iteration == 1 or iteration == 4:
+                a_range = 3
+                b_range = 3
+                change_size = .001
+                starting_buy_factor =  optimal_buy_factor - change_size
+                starting_sell_factor = optimal_sell_factor - change_size
+            elif iteration == 2:
+                a_range = 1
+                b_range = 7
+                change_size = .015
+                starting_band = optimal_band_factor - .045
             elif iteration == 3 or iteration == 6:
-                minutes_until_sale_array[optimizing] = starting_minutes_until_sale + a*2
+                starting_minutes_until_sale = optimal_minutes_until_sale - 2
+                starting_minutes_until_sale_2 = optimal_minutes_until_sale_2 - 4
+                a_range = 3
+                b_range = 3
             elif iteration == 5:
-                price_to_sell_factor_3_array[optimizing] = starting_sell_factor_3 + .002*a
-
-            for b in range(0, b_range):
+                starting_sell_factor_2 = optimal_sell_factor_2 - .003
+                starting_sell_factor_3 = optimal_sell_factor_3 - .003
+                a_range = 4
+                b_range = 4
+    
+    
+            for a in range(0, a_range):
                 if iteration == 0 or iteration == 1 or iteration == 4:
-                    price_to_sell_factor_array[optimizing] = starting_sell_factor + change_size*b
-                elif iteration == 2:
-                    lower_band_buy_factor_array[optimizing] = starting_band + change_size*b
+                    price_to_buy_factor_array[optimizing] = starting_buy_factor + change_size*a
                 elif iteration == 3 or iteration == 6:
-                    minutes_until_sale_2_array[optimizing] = starting_minutes_until_sale_2 + b*4
+                    minutes_until_sale_array[optimizing] = starting_minutes_until_sale + a*2
                 elif iteration == 5:
-                    price_to_sell_factor_2_array[optimizing] = starting_sell_factor_2 + .002*b
+                    price_to_sell_factor_3_array[optimizing] = starting_sell_factor_3 + .002*a
+    
+                for b in range(0, b_range):
+                    if iteration == 0 or iteration == 1 or iteration == 4:
+                        price_to_sell_factor_array[optimizing] = starting_sell_factor + change_size*b
+                    elif iteration == 2:
+                        lower_band_buy_factor_array[optimizing] = starting_band + change_size*b
+                    elif iteration == 3 or iteration == 6:
+                        minutes_until_sale_2_array[optimizing] = starting_minutes_until_sale_2 + b*4
+                    elif iteration == 5:
+                        price_to_sell_factor_2_array[optimizing] = starting_sell_factor_2 + .002*b
+    
+    
+                    #minutes_until_sale = 2
+    
+                    #print('********', minutes_until_sale_2_array[optimizing])
+    
+                    if minutes_until_sale_array[optimizing] >= minutes_until_sale_2_array[optimizing] or minutes_until_sale_array[optimizing] < 2:
+                        continue
+    
+                    trades_count = 0
+    
+                    wins = 0
+                    losses = 0
+                    current_gain = 0
+    
+                    current_movement_win = []
+                    current_movement_loss = []
+    
+                    percentage_made_win = []
+                    percentage_made_loss = []
+    
+                    #pprint(symbol_data)
+                    #symbol_data['symbols'] = [{'quoteAsset': 'BTC', 'symbol': 'SNGLSBTC'}]
+                    
 
-                #minutes_until_sale = 2
-
-                #print('********', minutes_until_sale_2_array[optimizing])
-
-                if minutes_until_sale_array[optimizing] >= minutes_until_sale_2_array[optimizing] or minutes_until_sale_array[optimizing] < 2:
-                    continue
-
-                trades_count = 0
-
-                wins = 0
-                losses = 0
-                current_gain = 0
-
-                current_movement_win = []
-                current_movement_loss = []
-
-                percentage_made_win = []
-                percentage_made_loss = []
-
-                #pprint(symbol_data)
-                #symbol_data['symbols'] = [{'quoteAsset': 'BTC', 'symbol': 'SNGLSBTC'}]
-                for s in symbols_trimmed:
-                    symbol = symbols_trimmed[s]
-
-                    if continuous_mode:
-                        data = ut.pickle_read('./botfarming/Development/binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m.pklz')
-                        if data == False:
-                            print('no data for symbol', symbol['symbol'])
-                            continue
-                        continous_length = len(data)
-                    else:
-                        data = ut.pickle_read('./botfarming/Development/binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz')
-
+                    data = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m.pklz')
+                    if data == False:
+                        print('no data for symbol', symbol['symbol'])
+                        continue
+                    continous_length = len(data)
+                    
                     # if data != False:
                     #     print(path)
                     if not data:
@@ -252,8 +250,8 @@ for optimizing in optimizing_array:
                         #print(symbol['symbol'])
 
                         # prevent bots buying at same time
-                        if float(candle[0]) < float(sale_time):
-                            continue
+                        # if float(candle[0]) < float(sale_time):
+                        #     continue
 
                         #**cuts approx 45 min off whatever data is made available
                         try:
@@ -300,6 +298,7 @@ for optimizing in optimizing_array:
                                         break
 
                             if will_buy:
+                                
 
                                 if lower_band_buy_factor_array[look_back] < 100:
                                     buy_price = min(band_ok_value,buy_price)
@@ -393,67 +392,73 @@ for optimizing in optimizing_array:
                             del trailing_lows[0]
                             del trailing_closes[0]
 
-                # end symbol_loop, calc results
-                current_gain = numpy.sum(percentage_made_win)+numpy.sum(percentage_made_loss)
+                    # end symbol_loop, calc results
+                    current_gain = numpy.sum(percentage_made_win)+numpy.sum(percentage_made_loss)
+    
+    
+    
+                    if current_gain > best_gain:
+                        best_gain = current_gain
+                        best_wins = wins
+                        best_losses = losses
+                        optimal_buy_factor = price_to_buy_factor_array[optimizing]
+                        optimal_sell_factor = price_to_sell_factor_array[optimizing]
+                        optimal_band_factor = lower_band_buy_factor_array[optimizing]
+                        optimal_minutes_until_sale = minutes_until_sale_array[optimizing]
+                        optimal_minutes_until_sale_2 = minutes_until_sale_2_array[optimizing]
+                        optimal_sell_factor_2 = price_to_sell_factor_2_array[optimizing]
+                        optimal_sell_factor_3 = price_to_sell_factor_3_array[optimizing]
+                        print('###################NEW OPTIMAL for ', optimizing ,' optimal_buy_factor, optimal_sell_factor', optimal_buy_factor, optimal_sell_factor, optimal_band_factor)
+                        print('###################NEW OPTIMAL for ', optimizing ,' optimal_minutes_until_sale, optimal_minutes_until_sale_2', optimal_minutes_until_sale, optimal_minutes_until_sale_2)
+                        print('###################NEW OPTIMAL for ', optimizing ,' optimal_sell_factor_2, optimal_sell_factor_3', optimal_sell_factor_2, optimal_sell_factor_3)
+    
+    
+                    the_key = str(price_to_buy_factor_array[optimizing]) + '_' + str(price_to_sell_factor_array[optimizing]) + '_' + str(lower_band_buy_factor_array[optimizing])
+                    combined_results[the_key] = current_gain
+    
+    
+                    trades_count += wins + losses
+                    print('----------------------------------------------')
+                    print('trades_count', trades_count)
+                    print("gain", current_gain)
+                    print('lower_band_buy_factor', lower_band_buy_factor_array[optimizing])
+                    print('price_to_buy_factor, price to sell factors', price_to_buy_factor_array[optimizing], price_to_sell_factor_array[optimizing])
+                    print('other price to sell factors', price_to_sell_factor_2_array[optimizing], price_to_sell_factor_3_array[optimizing])
+                    print('minutes until sales', minutes_until_sale_array[optimizing], minutes_until_sale_2_array[optimizing], minutes_until_sale_3)
+                    print('wins:',wins)
+                    print(numpy.mean(percentage_made_win))
+                    print('losses:',losses)
+                    print(numpy.mean(percentage_made_loss))
+                    if losses != 0:
+                        print('wins/losses', wins/losses)
+                    print()
 
-
-                if current_gain > best_gain:
-                    best_gain = current_gain
-                    optimal_buy_factor = price_to_buy_factor_array[optimizing]
-                    optimal_sell_factor = price_to_sell_factor_array[optimizing]
-                    optimal_band_factor = lower_band_buy_factor_array[optimizing]
-                    optimal_minutes_until_sale = minutes_until_sale_array[optimizing]
-                    optimal_minutes_until_sale_2 = minutes_until_sale_2_array[optimizing]
-                    optimal_sell_factor_2 = price_to_sell_factor_2_array[optimizing]
-                    optimal_sell_factor_3 = price_to_sell_factor_3_array[optimizing]
-                    print('###################NEW OPTIMAL for ', optimizing ,' optimal_buy_factor, optimal_sell_factor', optimal_buy_factor, optimal_sell_factor, optimal_band_factor)
-                    print('###################NEW OPTIMAL for ', optimizing ,' optimal_minutes_until_sale, optimal_minutes_until_sale_2', optimal_minutes_until_sale, optimal_minutes_until_sale_2)
-                    print('###################NEW OPTIMAL for ', optimizing ,' optimal_sell_factor_2, optimal_sell_factor_3', optimal_sell_factor_2, optimal_sell_factor_3)
-
-
-                the_key = str(price_to_buy_factor_array[optimizing]) + '_' + str(price_to_sell_factor_array[optimizing]) + '_' + str(lower_band_buy_factor_array[optimizing])
-                combined_results[the_key] = current_gain
-
-
-                trades_count += wins + losses
-                print('----------------------------------------------')
-                print('trades_count', trades_count)
-                print("gain", current_gain)
-                print('step_back', step_back)
-                print('lower_band_buy_factor', lower_band_buy_factor_array[optimizing])
-                print('price_to_buy_factor, price to sell factors', price_to_buy_factor_array[optimizing], price_to_sell_factor_array[optimizing])
-                print('other price to sell factors', price_to_sell_factor_2_array[optimizing], price_to_sell_factor_3_array[optimizing])
-                print('minutes until sales', minutes_until_sale_array[optimizing], minutes_until_sale_2_array[optimizing], minutes_until_sale_3)
-                print('wins:',wins)
-                print(numpy.mean(percentage_made_win))
-                print('losses:',losses)
-                print(numpy.mean(percentage_made_loss))
-                if losses != 0:
-                    print('wins/losses', wins/losses)
-                print()
-
-    price_to_buy_factor_array[optimizing] = optimal_buy_factor
-    price_to_sell_factor_array[optimizing] = optimal_sell_factor
-    lower_band_buy_factor_array[optimizing] = optimal_band_factor
-    minutes_until_sale_array[optimizing] = optimal_minutes_until_sale
-    minutes_until_sale_2_array[optimizing] = optimal_minutes_until_sale_2
-    price_to_sell_factor_2_array[optimizing] = optimal_sell_factor_2
-    price_to_sell_factor_3_array[optimizing] = optimal_sell_factor_3
-    print('###################################################################')
-    print('###################################################################')
-    print('###################################################################')
-    print('###################################################################')
-    print('###################################################################')
-    print('results for', optimizing,'optimal buy, optimal sell, optimal band,', optimal_buy_factor, optimal_sell_factor,optimal_band_factor)
-    print('optimal minutes, optimal minutes 2', optimal_minutes_until_sale, optimal_minutes_until_sale_2)
-    print('optimal sell 2, optimal sell 3', optimal_sell_factor_2, optimal_sell_factor_3)
-    optimization_factors = [optimizing, optimal_buy_factor, optimal_sell_factor, optimal_sell_factor_2, optimal_sell_factor_3, optimal_minutes_until_sale, optimal_minutes_until_sale_2, optimal_band_factor]
-    ut.pickle_write('./botfarming/Development/optimization_factors/optimal_for_' + str(optimizing) + '.pklz', optimization_factors)
-    print('###################################################################')
-    print('###################################################################')
-    print('###################################################################')
-    print('###################################################################')
-    print('###################################################################')
+        price_to_buy_factor_array[optimizing] = optimal_buy_factor
+        price_to_sell_factor_array[optimizing] = optimal_sell_factor
+        lower_band_buy_factor_array[optimizing] = optimal_band_factor
+        minutes_until_sale_array[optimizing] = optimal_minutes_until_sale
+        minutes_until_sale_2_array[optimizing] = optimal_minutes_until_sale_2
+        price_to_sell_factor_2_array[optimizing] = optimal_sell_factor_2
+        price_to_sell_factor_3_array[optimizing] = optimal_sell_factor_3
+        print('###################################################################')
+        print('###################################################################')
+        print('###################################################################')
+        print('###################################################################')
+        print('###################################################################')
+        print('results for', optimizing,'optimal buy, optimal sell, optimal band,', optimal_buy_factor, optimal_sell_factor,optimal_band_factor)
+        print('optimal minutes, optimal minutes 2', optimal_minutes_until_sale, optimal_minutes_until_sale_2)
+        print('optimal sell 2, optimal sell 3', optimal_sell_factor_2, optimal_sell_factor_3)
+        if best_gain > .05:
+            should_use = True
+        else:
+            should_use = False
+        optimization_factors = [optimizing, optimal_buy_factor, optimal_sell_factor, optimal_sell_factor_2, optimal_sell_factor_3, optimal_minutes_until_sale, optimal_minutes_until_sale_2, optimal_band_factor, should_use, best_gain, best_wins, best_losses]
+        ut.pickle_write('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(optimizing) + '.pklz', optimization_factors)
+        print('###################################################################')
+        print('###################################################################')
+        print('###################################################################')
+        print('###################################################################')
+        print('###################################################################')
 
 
 print('optimal_buy_factor,optimal_sell_factor, optimal_band_factor', optimal_buy_factor, optimal_sell_factor, optimal_band_factor)

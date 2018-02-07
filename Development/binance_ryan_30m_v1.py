@@ -51,8 +51,8 @@ for periods_until_sale in range(1,40):
 
     for symbol in symbol_data['symbols']:
         if symbol['quoteAsset'] == 'BTC':
-            f = gzip.open('./binance_data/'+ symbol['symbol'] +'_data_30m_p'+str(step_backs)+'.pklz','rb')
-            #f = gzip.open('./binance_data/'+ symbol['symbol'] +'_data_30m.pklz','rb')
+            f = gzip.open('/home/ec2-user/environment/botfarming/Development/binance_data/'+ symbol['symbol'] +'_data_30m_p'+str(step_backs)+'.pklz','rb')
+            #f = gzip.open('/home/ec2-user/environment/botfarming/Development/binance_data/'+ symbol['symbol'] +'_data_30m.pklz','rb')
             data = pickle.load(f)
             f.close()
 

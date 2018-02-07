@@ -52,14 +52,14 @@ save_params = [
     # ['20180202_b', '2018-02-02 09:11', '2018-02-02 15:11'],
     # ['20180128_24', '2018-01-27 12:00', '2018-01-28 12:00'],
     # ['20180129_24', '2018-01-28 12:00', '2018-01-29 12:00'],
-    ['20180130_24', '2018-01-29 12:00', '2018-01-30 12:00'],
-    ['20180131_24', '2018-01-30 12:00', '2018-01-31 12:00'],
-    ['20180201_24', '2018-01-31 12:00', '2018-02-01 12:00'],
-    ['20180202_24', '2018-02-01 12:00', '2018-02-02 12:00'],
-    ['20180203_24', '2018-02-02 12:00', '2018-02-03 12:00'],
-    ['20180204_24', '2018-02-03 12:00', '2018-02-04 12:00'],
+    # ['20180130_24', '2018-01-29 12:00', '2018-01-30 12:00'],
+    # ['20180131_24', '2018-01-30 12:00', '2018-01-31 12:00'],
+    # ['20180201_24', '2018-01-31 12:00', '2018-02-01 12:00'],
+    # ['20180202_24', '2018-02-01 12:00', '2018-02-02 12:00'],
+    # ['20180203_24', '2018-02-02 12:00', '2018-02-03 12:00'],
+    # ['20180204_24', '2018-02-03 12:00', '2018-02-04 12:00'],
     ['20180205_24', '2018-02-04 12:00', '2018-02-05 12:00'],
-    # ['20180206_24', '2018-02-05 12:00', '2018-02-06 12:00'],
+    ['20180206_24', '2018-02-05 12:00', '2018-02-06 12:00'],
 ]
 
 print('start @', ut.get_time())
@@ -84,9 +84,9 @@ print('done @', ut.get_time())
 #     day_folder = settings[0]
 #     start_time = arrow.get(settings[1]).replace(tzinfo='America/Denver')
 #     end_time = arrow.get(settings[2]).replace(tzinfo='America/Denver')
-#         # file names ==> './binance_training_data/'+ day_folder + '/'+ symbol +'_data_'+str(minute)+'m.pklz'
+#         # file names ==> '/home/ec2-user/environment/botfarming/Development/binance_training_data/'+ day_folder + '/'+ symbol +'_data_'+str(minute)+'m.pklz'
 
-#     path = './botfarming/Development/binance_training_data/'+day_folder
+#     path = '/home/ec2-user/environment/botfarming/Development/binance_training_data/'+day_folder
 #     if not os.path.exists(path):
 #         os.makedirs(path)
 
@@ -106,7 +106,7 @@ print('done @', ut.get_time())
 #         if stop > end:
 #             stop = end
 #             last_loop = True
-#         symbols = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
+#         symbols = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_btc_symbols.pklz')
 #         coins = {}
 #         loops = 1
 #         while True:
@@ -160,7 +160,7 @@ print('done @', ut.get_time())
 #                 print('last candle')
 #                 pprint(data[-1])
 #                 print('--------------------ETHBTC')
-#             ut.pickle_write('./botfarming/Development/binance_training_data/'+ day_folder + '/'+ symbol +'_data_'+str(minute)+'m.pklz', data)
+#             ut.pickle_write('/home/ec2-user/environment/botfarming/Development/binance_training_data/'+ day_folder + '/'+ symbol +'_data_'+str(minute)+'m.pklz', data)
 
 #         # end all
 #         print('end all @', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
@@ -187,7 +187,7 @@ print('done @', ut.get_time())
 #         print('start all @',  time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
 #         start_time_all = int(time.time())
 
-#         symbols = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
+#         symbols = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_btc_symbols.pklz')
 #         for i in range(0, len(minutes)):
 #             minute = minutes[i]
 #             for step_back in range(0, step_backs[i]):
@@ -216,7 +216,7 @@ print('done @', ut.get_time())
 #                         break
 
 #                     #write out to file
-#                     ut.pickle_write('./botfarming/Development/binance_training_data/'+ day_folder + '/'+ symbol['symbol'] +'_data_'+str(minute)+'m_p'+str(step_back)+'.pklz',data)
+#                     ut.pickle_write('/home/ec2-user/environment/botfarming/Development/binance_training_data/'+ day_folder + '/'+ symbol['symbol'] +'_data_'+str(minute)+'m_p'+str(step_back)+'.pklz',data)
 #                     # print('# step_back', step_back, 'symbol', symbol['symbol'])
 
 #                 # end

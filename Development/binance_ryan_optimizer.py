@@ -51,7 +51,7 @@ for past in range(1,9):
 
                             ##create function below combine with bincance_ryan
 
-                            f = gzip.open('./binance_data/'+ symbol['symbol'] +'_data_1m_p'+ str(past) +'.pklz','rb')
+                            f = gzip.open('/home/ec2-user/environment/botfarming/Development/binance_data/'+ symbol['symbol'] +'_data_1m_p'+ str(past) +'.pklz','rb')
                             data = pickle.load(f)
                             f.close()
 

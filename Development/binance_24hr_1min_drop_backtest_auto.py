@@ -21,7 +21,7 @@ days = [
     # '20180201_24',
     # '20180202_24',
     # '20180203_24',
-    '20180204_24',
+    # '20180204_24',
     '20180205_24',
     '20180206_24'
 ]
@@ -40,7 +40,7 @@ print_trades = False
 
 #################################################################################### RUN STRATEGY
 
-symbols = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
+symbols = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_btc_symbols.pklz')
 symbols_filtered, symbol_list = ut2.get_trimmed_symbols(symbols, min_volume_btc)
 
 
@@ -98,7 +98,7 @@ for a in [0.9,0.8,0.7]:
             if print_trades:
                 print('------------------------------', s, '-----------------------------')
 
-            data_1 = ut.pickle_read('./botfarming/Development/binance_training_data/'+ day_1 + '/'+ s +'_data_1m.pklz')
+            data_1 = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_training_data/'+ day_1 + '/'+ s +'_data_1m.pklz')
             if data_1 == False or len(data_1) < 30:
                 if print_trades:
                     print('no data found day 1')
@@ -106,19 +106,13 @@ for a in [0.9,0.8,0.7]:
             else:
                 outlier_drops = ut2.get_outlier_drops(data_1, symbol, future_candles_length, drops_to_collect)
 
-                # print('OUTLIER DROPS')
-                # print('drop_percent  best_minute  best_gain_percent  avg_gain_percent')
-                # for d in outlier_drops:
-                #     print(round(d['drop_percent'], 4), d['best_minute'], round(d['best_gain_percent'], 4), round(d['avg_gain_percent'], 4))
-                # print('----------------------')
-
                 buy_trigger_drop_percent = outlier_drops[-1]['drop_percent'] * buy_trigger_drop_percent_factor
                 sell_trigger_gain_percent = outlier_drops[-1]['best_gain_percent'] * sell_trigger_gain_percent_factor
 
                 # gain_percent, gain_usd, trades = ut2.trade_on_drops(symbol, data_1, future_candles_length, buy_trigger_drop_percent, sell_trigger_gain_percent, btc_tradeable_volume_factor)
                 # print('GAIN ON CURRENT DAY DATA', s, round(gain_percent, 4), len(trades), round(gain_usd, 2))
 
-                data_2 = ut.pickle_read('./botfarming/Development/binance_training_data/'+ day_2 + '/'+ s +'_data_1m.pklz')
+                data_2 = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_training_data/'+ day_2 + '/'+ s +'_data_1m.pklz')
                 if data_2 == False or len(data_2) < 30:
                     if print_trades:
                         print('no data found day 2')
@@ -165,19 +159,19 @@ for a in [0.9,0.8,0.7]:
 
         print('--------------------------------------------------------', day_2, 'Day Results')
         print('TOTAL_GAIN_PERCENT', gain_percent, len(trades_by_symbol), '$', gain_usd)
-        print('symbols_traded', len(trades_by_symbol))
-        print('total_trades', total_trades)
-        print('trades_per_symbol', trades_per_symbol)
-        print('avg_volume_btc', avg_volume_btc)
-        print('avg_gain_percent', avg_gain_percent)
-        print('most recent buy_trigger_drop_percent', round(buy_trigger_drop_percent, 7))
-        print('most recent sell_trigger_gain_percent', round(sell_trigger_gain_percent, 7))
+        pprint(day_results)
+        # print('symbols_traded', len(trades_by_symbol))
+        # print('total_trades', total_trades)
+        # print('trades_per_symbol', trades_per_symbol)
+        # print('avg_volume_btc', avg_volume_btc)
+        # print('avg_gain_percent', avg_gain_percent)
+        # print('most recent buy_trigger_drop_percent', round(buy_trigger_drop_percent, 7))
+        # print('most recent sell_trigger_gain_percent', round(sell_trigger_gain_percent, 7))
         print('symbols_not_found_day_1', len(symbols_not_found_day_1), symbols_not_found_day_1)
         print('symbols_not_found_day_2', len(symbols_not_found_day_2), symbols_not_found_day_2)
 
         #################################################################################### AGGREGATE RESULTS
 
-        # param_combo = 'future_candles_length_'+str(future_candles_length)
         param_combo = str(future_candles_length)+'_'+str(buy_trigger_drop_percent_factor)+'_'+str(sell_trigger_gain_percent_factor)
         if param_combo not in all_day_results:
             all_day_results[param_combo] = []
@@ -189,8 +183,8 @@ for a in [0.9,0.8,0.7]:
 all_param_results = {}
 print('---------------------------------------------------------------- all_param_results')
 for param_combo in all_day_results:
-    days = len(day_results)
     daily_results = all_day_results[param_combo]
+    days = len(daily_results)
 
     gain_percent = round(sum(day_result['gain_percent'] for day_result in daily_results), 4)
     gain_usd = round(sum(day_result['gain_usd'] for day_result in daily_results), 4)
@@ -221,7 +215,7 @@ for param_combo in all_day_results:
     all_param_results[param_combo] = param_result
 
     print('-----------------------------------------', param_combo)
-    print(param_combo, 'cumulative', len(day_results), 'day results:')
+    print(param_combo, 'cumulative', days, 'day results:')
     pprint(param_result)
 
 
@@ -241,7 +235,7 @@ print('---------------------------------------------------------------- best_par
 pprint(best_params)
 
 # TODO: save best_params to disk
-# best_params_path = './botfarming/Development/binance_24hr_1min_drop/best_params.pklz'
+# best_params_path = '/home/ec2-user/environment/botfarming/Development/binance_24hr_1min_drop/best_params.pklz'
 # ut.pickle_write(best_params_path, best_params, 'ERROR could not save best_params for 24hr 1min drop strategy')
 
 print('done @', ut.get_time())

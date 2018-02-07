@@ -9,7 +9,7 @@ from pprint import pprint
 #import utility as ut
 import numpy
 
-file_path = './botfarming/Development/binance_profit_graph/profits.pklz'
+file_path = '/home/ec2-user/environment/botfarming/Development/binance_profit_graph/profits.pklz'
 f = gzip.open(file_path,'rb')
 data_points = pickle.load(f)
 pprint(data_points)
@@ -30,7 +30,7 @@ for hours in hours_ago_to_plot:
 
     pylab.plot(data_for_plot)
 
-    pylab.savefig('./graphs/' + str(hours) + 'hour_cumlative.png')
+    pylab.savefig('/home/ec2-user/environment/botfarming/Development/graphs/' + str(hours) + 'hour_cumlative.png')
 
     pylab.clf()
 
@@ -72,7 +72,7 @@ for x in range(0,int(24*60/15)):
 
     pylab.plot(data_for_plot)
 
-    pylab.savefig('./graphs/24_hour_cumlative_V1.png')
+    pylab.savefig('/home/ec2-user/environment/botfarming/Development/graphs/24_hour_cumlative_V1.png')
 
     pylab.clf()
 
@@ -113,7 +113,7 @@ x = numpy.arange(len(data_points_for_graph))
 pylab.bar(x, height=data_points_for_graph)
 #pylab.xticks(x+.5, data_points_for_graph_2)
 
-pylab.savefig('./graphs/24hour_bar.png')
+pylab.savefig('/home/ec2-user/environment/botfarming/Development/graphs/24hour_bar.png')
 
 pylab.clf()
 

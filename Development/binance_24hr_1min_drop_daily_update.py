@@ -34,7 +34,7 @@ do_print = True
 
 # update symbol list
 ut.update_symbol_list()
-symbols = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
+symbols = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_btc_symbols.pklz')
 symbols_filtered, symbol_list = ut2.get_trimmed_symbols(symbols, min_volume_btc)
 
 # save latest 24 hr candles for all symbols
@@ -54,14 +54,14 @@ print('download complete - 1min data set for', day_folder, '(', start, 'to', end
 
 
 # save to disk max 1min drop for all symbols
-print('start save to disk max 1min drop for all symbols')
+print('start save to disk max 1min drop for all symbols', ut.get_time())
 for s in symbols_filtered:
     symbol = symbols_filtered[s]
 
     if do_print:
         print('------------------------------', s, '-----------------------------')
 
-    symbol_candles_path = './botfarming/Development/binance_training_data/'+ day_folder + '/'+ s +'_data_'+str(minutes)+'m.pklz'
+    symbol_candles_path = '/home/ec2-user/environment/botfarming/Development/binance_training_data/'+ day_folder + '/'+ s +'_data_'+str(minutes)+'m.pklz'
     candles = ut.pickle_read(symbol_candles_path)
 
     if candles == False:
@@ -73,7 +73,7 @@ for s in symbols_filtered:
             'best_gain_percent': outlier_drops[-1]['best_gain_percent']
         }
 
-        symbol_24hr_drop_path = './botfarming/Development/binance_24hr_1min_drop/24hr_1min_drops_by_symbol/'+s+'.pklz'
+        symbol_24hr_drop_path = '/home/ec2-user/environment/botfarming/Development/binance_24hr_1min_drop/24hr_1min_drops_by_symbol/'+s+'.pklz'
         ut.pickle_write(symbol_24hr_drop_path, drop_to_save, 'ERROR could not save 24hr 1min drop data for '+s)
 
 print('done @', ut.get_time())

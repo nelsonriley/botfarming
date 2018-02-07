@@ -13,7 +13,7 @@ import datetime
 import utility as ut
 import functions_financial as fn
 
-symbols = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
+symbols = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_btc_symbols.pklz')
 
 total_btc_coins = 0
 symbols_trimmed = {}
@@ -29,7 +29,7 @@ for s in symbols_trimmed:
     symbol = symbols_trimmed[s]
 
     #print symbol['symbol']
-    our_one_minute_minimums = ut.pickle_read('./botfarming/Development/candle_minimums/candle_minimum_' + symbol['symbol'])
+    our_one_minute_minimums = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/candle_minimums/candle_minimum_' + symbol['symbol'])
 
     url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval=1m&startTime=1517442420000&endTime=1517528820000'
     r = requests.get(url)

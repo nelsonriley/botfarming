@@ -41,7 +41,7 @@ for step_back in range(0, step_backs):
             data = r.json()
 
             #write out to file
-            f = gzip.open('./binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz','wb')
+            f = gzip.open('/home/ec2-user/environment/botfarming/Development/binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz','wb')
             pickle.dump(data,f)
             f.close()
             print('# step_back', step_back, 'symbol', symbol['symbol'])

@@ -26,9 +26,17 @@ import math
 print('start @',  time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
 start_time = int(time.time())
 
+################################################################################ PLAY WITH CODE
+
+
+
+
+
+
+
 
 ################################################################################ TEST FILE PATH WRITES ON AWS
-# path = './botfarming/Development/botfarming/Development/__test_pickle'
+# path = '/home/ec2-user/environment/botfarming/Development/botfarming/Development/__test_pickle'
 # ut.pickle_write(path, 'it works!!!')
 # saved = ut.pickle_read(path)
 # print(saved)
@@ -48,30 +56,32 @@ start_time = int(time.time())
 # bm.start()
 
 
-def get_current_price_from_ticker(s):
-    ticker_path = './botfarming/Development/recent_tickers/'+s+'.pklz'
-    ticker = ut.pickle_read(ticker_path)
-    current_price = float(ticker['c'])
-    return current_price
+
+
+################################################################################ INVESTIGATE RELATIVE / ABSOLUTE PATHS ON AWS
+# print(os.curdir)
+# print(os.getcwd())
+# print(os.path.isdir('/home/ec2-user/environment/botfarming/Development/recent_tickers/'))
+
+# def get_current_price_from_ticker(s):
+#     ticker_path = '/home/ec2-user/environment/botfarming/Development/recent_tickers/'+s+'.pklz'
+#     ticker_path = '/home/ec2-user/environment/botfarming/Development/recent_tickers/'+s+'.pklz'
+#     ticker = ut.pickle_read(ticker_path)
+#     current_price = float(ticker['c'])
+#     return current_price
     
-price = ut2.get_current_price_from_ticker('OMGBTC')
-print(price)
+s = 'ENJBTC'
+# price = ut2.get_current_price_from_ticker(s)
+# print(price)
 
+# ticker_path = '/home/ec2-user/environment/botfarming/Development/recent_tickers/'+s+'.pklz'
+# ticker = ut.pickle_read(ticker_path)
+# pprint(ticker)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+while True:
+    price = ut2.get_current_price_from_ticker(s)
+    print(s, price)
+    time.sleep(0.3)
 
 
 
@@ -84,8 +94,6 @@ print(price)
 # url = 'https://api.binance.com/api/v1/klines?symbol='+ s +'&interval='+interval+'&startTime='+str(start_time)+'&endTime='+str(end_time)
 # print(url)
 # # data = requests.get(url).json()
-
-
 
 
 
@@ -105,9 +113,9 @@ print(price)
 
 
 ################################################# STUFF
-# file_path = './botfarming/Development/binance_all_trades_history/binance_all_trades_history_attempts.pklz'
+# file_path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history_attempts.pklz'
 # ut.pickle_write(file_path, [])
-# file_path = './botfarming/Development/binance_all_trades_history/binance_all_trades_history.pklz'
+# file_path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history.pklz'
 # ut.pickle_write(file_path, [])
 # print(ut.pickle_read(file_path))
 
@@ -205,7 +213,7 @@ print(price)
 # def worker_get_and_save_klines(interval, symbol, start_time, end_time):
 #     url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol +'&interval='+interval+'&startTime='+str(start_time)+'&endTime='+str(end_time)
 #     data = requests.get(url).json()
-#     ut.pickle_write('./botfarming/Development/recent_klines/'+symbol+'_'+interval+'.pklz', data)
+#     ut.pickle_write('/home/ec2-user/environment/botfarming/Development/recent_klines/'+symbol+'_'+interval+'.pklz', data)
 #     # print first candle open & last candle open as readable
 #         # print('-------------candle 0')
 #         # print symbol, ut.get_readable_time(data[0][0])
@@ -224,7 +232,7 @@ print(price)
 
 
 ############################################ Get/View Trade History Array
-# file_path_all_trades = './binance_all_trades_history/binance_all_trades_history.pklz'
+# file_path_all_trades = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history.pklz'
 # # empty our trades array
 #     # ut.pickle_write(file_path_all_trades, [])
 #     # sys.exit()
@@ -340,7 +348,7 @@ print(price)
 # pprint(range(5, 0, -1))
 
 ############################################ N-minute Candles from 1-minute Data
-# one_min_data = ut.pickle_read('./botfarming/Development/binance_training_data/20180117/BATBTC_data_1m_p0.pklz')
+# one_min_data = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_training_data/20180117/BATBTC_data_1m_p0.pklz')
 # pprint(data)
     # https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md#klinecandlestick-data
     # 1499040000000,      0 // Open time
@@ -404,7 +412,7 @@ print(price)
 
 
 ############################################ Test Data Quality
-# data = ut.pickle_read('./botfarming/Development/binance_training_data/20180118/ETHBTC_data_30m_p7.pklz')
+# data = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_training_data/20180118/ETHBTC_data_30m_p7.pklz')
 # pprint(data)
 
 
@@ -584,7 +592,7 @@ print(price)
 
 
 
-# file_path = './botfarming/Development/binance_1m_trades/1m_trades.pklz'
+# file_path = '/home/ec2-user/environment/botfarming/Development/binance_1m_trades/1m_trades.pklz'
 # f = gzip.open(file_path,'rb')
 # data_points = pickle.load(f)
 # print(numpy.sum(data_points))
@@ -592,7 +600,7 @@ print(price)
 # f.close()
 
 
-# file_path = './botfarming/Development/binance_30m_trades/30m_trades.pklz'
+# file_path = '/home/ec2-user/environment/botfarming/Development/binance_30m_trades/30m_trades.pklz'
 # f = gzip.open(file_path,'rb')
 # data_points = pickle.load(f)
 # print(numpy.sum(data_points))
@@ -601,13 +609,13 @@ print(price)
 
 
 
-# ut.append_or_create_data('./binance_30m_trades/test.pklz', 99)
+# ut.append_or_create_data('/home/ec2-user/environment/botfarming/Development/binance_30m_trades/test.pklz', 99)
 # time.sleep(1)
-# ut.append_or_create_data('./binance_30m_trades/test.pklz', 99)
+# ut.append_or_create_data('/home/ec2-user/environment/botfarming/Development/binance_30m_trades/test.pklz', 99)
 
-# is_file = os.path.isfile('./binance_profit_graph/profit_graphNOT.pklz')
+# is_file = os.path.isfile('/home/ec2-user/environment/botfarming/Development/binance_profit_graph/profit_graphNOT.pklz')
 # print(is_file)
-# is_file = os.path.isfile('./binance_profit_graph/profit_graph.pklz')
+# is_file = os.path.isfile('/home/ec2-user/environment/botfarming/Development/binance_profit_graph/profit_graph.pklz')
 # print(is_file)
 
 
@@ -767,12 +775,12 @@ print(price)
 
 # #store the object
 # myObject = {'a':'blah','b':range(10)}
-# f = gzip.open('../Data/testPickleFile.pklz','wb')
+# f = gzip.open('./home/ec2-user/environment/botfarming/Development/Data/testPickleFile.pklz','wb')
 # pickle.dump(myObject,f)
 # f.close()
 
 # #restore the object
-# f = gzip.open('../Data/testPickleFile.pklz','rb')
+# f = gzip.open('./home/ec2-user/environment/botfarming/Development/Data/testPickleFile.pklz','rb')
 # myNewObject = pickle.load(f)
 # f.close()
 

@@ -10,7 +10,7 @@ import pickle
 import gzip
 
 # custom time period
-directory = './binance_training_data/1m_20180118/'
+directory = '/home/ec2-user/environment/botfarming/Development/binance_training_data/1m_20180118/'
 minutes = 1
 # 7:30 until 9:45 (use epochtimeconverter.com or some shit)
 end_time_period = 1516222800000

@@ -15,7 +15,7 @@ from pprint import pprint
     # status = row[8]
 
 # setup dictionary for every symbol traded
-f = open('./OrderHistory.csv', 'rb')
+f = open('/home/ec2-user/environment/botfarming/Development/OrderHistory.csv', 'rb')
 reader = csv.reader(f)
 symbols = {}
 symbols_traded = {}
@@ -33,7 +33,7 @@ for row in reader:
 f.close()
 
 # track buys + sells total / filled
-f = open('./OrderHistory.csv', 'rb')
+f = open('/home/ec2-user/environment/botfarming/Development/OrderHistory.csv', 'rb')
 reader = csv.reader(f)
 for row in reader:
     status = row[8]

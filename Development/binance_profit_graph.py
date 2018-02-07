@@ -93,22 +93,22 @@ while True:
         'period_profit': 0
     }
 
-    is_file = os.path.isfile('./binance_profit_graph/profit_graph.pklz')
+    is_file = os.path.isfile('/home/ec2-user/environment/botfarming/Development/binance_profit_graph/profit_graph.pklz')
     if is_file:
         #read
-        f = gzip.open('./binance_profit_graph/profit_graph.pklz','rb')
+        f = gzip.open('/home/ec2-user/environment/botfarming/Development/binance_profit_graph/profit_graph.pklz','rb')
         data_points = pickle.load(f)
         f.close()
         data['period_profit'] = round(total_profit_so_far - data_points[-1]['profit'], 8)
         data_points.append(data)
         #write
-        f = gzip.open('./binance_profit_graph/profit_graph.pklz','wb')
+        f = gzip.open('/home/ec2-user/environment/botfarming/Development/binance_profit_graph/profit_graph.pklz','wb')
         pickle.dump(data_points, f)
         f.close()
         print('file updated')
     else:
         #save the file first time
-        f = gzip.open('./binance_profit_graph/profit_graph.pklz','wb')
+        f = gzip.open('/home/ec2-user/environment/botfarming/Development/binance_profit_graph/profit_graph.pklz','wb')
         pickle.dump([data], f)
         f.close()
         print('file created')

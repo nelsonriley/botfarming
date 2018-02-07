@@ -34,7 +34,7 @@ global bm
 bm = BinanceSocketManager(client)
 
 # get symbols & update if older than 1 hour
-symbol_path = './binance_btc_symbols.pklz'
+symbol_path = './botfarming/Development/binance_btc_symbols.pklz'
 last_modified_stamp = int(os.path.getmtime(symbol_path))
 if last_modified_stamp < int(time.time()) - 60 * 60:
     ut.update_symbol_list()
@@ -55,7 +55,7 @@ symbol_list = []
 for s in symbols_trimmed:
     symbol = symbols_trimmed[s]
     # reset current_state 'status' to 'monitoring' (not 'buying_and_selling')
-    # state_path = './program_state_1m/program_state_1m_1000_' + s + '.pklz'
+    # state_path = './botfarming/Development/program_state_1m/program_state_1m_1000_' + s + '.pklz'
     # current_state = ut.pickle_read(state_path)
     # if current_state is False:
     #     ut.pickle_write(state_path, {'status': 'monitoring'}, '******could not write state superbot 1******')
@@ -97,11 +97,11 @@ print('starting super bot now', ut.get_time())
 #         current_state = { 'status': 'monitoring' }
 #         if current_state['status'] == 'monitoring':
 #             # get order book & candles from disk (kept up to date)
-#             order_book_path = './recent_order_book/'+s+'.pklz'
+#             order_book_path = './botfarming/Development/recent_order_book/'+s+'.pklz'
 #             order_book = ut.pickle_read(order_book_path)
 #             if order_book != False:
 #                 current_price = float(order_book['bids'][0][0])
-#                 candles_path = './recent_klines/'+s+'_1m.pklz'
+#                 candles_path = './botfarming/Development/recent_klines/'+s+'_1m.pklz'
 #                 trailing_candles = ut.pickle_read(candles_path)
 #                 buy_params = ut.evaluate_buy(s, trailing_candles, current_price)
 #                 if buy_params['do_buy'] == True:

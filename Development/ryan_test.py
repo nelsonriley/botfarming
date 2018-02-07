@@ -15,12 +15,12 @@ import math
 
 length = '1m'
 
-result = ut.pickle_read('./optimization_factors/optimal_for_2.pklz')
+result = ut.pickle_read('./botfarming/Development/optimization_factors/optimal_for_2.pklz')
 
 pprint(result)
 
 
-# file_path = './program_state_30m/program_state_30m_0_GXSBTC.pklz'
+# file_path = './botfarming/Development/program_state_30m/program_state_30m_0_GXSBTC.pklz'
 # f = gzip.open(file_path,'rb')
 # data_points = pickle.load(f)
 # pprint(data_points)
@@ -30,7 +30,7 @@ pprint(result)
 #ut.append_or_create_data('./binance_' + length + '_trades/'+ length + '_trade_data', [.5,'YOMAMA',ut.get_time()])
 
 
-# file_path = './binance_30m_trades/30m_trade_data'
+# file_path = './botfarming/Development/binance_30m_trades/30m_trade_data'
 # f = gzip.open(file_path,'rb')
 # data_points = pickle.load(f)
 # pprint(data_points)

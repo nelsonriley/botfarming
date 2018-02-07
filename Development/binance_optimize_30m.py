@@ -33,7 +33,7 @@ best_minutes_until_sale_3 = 0
 
 # Volume
 volume_minimum = 450
-symbols = ut.pickle_read('./binance_btc_symbols.pklz')
+symbols = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
 total_btc_coins = 0
 symbols_trimmed = {}
 for s in symbols:

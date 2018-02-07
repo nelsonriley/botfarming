@@ -8,6 +8,7 @@ import os
 import datetime
 from pprint import pprint
 import utility as ut
+import utility_2 as ut2
 import numpy
 from binance.client import Client
 from binance.websockets import BinanceSocketManager
@@ -26,20 +27,35 @@ print('start @',  time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
 start_time = int(time.time())
 
 
+################################################################################ TEST FILE PATH WRITES ON AWS
+# path = './botfarming/Development/botfarming/Development/__test_pickle'
+# ut.pickle_write(path, 'it works!!!')
+# saved = ut.pickle_read(path)
+# print(saved)
+
 
 ################################################################################ TEST TICKER WEB SOCKET (is it current price?)
-api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
-api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
-client = Client(api_key, api_secret)
-bm = BinanceSocketManager(client)
+# api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
+# api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
+# client = Client(api_key, api_secret)
+# bm = BinanceSocketManager(client)
 
-def process_ticker_socket(msg):
-    print('-----------------------------------')
-    print(msg['stream'], msg['data']['c'])
+# def process_ticker_socket(msg):
+#     print('-----------------------------------')
+#     print(msg['stream'], msg['data']['c'])
 
-conn_key = bm.start_multiplex_socket(['neobtc@ticker'], process_ticker_socket)
-bm.start()
+# conn_key = bm.start_multiplex_socket(['neobtc@ticker'], process_ticker_socket)
+# bm.start()
 
+
+def get_current_price_from_ticker(s):
+    ticker_path = './botfarming/Development/recent_tickers/'+s+'.pklz'
+    ticker = ut.pickle_read(ticker_path)
+    current_price = float(ticker['c'])
+    return current_price
+    
+price = ut2.get_current_price_from_ticker('OMGBTC')
+print(price)
 
 
 
@@ -89,9 +105,9 @@ bm.start()
 
 
 ################################################# STUFF
-# file_path = './binance_all_trades_history/binance_all_trades_history_attempts.pklz'
+# file_path = './botfarming/Development/binance_all_trades_history/binance_all_trades_history_attempts.pklz'
 # ut.pickle_write(file_path, [])
-# file_path = './binance_all_trades_history/binance_all_trades_history.pklz'
+# file_path = './botfarming/Development/binance_all_trades_history/binance_all_trades_history.pklz'
 # ut.pickle_write(file_path, [])
 # print(ut.pickle_read(file_path))
 
@@ -189,7 +205,7 @@ bm.start()
 # def worker_get_and_save_klines(interval, symbol, start_time, end_time):
 #     url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol +'&interval='+interval+'&startTime='+str(start_time)+'&endTime='+str(end_time)
 #     data = requests.get(url).json()
-#     ut.pickle_write('./recent_klines/'+symbol+'_'+interval+'.pklz', data)
+#     ut.pickle_write('./botfarming/Development/recent_klines/'+symbol+'_'+interval+'.pklz', data)
 #     # print first candle open & last candle open as readable
 #         # print('-------------candle 0')
 #         # print symbol, ut.get_readable_time(data[0][0])
@@ -324,7 +340,7 @@ bm.start()
 # pprint(range(5, 0, -1))
 
 ############################################ N-minute Candles from 1-minute Data
-# one_min_data = ut.pickle_read('./binance_training_data/20180117/BATBTC_data_1m_p0.pklz')
+# one_min_data = ut.pickle_read('./botfarming/Development/binance_training_data/20180117/BATBTC_data_1m_p0.pklz')
 # pprint(data)
     # https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md#klinecandlestick-data
     # 1499040000000,      0 // Open time
@@ -388,7 +404,7 @@ bm.start()
 
 
 ############################################ Test Data Quality
-# data = ut.pickle_read('./binance_training_data/20180118/ETHBTC_data_30m_p7.pklz')
+# data = ut.pickle_read('./botfarming/Development/binance_training_data/20180118/ETHBTC_data_30m_p7.pklz')
 # pprint(data)
 
 
@@ -568,7 +584,7 @@ bm.start()
 
 
 
-# file_path = './binance_1m_trades/1m_trades.pklz'
+# file_path = './botfarming/Development/binance_1m_trades/1m_trades.pklz'
 # f = gzip.open(file_path,'rb')
 # data_points = pickle.load(f)
 # print(numpy.sum(data_points))
@@ -576,7 +592,7 @@ bm.start()
 # f.close()
 
 
-# file_path = './binance_30m_trades/30m_trades.pklz'
+# file_path = './botfarming/Development/binance_30m_trades/30m_trades.pklz'
 # f = gzip.open(file_path,'rb')
 # data_points = pickle.load(f)
 # print(numpy.sum(data_points))

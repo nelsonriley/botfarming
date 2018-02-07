@@ -27,7 +27,7 @@ step_backs = 8
 trailing_and_current_candles_array = {}
 smart_trailing_candles_array = {}
 
-symbols = ut.pickle_read('./binance_btc_symbols.pklz')
+symbols = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
 
 total_btc_coins = 0
 symbols_trimmed = {}
@@ -107,7 +107,7 @@ for step_back in range(0, 8):
                 for s in symbols_trimmed:
                     symbol = symbols_trimmed[s]
 
-                    data = ut.pickle_read('./binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz')
+                    data = ut.pickle_read('./botfarming/Development/binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz')
 
                     # if data != False:
                     #     print(path)

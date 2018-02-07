@@ -100,7 +100,7 @@ if minutes == 30:
     price_to_sell_factor_3 = .974
 
 
-symbols = ut.pickle_read('./binance_btc_symbols.pklz')
+symbols = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
 
 total_btc_coins = 0
 symbols_trimmed = {}
@@ -150,7 +150,7 @@ for step_back in range(0, step_backs):
             for s in symbols_trimmed:
                 symbol = symbols_trimmed[s]
 
-                data = ut.pickle_read('./binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(1)+'m_p'+str(step_back)+'.pklz')
+                data = ut.pickle_read('./botfarming/Development/binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(1)+'m_p'+str(step_back)+'.pklz')
                 data = fn.get_n_minute_candles(minutes, data)
 
                 if not data:
@@ -224,7 +224,7 @@ for step_back in range(0, step_backs):
                                 start_time_period = (candle[0])
                                 end_time_period = start_time_period + 1*60*60*1000
 
-                                sale_data_path = './binance_training_data/'+ day + '/sale_data_' + str(minutes) + 'm_'+ symbol['symbol'] +'_start_' + str(start_time_period) + '_end_' + str(end_time_period) +'.pklz'
+                                sale_data_path = './botfarming/Development/binance_training_data/'+ day + '/sale_data_' + str(minutes) + 'm_'+ symbol['symbol'] +'_start_' + str(start_time_period) + '_end_' + str(end_time_period) +'.pklz'
 
                                 data_for_sale = ut.pickle_read(sale_data_path)
                                 # watch for bad saved data

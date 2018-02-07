@@ -22,7 +22,7 @@ trailing_and_current_candles_array = {}
 smart_trailing_candles_array = {}
 total_btc_coins = 0
 symbols_trimmed = {}
-symbols = ut.pickle_read('./binance_btc_symbols.pklz')
+symbols = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
 for s in symbols:
     symbol = symbols[s]
     if float(symbol['24hourVolume']) > 450:
@@ -80,7 +80,7 @@ for step_back in range(0, 8):
                     symbol = symbols_trimmed[s]
 
                     # get 1 min data
-                    path = './binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz'
+                    path = './botfarming/Development/binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz'
                     data = ut.pickle_read(path)
                     if not data:
                         continue

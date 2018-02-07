@@ -23,7 +23,7 @@ pprint(symbols_for_save['ETHBTC'])
 print('---------------ETHBTC')
 
 print('btc symbols found:', len(symbols_for_save))
-ut.pickle_write('./binance_btc_symbols.pklz', symbols_for_save)
+ut.pickle_write('./botfarming/Development/binance_btc_symbols.pklz', symbols_for_save)
 
-symbols_saved = ut.pickle_read('./binance_btc_symbols.pklz')
+symbols_saved = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
 print('btc symbols saved:', len(symbols_saved))

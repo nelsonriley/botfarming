@@ -86,7 +86,7 @@ from pytz import timezone
 
 # #################################################################################### RUN STRATEGY
 
-# symbols = ut.pickle_read('./binance_btc_symbols.pklz')
+# symbols = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
 # symbols_filtered, symbol_list = ut2.get_trimmed_symbols(symbols, min_volume_btc)
 
 # for d, day in enumerate(days):
@@ -106,7 +106,7 @@ from pytz import timezone
 #         if print_trades:
 #             print('------------------------------', s, '-----------------------------')
 
-#         data_1 = ut.pickle_read('./binance_training_data/'+ day_1 + '/'+ s +'_data_1m.pklz')
+#         data_1 = ut.pickle_read('./botfarming/Development/binance_training_data/'+ day_1 + '/'+ s +'_data_1m.pklz')
 #         if data_1 == False or len(data_1) < 30:
 #             if print_trades:
 #                 print('no data found day 1')
@@ -126,7 +126,7 @@ from pytz import timezone
 #             # gain_percent, gain_usd, trades = trade_on_drops(symbol, data_1, future_candles_length, buy_trigger_drop_percent, sell_trigger_gain_percent, btc_tradeable_volume_factor)
 #             # print('GAIN ON CURRENT DAY DATA', s, round(gain_percent, 4), len(trades), round(gain_usd, 2))
 
-#             data_2 = ut.pickle_read('./binance_training_data/'+ day_2 + '/'+ s +'_data_1m.pklz')
+#             data_2 = ut.pickle_read('./botfarming/Development/binance_training_data/'+ day_2 + '/'+ s +'_data_1m.pklz')
 #             if data_2 == False or len(data_2) < 30:
 #                 if print_trades:
 #                     print('no data found day 2')

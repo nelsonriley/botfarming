@@ -55,12 +55,14 @@ save_params = [
 ]
 ut2.save_data(save_params, datapoints_trailing, min_volume, minutes)
 
+#day = '20180205_14:04_to_20180206_14:04'
+
 ################################################################################ RUN OPTIMIZER
 
 trailing_and_current_candles_array = {}
 smart_trailing_candles_array = {}
 
-symbols = ut.pickle_read('./binance_btc_symbols.pklz')
+symbols = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
 
 total_btc_coins = 0
 symbols_trimmed = {}
@@ -88,13 +90,13 @@ best_minutes_until_sale_3 = 0
 sell_price_drop_factor = .997
 buy_price_increase_factor = 1.002
 
-price_to_buy_factor_array = [0,.977, .969, .973, .965, .962, .96, .958, .95, .956, .95]
-price_to_sell_factor_array = [0,.995, .993, .987, .995, .992, .989, .991, .986, .986, .986]
-price_to_sell_factor_2_array = [0,.982, .98, .984, .985, .984, .983, .982, .982, .982, .981]
-price_to_sell_factor_3_array = [0,.965, .974, .965, .971, .965, .964, .964, .963, .963, .963]
-lower_band_buy_factor_array = [0,1.01, 1.15, 1.09, 1.055, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
-minutes_until_sale_array = [0,6,6,4,6,4,4,4,4,4]
-minutes_until_sale_2_array = [0,20,24,12,22,12,12,12,12,12]
+price_to_buy_factor_array = [0,.978, .968, .973, .962, .962, .96, .958, .95, .956, .95]
+price_to_sell_factor_array = [0,.992, .991, .987, .994, .992, .989, .991, .986, .986, .986]
+price_to_sell_factor_2_array = [0,.983, .977, .984, .988, .984, .983, .982, .982, .982, .981]
+price_to_sell_factor_3_array = [0,.968, .971, .965, .974, .965, .964, .964, .963, .963, .963]
+lower_band_buy_factor_array = [0,1.025, 1.12, 1.09, 1.04, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
+minutes_until_sale_array = [0,8,8,4,6,4,4,4,4,4]
+minutes_until_sale_2_array = [0,16,20,12,22,12,12,12,12,12]
 
 
 minutes_until_sale_3 = 45
@@ -110,10 +112,10 @@ best_gain = -999999
 optimal_buy_factor = 0
 optimal_sell_factor = 0
 
-optimizing_array= [2,4,1]
+optimizing_array= [4,2,1]
 
 for look_back in optimizing_array:
-    look_back_optimized = ut.pickle_read('./optimization_factors/optimal_for_' + str(look_back) + '.pklz')
+    look_back_optimized = ut.pickle_read('./botfarming/Development/optimization_factors/optimal_for_' + str(look_back) + '.pklz')
     price_to_buy_factor_array[look_back] = look_back_optimized[1]
     price_to_sell_factor_array[look_back] = look_back_optimized[2]
     price_to_sell_factor_2_array[look_back] = look_back_optimized[3]
@@ -223,13 +225,13 @@ for optimizing in optimizing_array:
                     symbol = symbols_trimmed[s]
 
                     if continuous_mode:
-                        data = ut.pickle_read('./binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m.pklz')
+                        data = ut.pickle_read('./botfarming/Development/binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m.pklz')
                         if data == False:
                             print('no data for symbol', symbol['symbol'])
                             continue
                         continous_length = len(data)
                     else:
-                        data = ut.pickle_read('./binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz')
+                        data = ut.pickle_read('./botfarming/Development/binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz')
 
                     # if data != False:
                     #     print(path)
@@ -268,7 +270,7 @@ for optimizing in optimizing_array:
                             will_buy = False
 
                             #look back schedule 2,1,4 or 2,4,1
-                            look_back_schedule = [2,4,1]
+                            look_back_schedule = [4,2,1]
                             #look_back_schedule = [6,1,8,10,9,4,5,2,7,3]
 
                             current_look_back = 0
@@ -446,7 +448,7 @@ for optimizing in optimizing_array:
     print('optimal minutes, optimal minutes 2', optimal_minutes_until_sale, optimal_minutes_until_sale_2)
     print('optimal sell 2, optimal sell 3', optimal_sell_factor_2, optimal_sell_factor_3)
     optimization_factors = [optimizing, optimal_buy_factor, optimal_sell_factor, optimal_sell_factor_2, optimal_sell_factor_3, optimal_minutes_until_sale, optimal_minutes_until_sale_2, optimal_band_factor]
-    ut.pickle_write('./optimization_factors/optimal_for_' + str(optimizing) + '.pklz', optimization_factors)
+    ut.pickle_write('./botfarming/Development/optimization_factors/optimal_for_' + str(optimizing) + '.pklz', optimization_factors)
     print('###################################################################')
     print('###################################################################')
     print('###################################################################')

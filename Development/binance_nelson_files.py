@@ -11,8 +11,8 @@ print(isinstance({},dict))
 print(isinstance(None,dict))
 
 pickle_file_path = '/home/nelsonriley/Development/binance_profit_graph/profits.pklz'
-pickle_file_path = './program_state_1m/program_state_1m_3_SALTBTC.pklz'
-pickle_file_path = './program_state_1m/test.pklz'
+pickle_file_path = './botfarming/Development/program_state_1m/program_state_1m_3_SALTBTC.pklz'
+pickle_file_path = './botfarming/Development/program_state_1m/test.pklz'
 
 f = gzip.open(pickle_file_path,'wb')
 #pickle.dump({'epoch': 1515612763, 'profit': 0, 'readable_time': '2018-01-10 19:32:43'}, f)

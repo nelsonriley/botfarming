@@ -13,11 +13,11 @@ import utility as ut
 import json
 import math
 
-path = './binance_all_trades_history/binance_all_trades_history.pklz'
+path = './botfarming/Development/binance_all_trades_history/binance_all_trades_history.pklz'
 bot_trades = ut.pickle_read(path)
 # if bot_trades == False:
-# ut.pickle_write(path, [])
-# bot_trades = ut.pickle_read(path)
+#ut.pickle_write(path, [])
+#bot_trades = ut.pickle_read(path)
 
 total_profit = 0
 total_trades = 0
@@ -27,7 +27,6 @@ profit_with_limit_3 = 0
 profit_with_limit_4 = 0
 # start_epoch = 1517024439
 # start_epoch = 1517353200
-
 
 
 for bot_trade in bot_trades:
@@ -64,10 +63,10 @@ print(total_trades)
 #     trades_by_size['over_1000'] = {}
 #     trades_by_size['over_1000']['sum'] = 0
 #     trades_by_size['over_1000']['number_of_trades'] = 0
-#     symbols = ut.pickle_read('./binance_btc_symbols.pklz')
+#     symbols = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
 #     #pprint(symbols)
 
-#     file_path = './binance_' + length + '_trades/' + length + '_trade_data'
+#     file_path = './botfarming/Development/binance_' + length + '_trades/' + length + '_trade_data'
 #     f = gzip.open(file_path,'rb')
 #     data_points = pickle.load(f)
 #     #pprint(data_points)

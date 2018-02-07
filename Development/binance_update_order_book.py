@@ -22,7 +22,7 @@ bm = BinanceSocketManager(client)
 # limit symbols by 24hr volume
 min_volume = 0 # 450
 ut.update_symbol_list()
-symbol_path = './binance_btc_symbols.pklz'
+symbol_path = './botfarming/Development/binance_btc_symbols.pklz'
 symbols = ut.pickle_read(symbol_path)
 total_btc_coins = 0
 symbols_trimmed = {}
@@ -34,7 +34,7 @@ for s in symbols:
         total_btc_coins += 1
         symbols_trimmed[s] = symbol
         socket_list.append(s.lower()+'@depth20')
-        ut.pickle_write('./recent_order_books/'+s+'.pklz', False)
+        ut.pickle_write('./botfarming/Development/recent_order_books/'+s+'.pklz', False)
 
 print('symbols with volume > ', min_volume, '=', len(socket_list))
 

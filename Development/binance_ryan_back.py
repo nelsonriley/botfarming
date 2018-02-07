@@ -44,7 +44,7 @@ if minutes == 1:
     price_to_sell_factor_3 = .965
 
 
-symbols = ut.pickle_read('./binance_btc_symbols.pklz')
+symbols = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
 
 total_btc_coins = 0
 symbols_trimmed = {}
@@ -95,7 +95,7 @@ for a in range(0, 1):
                     symbol = symbols_trimmed[s]
 
 
-                    data = ut.pickle_read('./binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz')
+                    data = ut.pickle_read('./botfarming/Development/binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m_p'+str(step_back)+'.pklz')
 
                     if not data:
                         continue

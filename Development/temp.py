@@ -48,7 +48,7 @@ pprint(stats)
 
 
 ################################################# CONFIRM MAX DROPS SAVED for 24 HOURS
-# symbol_24hr_drop_path = './binance_24hr_1min_drop/24hr_1min_drops_by_symbol/YOYOBTC.pklz'
+# symbol_24hr_drop_path = './botfarming/Development/binance_24hr_1min_drop/24hr_1min_drops_by_symbol/YOYOBTC.pklz'
 # data = ut.pickle_read(symbol_24hr_drop_path)
 # pprint(data)
 
@@ -105,9 +105,9 @@ pprint(stats)
 
 
 ################################################# STUFF
-# file_path = './binance_all_trades_history/binance_all_trades_history_attempts.pklz'
+# file_path = './botfarming/Development/binance_all_trades_history/binance_all_trades_history_attempts.pklz'
 # ut.pickle_write(file_path, [])
-# file_path = './binance_all_trades_history/binance_all_trades_history.pklz'
+# file_path = './botfarming/Development/binance_all_trades_history/binance_all_trades_history.pklz'
 # ut.pickle_write(file_path, [])
 # print(ut.pickle_read(file_path))
 
@@ -205,7 +205,7 @@ pprint(stats)
 # def worker_get_and_save_klines(interval, symbol, start_time, end_time):
 #     url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol +'&interval='+interval+'&startTime='+str(start_time)+'&endTime='+str(end_time)
 #     data = requests.get(url).json()
-#     ut.pickle_write('./recent_klines/'+symbol+'_'+interval+'.pklz', data)
+#     ut.pickle_write('./botfarming/Development/recent_klines/'+symbol+'_'+interval+'.pklz', data)
 #     # print first candle open & last candle open as readable
 #         # print('-------------candle 0')
 #         # print symbol, ut.get_readable_time(data[0][0])
@@ -340,7 +340,7 @@ pprint(stats)
 # pprint(range(5, 0, -1))
 
 ############################################ N-minute Candles from 1-minute Data
-# one_min_data = ut.pickle_read('./binance_training_data/20180117/BATBTC_data_1m_p0.pklz')
+# one_min_data = ut.pickle_read('./botfarming/Development/binance_training_data/20180117/BATBTC_data_1m_p0.pklz')
 # pprint(data)
     # https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md#klinecandlestick-data
     # 1499040000000,      0 // Open time
@@ -404,7 +404,7 @@ pprint(stats)
 
 
 ############################################ Test Data Quality
-# data = ut.pickle_read('./binance_training_data/20180118/ETHBTC_data_30m_p7.pklz')
+# data = ut.pickle_read('./botfarming/Development/binance_training_data/20180118/ETHBTC_data_30m_p7.pklz')
 # pprint(data)
 
 
@@ -584,7 +584,7 @@ pprint(stats)
 
 
 
-# file_path = './binance_1m_trades/1m_trades.pklz'
+# file_path = './botfarming/Development/binance_1m_trades/1m_trades.pklz'
 # f = gzip.open(file_path,'rb')
 # data_points = pickle.load(f)
 # print(numpy.sum(data_points))
@@ -592,7 +592,7 @@ pprint(stats)
 # f.close()
 
 
-# file_path = './binance_30m_trades/30m_trades.pklz'
+# file_path = './botfarming/Development/binance_30m_trades/30m_trades.pklz'
 # f = gzip.open(file_path,'rb')
 # data_points = pickle.load(f)
 # print(numpy.sum(data_points))
@@ -829,7 +829,7 @@ print('elapsed:', int(time.time()) - start_time, 'seconds')
 #             # #          [u'0.01265300', u'0.20000000', []],
 #             # print('--------------------------------------')
 #             symbol = msg['stream'].split('@')[0].upper()
-#             ut.pickle_write('./recent_order_book/'+symbol+'.pklz', msg['data'])
+#             ut.pickle_write('./botfarming/Development/recent_order_book/'+symbol+'.pklz', msg['data'])
 
 # conn_key = bm.start_multiplex_socket(socket_list, process_socket_pushes)
 # bm.start()
@@ -882,7 +882,7 @@ print('elapsed:', int(time.time()) - start_time, 'seconds')
 
 
 #########################check if symbols are in our list
-# symbols = ut.pickle_read('./binance_btc_symbols.pklz')
+# symbols = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
 # symbol_list = []
 # for s in symbols:
 #     symbol = symbols[s]
@@ -892,7 +892,7 @@ print('elapsed:', int(time.time()) - start_time, 'seconds')
 #             print('----', s)
 # print('symbol_count', len(symbol_list))
 # i = 0
-# symbols2 = ut.pickle_read('./binance_btc_symbols.pklz')
+# symbols2 = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
 # for s in symbols2:
 #     if symbol_list[i] != s:
 #         print('wtf!', s)

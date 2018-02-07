@@ -15,24 +15,15 @@ from pytz import timezone
 
 # optimizing on 8 days
 days = [
-    # '20180124_c',
-    # '20180125_c',
-    # '20180126_c',
-    # '20180127_c',
-    '20180128_c',
-    '20180129_c',
-    '20180130_c',
-    '20180131_c',
-    '20180201',
-    # ['20180128_24', '2018-01-27 12:00', '2018-01-28 12:00'],
-    # ['20180129_24', '2018-01-28 12:00', '2018-01-29 12:00'],
-    # ['20180130_24', '2018-01-29 12:00', '2018-01-30 12:00'],
-    # ['20180131_24', '2018-01-30 12:00', '2018-01-31 12:00'],
-    # ['20180201_24', '2018-01-31 12:00', '2018-02-01 12:00'],
-    '20180202_24',
-    '20180203_24',
+    # '20180129_24',
+    # '20180130_24',
+    # '20180131_24',
+    # '20180201_24',
+    # '20180202_24',
+    # '20180203_24',
     '20180204_24',
     '20180205_24',
+    '20180206_24'
 ]
 
 future_candles_length = 15 # 20180205
@@ -49,7 +40,7 @@ print_trades = False
 
 #################################################################################### RUN STRATEGY
 
-symbols = ut.pickle_read('./binance_btc_symbols.pklz')
+symbols = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
 symbols_filtered, symbol_list = ut2.get_trimmed_symbols(symbols, min_volume_btc)
 
 
@@ -62,20 +53,20 @@ all_day_results = {} # key = param combo, value = array of individual day result
 # 3 combos takes 20min or so
 # started @ 16:48 > 15:13
 # for a in range(0, 3):
-for a in [0.15,0.25,0.30,0.35]:
+for a in [0.9,0.8,0.7]:
 
     # optimizing params: 15_0.9_0.8 = $3800
         # ('15_0.2_0.1', '$', 75852.41, 41.605, '%', 98999)
         # ('15_0.3_0.2', '$', 104511.47, 61.0679, '%', 47957) <--- LOCAL BEST
         # ('15_0.4_0.3', '$', 87807.07, 50.4541, '%', 24957)
         # ('15_0.5_0.4', '$', 76593.71, 39.4662, '%', 14306)
-        # ('15_0.6_0.5', '$', 59957.12, 29.2469, '%', 21000) 120 trades/min
-        # ('15_0.7_0.6', '$', 50382.33, 23.0861, '%', 4900) <--- START HERE
+        # ('15_0.6_0.5', '$', 59957.12, 29.2469, '%', 21000) 2 trades/min
+        # ('15_0.7_0.6', '$', 50382.33, 23.0861, '%', 4900) <--- START HERE 0.5 trades/min
         # ('15_0.75_0.65', '$', 47677.47, 21.6949, '%', 2800)
-        # ('15_0.85_0.75', '$', 41578.04, 18.1444, '%')
+        # ('15_0.85_0.75', '$', 41578.04, 18.1444, '%') 0.166 trades/min
             # ('15_0.3_0.3', '$', 115735.12, 67.5115, '%', 47957)
             # ('15_0.3_0.15', '$', 80427.81, 46.3532, '%', 47957)
-            # ('15_0.3_0.25', '$', 117912.85, 67.8962, '%', 47957) <--- BEST   4.7 trades per min    1 in 20 of all symbols being traded continuously
+            # ('15_0.3_0.25', '$', 117912.85, 67.8962, '%', 47957) <--- BEST   4.7 trades/min    1 in 20 of all symbols being traded continuously
             # ('15_0.3_0.35', '$', 117869.66, 66.6428, '%', 47957)
 
     # start = 6
@@ -85,9 +76,10 @@ for a in [0.15,0.25,0.30,0.35]:
     # start = 0.8
     # step = 0.1
     # buy_trigger_drop_percent_factor = start + (a * step)
-    # buy_trigger_drop_percent_factor = a
-    # sell_trigger_gain_percent_factor = buy_trigger_drop_percent_factor - 0.1
-    sell_trigger_gain_percent_factor = a
+    buy_trigger_drop_percent_factor = a
+    sell_trigger_gain_percent_factor = buy_trigger_drop_percent_factor - 0.1
+    
+    # sell_trigger_gain_percent_factor = a
 
     for d, day in enumerate(days):
         print('------------------------------', day, '-----------------------------')
@@ -106,7 +98,7 @@ for a in [0.15,0.25,0.30,0.35]:
             if print_trades:
                 print('------------------------------', s, '-----------------------------')
 
-            data_1 = ut.pickle_read('./binance_training_data/'+ day_1 + '/'+ s +'_data_1m.pklz')
+            data_1 = ut.pickle_read('./botfarming/Development/binance_training_data/'+ day_1 + '/'+ s +'_data_1m.pklz')
             if data_1 == False or len(data_1) < 30:
                 if print_trades:
                     print('no data found day 1')
@@ -126,7 +118,7 @@ for a in [0.15,0.25,0.30,0.35]:
                 # gain_percent, gain_usd, trades = ut2.trade_on_drops(symbol, data_1, future_candles_length, buy_trigger_drop_percent, sell_trigger_gain_percent, btc_tradeable_volume_factor)
                 # print('GAIN ON CURRENT DAY DATA', s, round(gain_percent, 4), len(trades), round(gain_usd, 2))
 
-                data_2 = ut.pickle_read('./binance_training_data/'+ day_2 + '/'+ s +'_data_1m.pklz')
+                data_2 = ut.pickle_read('./botfarming/Development/binance_training_data/'+ day_2 + '/'+ s +'_data_1m.pklz')
                 if data_2 == False or len(data_2) < 30:
                     if print_trades:
                         print('no data found day 2')
@@ -206,6 +198,10 @@ for param_combo in all_day_results:
     trades_per_symbol = sum(day_result['trades_per_symbol'] for day_result in daily_results)
     avg_volume_btc = round(sum(day_result['avg_volume_btc'] for day_result in daily_results) / days, 4)
     avg_gain_percent = round(sum(day_result['avg_gain_percent'] for day_result in daily_results) / days, 4)
+    
+    trades_per_day = int(total_trades / days)
+    trades_per_hour = round(total_trades / days / 24, 1)
+    trades_per_minute = round(total_trades / days / 24 / 60, 2)
 
     param_result = {
         'gain_percent': gain_percent,
@@ -214,6 +210,9 @@ for param_combo in all_day_results:
         'trades_per_symbol': trades_per_symbol,
         'avg_volume_btc': avg_volume_btc,
         'avg_gain_percent': avg_gain_percent,
+        'trades_per_day': trades_per_day,
+        'trades_per_hour': trades_per_hour,
+        'trades_per_minute': trades_per_minute,
         # params
         'future_candles_length': daily_results[0]['future_candles_length'],
         'buy_trigger_drop_percent_factor': daily_results[0]['buy_trigger_drop_percent_factor'],
@@ -235,13 +234,14 @@ for param_combo in all_param_results:
     if result['gain_usd'] > biggest_gain:
         biggest_gain = result['gain_usd']
         best_params = result
-    print(param_combo, '$', result['gain_usd'], result['gain_percent'], '%', result['total_trades'])
+    r = result
+    print(param_combo, '$', r['gain_usd'], r['gain_percent'], '%', r['total_trades'], 'day', r['trades_per_day'], 'hr', r['trades_per_hour'], 'min', r['trades_per_minute'])
 
 print('---------------------------------------------------------------- best_params (to save)')
 pprint(best_params)
 
 # TODO: save best_params to disk
-# best_params_path = './binance_24hr_1min_drop/best_params.pklz'
+# best_params_path = './botfarming/Development/binance_24hr_1min_drop/best_params.pklz'
 # ut.pickle_write(best_params_path, best_params, 'ERROR could not save best_params for 24hr 1min drop strategy')
 
 print('done @', ut.get_time())

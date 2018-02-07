@@ -19,7 +19,7 @@ import numpy
 # import urllib
 # from binance.client import Client
 
-file_path = './binance_profit_graph/profits.pklz'
+file_path = './botfarming/Development/binance_profit_graph/profits.pklz'
 f = gzip.open(file_path,'rb')
 data_points = pickle.load(f)
 pprint(data_points)

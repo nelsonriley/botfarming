@@ -13,7 +13,7 @@ import utility as ut
 import json
 import math
 
-bot_trades_attempts = ut.pickle_read('./binance_all_trades_history/binance_all_trades_history_attempts.pklz')
+bot_trades_attempts = ut.pickle_read('./botfarming/Development/binance_all_trades_history/binance_all_trades_history_attempts.pklz')
 
 total_trades_attempts = 0
 start_epoch = 1517024439
@@ -58,10 +58,10 @@ print(total_trades_attempts)
 #     trades_by_size['over_1000'] = {}
 #     trades_by_size['over_1000']['sum'] = 0
 #     trades_by_size['over_1000']['number_of_trades'] = 0
-#     symbols = ut.pickle_read('./binance_btc_symbols.pklz')
+#     symbols = ut.pickle_read('./botfarming/Development/binance_btc_symbols.pklz')
 #     #pprint(symbols)
 
-#     file_path = './binance_' + length + '_trades/' + length + '_trade_data'
+#     file_path = './botfarming/Development/binance_' + length + '_trades/' + length + '_trade_data'
 #     f = gzip.open(file_path,'rb')
 #     data_points = pickle.load(f)
 #     #pprint(data_points)

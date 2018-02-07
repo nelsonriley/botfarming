@@ -60,19 +60,22 @@ def pickle_read(file_path):
         #print(e)
         return False
         
-def pickle_read_test(file_path):
+def pickle_read_test(file_path, file_was_in_use=False):
     try:
-        file_exists = os.path.isfile(file_path)
-        if not file_exists:
-            print('sleeping in pickle_read_test')
-            time.sleep(0.1)
+        # file_exists = os.path.isfile(file_path)
+        # if not file_exists:
+        #     print('sleeping in pickle_read_test')
+        #     time.sleep(0.1)
         f = gzip.open(file_path,'rb')
         data = pickle.load(f)
         f.close()
         return data
     except Exception as e:
-        print('ERROR in pickle_read_test()')
-        print(e)
+        if not file_was_in_use:
+            time.sleep(1.5)
+            pickle_read_test(file_path, file_was_in_use=True)
+        # print('ERROR in pickle_read_test() after retrying read', file_path, e)
+        # print(e)
         return False
 
 def pickle_write(file_path, data, error_message='pickle could not write'):
@@ -152,7 +155,7 @@ def buy_coin_socket(msg):
 
 
 def process_socket_pushes_order_book(msg):
-    if 'e' in msg and msg['e'] == 'error':
+    if not 'stream' in msg:
         # close and restart the socket, if socket can't reconnect itself
         print('restarting process_socket_pushes(msg)')
         global socket_list
@@ -257,7 +260,7 @@ def cancel_sale_order(current_state):
 
 def create_buy_order(current_state, price_to_buy):
 
-    maximum_order_to_buy = float_to_str(round(current_state['largest_buy_segment'],current_state['quantity_decimals']))
+    maximum_order_to_buy = float_to_str(round(current_state['largest_buy_segment'], current_state['quantity_decimals']))
     maximum_possible_buy = float_to_str(round(current_state['original_amount_to_buy'] - current_state['executedQty'], current_state['quantity_decimals']))
     quantity_to_buy = min(float(maximum_order_to_buy), float(maximum_possible_buy))
 
@@ -268,7 +271,8 @@ def create_buy_order(current_state, price_to_buy):
 
     current_state['state'] = 'buying'
     current_state['orderId'] = buy_order['orderId']
-    pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state 2nd sell******')
+    current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz'
+    pickle_write(current_state_path, current_state, '******could not write state 2nd sell******')
 
     return current_state
 
@@ -578,7 +582,7 @@ def buy_coin(symbol, length, file_number):
         part_of_bitcoin_to_use = .35
         price_to_start_buy_factor = 1.003
 
-        sell_price_drop_factor = .996
+        sell_price_drop_factor = .997
         buy_price_increase_factor = 1.002
 
         price_to_buy_factor_array = [0,.977, .969, .973, .965, .962, .96, .958, .95, .956, .95]
@@ -610,7 +614,7 @@ def buy_coin(symbol, length, file_number):
                 should_trade = look_back_optimized[8]
             else:
                 print('No trading parameters for', symbol['symbol'], 'look_back', look_back)
-                time.sleep(30)
+                time.sleep(60*30)
                 return
             
         if should_trade == False:
@@ -715,7 +719,7 @@ def buy_coin(symbol, length, file_number):
                         # file_path_all_trades_attempts = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history_attempts.pklz'
                         # append_data(file_path_all_trades_attempts, recorded_trade_attempt)
 
-                        print('-------------------buy!', symbol['symbol'], 'look_back', look_back, price_to_buy, get_time())
+                        print('-------------------buy!', symbol['symbol'], 'look_back', look_back, 'price', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back], 'price_to_sell_factor',price_to_sell_factor_array[look_back] , get_time())
 
                         if lower_band_buy_factor < 100:
                             price_to_buy = min(lower_band_for_index*lower_band_buy_factor, float(data[index-look_back][4])*price_to_buy_factor)

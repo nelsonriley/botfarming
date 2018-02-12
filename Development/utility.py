@@ -213,26 +213,24 @@ def update_symbol_list():
 
 
 def cancel_buy_order(current_state):
+    
+    order_id_of_current_state = current_state['orderId']
 
     try:
         buy_canceled_order = current_state['client'].cancel_order(symbol=current_state['symbol'], orderId=current_state['orderId'])
     except Exception as e:
         print('could not cancel buy order (no order id exists any longer)')
 
-    try:
-        buy_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
-        current_state['state'] = 'buying'
-        current_state['orderId'] = False
-        current_state['executedQty'] = current_state['executedQty'] + float(buy_order_info['executedQty'])
-        if float(buy_order_info['price']) != 0:
-            current_state['original_price'] = float(buy_order_info['price'])
-        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state******')
-    except Exception as e:
-        print('could not get buy_order_info')
-        current_state['state'] = 'buying'
-        current_state['orderId'] = False
-        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state******')
-
+    current_state['state'] = 'buying'
+    current_state['orderId'] = False
+    pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state******')
+    
+    buy_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=order_id_of_current_state)
+    current_state['executedQty'] = current_state['executedQty'] + float(buy_order_info['executedQty'])
+    if float(buy_order_info['price']) != 0:
+        current_state['original_price'] = float(buy_order_info['price'])
+    pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state******')
+    
 
     return current_state
 
@@ -262,7 +260,8 @@ def create_buy_order(current_state, price_to_buy):
 
     maximum_order_to_buy = float_to_str(round(current_state['largest_buy_segment'], current_state['quantity_decimals']))
     maximum_possible_buy = float_to_str(round(current_state['original_amount_to_buy'] - current_state['executedQty'], current_state['quantity_decimals']))
-    quantity_to_buy = min(float(maximum_order_to_buy), float(maximum_possible_buy))
+    #quantity_to_buy = min(float(maximum_order_to_buy), float(maximum_possible_buy))
+    quantity_to_buy = maximum_possible_buy
 
     # DEBUGGER
     # print('qty', quantity_to_buy, 'price', price_to_buy)
@@ -505,48 +504,57 @@ def sell_coin_with_order_book(current_state):
 
 def buy_coin_from_state(current_state, strategy='ryan'):
 
-    print('buy coin from state', current_state['symbol'], 'strategy', strategy)
-    current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz'
 
-    if (current_state['state'] == 'sleeping'):
-        print('sleeping...', current_state['symbol'])
-        time.sleep(60*60*10)
-        pickle_write(current_state_path, False, '******could not write state buy from stae******')
-        return
-
-    if (current_state['state'] == 'buying'):
-
-        if current_state['orderId'] != False:
-            current_state = cancel_buy_order(current_state)
-
-        if float(current_state['executedQty']) < current_state['min_quantity']:
-            print('buy order canceled, was never filled, exiting')
+    try:
+        print('buy coin from state', current_state['symbol'], 'strategy', strategy)
+        current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz'
+    
+        if (current_state['state'] == 'sleeping'):
+            print('sleeping...', current_state['symbol'])
+            time.sleep(60*60*10)
             pickle_write(current_state_path, False, '******could not write state buy from stae******')
-            if strategy == 'ryan':
-                pickle_write(current_state_path, False)
             return
-        else:
-            current_state['state'] = 'selling'
-            current_state['original_quantity'] = current_state['executedQty']
-            pickle_write(current_state_path, current_state, '******could not write state******')
-
-
-    ##are selling...
-    print('buy_coin_from_state() selling..', current_state['symbol'])
-
-    if current_state['orderId'] > 0:
-
-        print('sale order exisits canceling it..')
-        current_state = cancel_sale_order(current_state)
-        if current_state['executedQty'] < current_state['min_quantity']:
-            calculate_profit_and_free_coin(current_state)
-            return
-
-    print('buy_coin_from_state() no open orders, selling coin..', current_state['symbol'], 'strategy', strategy)
-    if strategy == 'ryan':
-        sell_coin_with_order_book(current_state)
-    if strategy == '24hr_1min_drop':
-        ut2.sell_for_24hr_1min_drop(current_state)
+    
+        if (current_state['state'] == 'buying'):
+    
+            if current_state['orderId'] != False:
+                current_state = cancel_buy_order(current_state)
+    
+            if float(current_state['executedQty']) < current_state['min_quantity']:
+                print('buy order canceled, was never filled, exiting')
+                pickle_write(current_state_path, False, '******could not write state buy from stae******')
+                if strategy == 'ryan':
+                    pickle_write(current_state_path, False)
+                return
+            else:
+                current_state['state'] = 'selling'
+                current_state['original_quantity'] = current_state['executedQty']
+                pickle_write(current_state_path, current_state, '******could not write state******')
+    
+    
+        ##are selling...
+        print('buy_coin_from_state() selling..', current_state['symbol'])
+    
+        if current_state['orderId'] > 0:
+    
+            print('sale order exisits canceling it..')
+            current_state = cancel_sale_order(current_state)
+            if current_state['executedQty'] < current_state['min_quantity']:
+                calculate_profit_and_free_coin(current_state)
+                return
+    
+        print('buy_coin_from_state() no open orders, selling coin..', current_state['symbol'], 'strategy', strategy)
+        if strategy == 'ryan':
+            sell_coin_with_order_book(current_state)
+        if strategy == '24hr_1min_drop':
+            ut2.sell_for_24hr_1min_drop(current_state)
+    
+    except Exception as e:
+        print('some error - freeing coin:', current_state['symbol'])
+        print(e)
+        print_exception()
+        time.sleep(60*4)
+        return False
 
 
 def buy_coin(symbol, length, file_number):
@@ -597,6 +605,10 @@ def buy_coin(symbol, length, file_number):
         datapoints_trailing = 230
 
         look_back_schedule = [4,2,1]
+        look_back_gains = [0,0,0,0,0,0,0,0,0,0]
+        look_back_wins = [0,0,0,0,0,0,0,0,0,0]
+        look_back_losses = [0,0,0,0,0,0,0,0,0,0]
+        max_look_back_gain = 0
         
         should_trade = False
 
@@ -611,15 +623,19 @@ def buy_coin(symbol, length, file_number):
                 minutes_until_sale_array[look_back] = look_back_optimized[5]
                 minutes_until_sale_2_array[look_back] = look_back_optimized[6]
                 lower_band_buy_factor_array[look_back] = look_back_optimized[7]
-                should_trade = look_back_optimized[8]
+                look_back_gains[look_back] = look_back_optimized[9]
+                look_back_wins[look_back] = look_back_optimized[10]
+                look_back_losses[look_back] = look_back_optimized[11]
+                if look_back_gains[look_back] > max_look_back_gain:
+                    max_look_back_gain = look_back_gains[look_back]
             else:
                 print('No trading parameters for', symbol['symbol'], 'look_back', look_back)
-                time.sleep(60*30)
+                time.sleep(30*30)
                 return
             
-        if should_trade == False:
-            #print('This symbol has bad results and we should not trade on it', symbol['symbol'], 'look_back', look_back)
-            time.sleep(30)
+        if max_look_back_gain <= 0:
+            print('This symbol has bad or no results and we should not trade on it ', symbol['symbol'], 'max_look_back_gain', max_look_back_gain)
+            time.sleep(30*30)
             return
 
         while time.localtime().tm_sec < 3:
@@ -670,6 +686,9 @@ def buy_coin(symbol, length, file_number):
             #     print('about to check lookback', symbol['symbol'], 'current_price',  current_price, get_time())
 
             for look_back in look_back_schedule:
+                
+                if look_back_gains[look_back] <= 0:
+                    continue
 
                 price_to_start_buy = float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy_factor
 
@@ -719,7 +738,7 @@ def buy_coin(symbol, length, file_number):
                         # file_path_all_trades_attempts = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history_attempts.pklz'
                         # append_data(file_path_all_trades_attempts, recorded_trade_attempt)
 
-                        print('-------------------buy!', symbol['symbol'], 'look_back', look_back, 'price', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back], 'price_to_sell_factor',price_to_sell_factor_array[look_back] , get_time())
+                        print('-------------------buy!', symbol['symbol'], 'look_back', look_back, 'price', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back], 'price_to_sell_factor',price_to_sell_factor_array[look_back] , 'minutes until sale', minutes_until_sale_array[look_back], 'look_back_gain', look_back_gains[look_back], 'look_back_wins', look_back_wins[look_back], 'look_back_losses', look_back_losses[look_back], get_time())
 
                         if lower_band_buy_factor < 100:
                             price_to_buy = min(lower_band_for_index*lower_band_buy_factor, float(data[index-look_back][4])*price_to_buy_factor)
@@ -766,8 +785,6 @@ def buy_coin(symbol, length, file_number):
                         current_state['quantity_decimals'] = quantity_decimals
                         current_state['min_price'] = float(symbol['filters'][0]['minPrice'])
                         current_state['min_quantity'] = min(float(symbol['filters'][1]['minQty']), float(symbol['filters'][2]['minNotional']))
-                        current_state['trailing_candles'] = trailing_candles
-                        current_state['trailing_volumes'] = trailing_volumes
 
                         pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + length + '/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '.pklz', current_state, '******could not write state******')
 

@@ -12,12 +12,50 @@ import gzip
 import utility as ut
 import json
 import math
+from binance.client import Client
 
-length = '1m'
 
-result = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_2.pklz')
+######
+symbols = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_btc_symbols.pklz')
+    
+total_btc_coins = 0
+symbols_trimmed = {}
 
-pprint(result)
+for s in symbols:
+    symbol = symbols[s]
+    if float(symbol['24hourVolume']) > 450:
+        total_btc_coins += 1
+        symbols_trimmed[s] = symbol
+        
+
+total_gain = 0
+total_symbols = 0
+look_back_array = [4,2,1]
+for s in symbols_trimmed:
+    symbol = symbols_trimmed[s]
+    print(symbol['symbol'])
+    total_symbols += 1
+    
+    for look_back in look_back_array:
+        look_back_optimized = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
+        if look_back_optimized != False:
+            print(symbol['symbol'], look_back_optimized[1], look_back_optimized[9], look_back_optimized[10], look_back_optimized[11])
+            total_gain += look_back_optimized[9]
+            
+    
+print('total_gain', total_gain)
+print('total_symbols', total_symbols)
+
+
+
+
+
+
+# length = '1m'
+
+# result = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_2.pklz')
+
+# pprint(result)
 
 
 # file_path = '/home/ec2-user/environment/botfarming/Development/program_state_30m/program_state_30m_0_GXSBTC.pklz'

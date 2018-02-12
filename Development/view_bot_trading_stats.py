@@ -28,13 +28,26 @@ profit_with_limit_4 = 0
 # start_epoch = 1517024439
 # start_epoch = 1517353200
 
-
+start_counting = False
 for bot_trade in bot_trades:
     print(bot_trade[0], bot_trade[1], bot_trade[2], bot_trade[3], bot_trade[4], bot_trade[5])
-
+    # look_back_optimized = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + bot_trade[1] + '_1.pklz')
+    # if look_back_optimized != False:
+    #     print(bot_trade[1], look_back_optimized[9], look_back_optimized[10], look_back_optimized[11])
+    #     if float(look_back_optimized[11]) != 0:
+    #         win_loss_ratio = float(look_back_optimized[10])/float(look_back_optimized[11])
+    #     else:
+    #         win_loss_ratio = 999
+    #     print win_loss_ratio
+    # print('')
+    
     # print(bot_trade['time_buy_epoch'], bot_trade['time_buy_human'], bot_trade['symbol'], bot_trade['profit_btc'], bot_trade['profit_percent'], bot_trade['invested_btc'], bot_trade['look_back'], bot_trade['volume_ten_candles_btc'], bot_trade['volume_twentyfour_hr_btc'])
-    total_profit += bot_trade[2]
-    total_trades += 1
+    #if win_loss_ratio > 4:
+    if '2018-02-12' in bot_trade[0]:
+        start_counting = True
+    if start_counting == True:
+        total_profit += bot_trade[2]
+        total_trades += 1
     # profit_with_limit += bot_trade['profit_percent']*min(.35,bot_trade['invested_btc'])
     # profit_with_limit_2 += bot_trade['profit_percent']*min(.4,bot_trade['invested_btc'])
     # profit_with_limit_3 += bot_trade['profit_percent']*min(.45,bot_trade['invested_btc'])

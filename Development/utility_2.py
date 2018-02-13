@@ -187,6 +187,7 @@ def monitor_and_buy_for_24hr_1min_drop(symbol, interval, file_number, client):
                 current_state['buy_trigger_drop_percent'] = buy_trigger_drop_percent
                 current_state['sell_trigger_gain_percent'] = sell_trigger_gain_percent
                 current_state['btc_tradeable_volume_factor'] = btc_tradeable_volume_factor
+                current_state['symbol_data'] = symbol
 
                 ut.pickle_write(current_state_path, current_state, '******could not write initial current_state******')
 
@@ -300,11 +301,16 @@ def sell_for_24hr_1min_drop(current_state):
                         break
                     else:
                         current_state['sell_partial_fill_qty'] = current_state['original_amount_to_buy'] - current_state['executedQty']
+                else:
+                    current_state['traded_by_sell_trigger'] = False
+                    current_state['sell_time_triggered'] = int(time.time())
+                    current_state['sell_time_triggered_readable'] = ut.get_time()
                 current_state = ut.create_sale_order(current_state, current_state['executedQty'], market=True)
 
             # create 1 limit sale order & wait
             if current_price >= price_to_sell_for_order:
                 if current_state['orderId'] == False:
+                    current_state['traded_by_sell_trigger'] = True
                     current_state['sell_time_triggered'] = int(time.time())
                     current_state['sell_time_triggered_readable'] = ut.get_time()
                     current_state = ut.create_sale_order(current_state, price_to_sell_for_order)
@@ -330,6 +336,7 @@ def sell_for_24hr_1min_drop(current_state):
         current_state['sell_time_executed_readable'] = ut.get_time()
         current_state['profit_percent'] = (current_state['total_revenue'] - current_state['original_quantity']*current_state['original_price'])/(current_state['original_quantity']*current_state['original_price'])
         current_state['profit_btc'] = current_state['total_revenue'] - current_state['original_quantity']*current_state['original_price']
+        get_live_vs_sim_stats(current_state)
         
         # calc profit, save trade, & delete current_state
         ut.calculate_profit_and_free_coin(current_state, strategy='24hr_1min_drop')
@@ -348,14 +355,76 @@ def sell_for_24hr_1min_drop(current_state):
             return True
         print('error selling')
         return False
-        
 
-def compare_sim_vs_live(current_state):
+
+def get_live_vs_sim_stats(current_state):
     s = current_state['symbol']
+    # get last 20 min of candles (or so)
+    epoch_now = int(time.time())
+    epoch_ago = epoch_now - 60 * (current_state['future_candles_length'] + 5)
+    start = epoch_ago * 1000
+    stop = epoch_now * 1000
+    url = 'https://api.binance.com/api/v1/klines?symbol='+ s +'&interval=1m&startTime='+str(start)+'&endTime='+str(stop)
+    data = requests.get(url).json()
+    gain_percent, gain_usd, trades = trade_on_drops(current_state['symbol_data'], data, current_state['future_candles_length'], current_state['buy_trigger_drop_percent'], current_state['sell_trigger_gain_percent'], current_state['btc_tradeable_volume_factor'])
+    if len(trades) > 0:
+        sim = trades[0]
+        sim['profit_btc'] = sim['gain_btc']
+        sim['profit_percent'] = sim['gain_percent']
+        sim['qty_btc'] = sim['volume_traded_btc']
+    else:
+        print('ERROR:', s, 'trade not executed in back test !!')
+        return
+    live = {}
+    live['open_price'] = current_state['open_price']
+    live['buy_time_triggered'] = current_state['buy_time_triggered']
+    live['buy_time_triggered_readable'] = current_state['buy_time_triggered_readable']
+    live['buy_time_executed'] = current_state['buy_time_executed']
+    live['buy_time_executed_readable'] = current_state['buy_time_executed_readable']
+    live['buy_price'] = current_state['buy_price']
+    live['sell_time_triggered'] = current_state['sell_time_triggered']
+    live['sell_partial_fill_qty'] = current_state['sell_partial_fill_qty']
+    live['sell_time_executed'] = current_state['sell_time_executed']
+    live['sell_price'] = current_state['sell_price']
+    live['qty_btc'] = current_state['qty_btc']
+    live['profit_btc'] = current_state['profit_btc']
+    live['profit_percent'] = current_state['profit_percent']
+    live['traded_by_sell_trigger'] = current_state['traded_by_sell_trigger']
     
+    # live vs sim: computable data
+    stats = {}
+    stats['live_open_price_diff'] = live['open_price'] - sim['open_price']
+    stats['live_open_price_diff_percent'] = round(live_open_price_diff/sim['open_price'], 10)
+    stats['live_buy_time_triggered_delay'] = live['buy_time_triggered'] - sim['buy_time']
+    stats['live_buy_time_executed_delay'] = live['buy_time_executed'] - sim['buy_time']
+    stats['live_buy_execution_delay'] = live['buy_time_executed'] - live['buy_time_triggered']
+    stats['live_buy_price_diff'] = live['buy_price'] - sim['buy_price']
+    stats['live_buy_price_diff_percent'] = round(stats['live_buy_price_diff']/sim['buy_price'], 10)
+    stats['live_sell_time_triggered_delay'] = live['sell_time_triggered'] - sim['sell_time']
+    stats['live_sell_time_executed_delay'] = live['sell_time_executed'] - sim['sell_time']
+    stats['live_sell_execution_delay'] = live['sell_time_executed'] - live['sell_time_triggered']
+    stats['live_sell_price_diff'] = live['sell_price'] - sim['sell_price']
+    stats['live_sell_price_diff_percent'] = round(stats['live_sell_price_diff']/sim['sell_price'], 10)
+    stats['live_profit_btc_diff'] = live['profit_btc'] - sim['profit_btc']
+    stats['live_profit_btc_percent_diff'] = live['profit_btc_percent'] - sim['profit_btc_percent']
+    stats['live_qty_btc_diff'] = live['qty_btc'] - sim['qty_btc']
+    stats['live_qty_btc_diff_percent'] = round(stats['live_qty_btc_diff']/sim['qty_btc'], 10)
+    stats['traded_by_sell_trigger_match'] = live['traded_by_sell_trigger'] == sim['traded_by_sell_trigger']
+    stats['traded_by_sell_trigger_compare'] = str(live['traded_by_sell_trigger'])+'_' + str(sim['traded_by_sell_trigger'])
+    if live['sell_partial_fill_qty'] > -1:
+        stats['traded_by_sell_trigger_partial_fill_percent'] = round(live['sell_partial_fill_qty']/current_state['original_amount_to_buy'], 10)
+    else:
+        stats['traded_by_sell_trigger_partial_fill_percent'] = 0
+    
+    print('##############################################', s, 'LIVE vs SIM, STATS')
+    pprint(live)
+    pprint(sim)
+    pprint(stats)
+    
+    # TODO save to disk
 
 
-def trade_on_drops(symbol, data, future_candles_length, buy_trigger_drop_percent, sell_trigger_gain_percent, btc_tradeable_volume_factor, btc_usd_price):
+def trade_on_drops(symbol, data, future_candles_length, buy_trigger_drop_percent, sell_trigger_gain_percent, btc_tradeable_volume_factor, btc_usd_price=8800):
     s = symbol['symbol']
     one_min_avg_volume = float(symbol['24hourVolume']) / (24*60)
     btc_tradeable_volume =  btc_tradeable_volume_factor * one_min_avg_volume
@@ -376,6 +445,8 @@ def trade_on_drops(symbol, data, future_candles_length, buy_trigger_drop_percent
                     sell_trigger_price = (buy_price + sell_trigger_gain_percent * buy_price)
                     if f_c['high_price'] > sell_trigger_price:
                         sell_price = sell_trigger_price # * 0.997
+                        sell_time = f_c['open_time']
+                        sell_time_readable = f_c['open_time_readable']
                         traded_by_sell_trigger = True
                         break
                 if not traded_by_sell_trigger:
@@ -384,13 +455,21 @@ def trade_on_drops(symbol, data, future_candles_length, buy_trigger_drop_percent
                 gain_percent = gain / buy_price
                 gain_btc = btc_tradeable_volume * gain_percent
                 gain_usd = gain_btc * btc_usd_price
+            
                 trade = {
                     'gain_percent': gain_percent,
                     'gain_btc': gain_btc,
                     'gain_usd': gain_usd,
                     'volume_traded_btc': btc_tradeable_volume,
                     'minute': minute,
-                    'buy_time_readable': c['open_time_readable']
+                    'open_price': c['open_price'],
+                    'buy_time_readable': c['open_time_readable'],
+                    'buy_time': c['open_time'],
+                    'buy_price': buy_price,
+                    'sell_time_readable': sell_time_readable,
+                    'sell_time': sell_time,
+                    'sell_price': sell_price,
+                    'traded_by_sell_trigger': traded_by_sell_trigger,
                 }
                 trades.append(trade)
 

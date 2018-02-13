@@ -31,22 +31,22 @@ while True:
     minutes = 1
     
     # if first_iteration == True:
-    day = '20180212_12:29_to_20180212_18:29'
+    #day = '20180212_12:29_to_20180212_18:29'
     #     first_iteration = False
     # else:
-    # ####get previous 24 hours data
-    # epoch_now = int(time.time())
-    # epoch_24hrs_ago = epoch_now - 6*60*60
-    # readable_time_now = datetime.datetime.fromtimestamp(epoch_now-7*60*60).strftime('%Y-%m-%d %H:%M')
-    # readable_time_24hrs_ago = datetime.datetime.fromtimestamp(epoch_24hrs_ago-7*60*60).strftime('%Y-%m-%d %H:%M')
-    # readable_time_now_folder = datetime.datetime.fromtimestamp(epoch_now-7*60*60).strftime('%Y%m%d_%H:%M')
-    # readable_time_24hrs_ago_folder = datetime.datetime.fromtimestamp(epoch_24hrs_ago-7*60*60).strftime('%Y%m%d_%H:%M')
-    # day = readable_time_24hrs_ago_folder + '_to_' + readable_time_now_folder
-    # print('fetching previous 24hrs of data', day)
-    # save_params = [
-    #     [day, readable_time_24hrs_ago, readable_time_now]
-    # ]
-    # ut2.save_data(save_params, datapoints_trailing, min_volume, minutes)
+    ####get previous 24 hours data
+    epoch_now = int(time.time())
+    epoch_24hrs_ago = epoch_now - 6*60*60
+    readable_time_now = datetime.datetime.fromtimestamp(epoch_now-7*60*60).strftime('%Y-%m-%d %H:%M')
+    readable_time_24hrs_ago = datetime.datetime.fromtimestamp(epoch_24hrs_ago-7*60*60).strftime('%Y-%m-%d %H:%M')
+    readable_time_now_folder = datetime.datetime.fromtimestamp(epoch_now-7*60*60).strftime('%Y%m%d_%H:%M')
+    readable_time_24hrs_ago_folder = datetime.datetime.fromtimestamp(epoch_24hrs_ago-7*60*60).strftime('%Y%m%d_%H:%M')
+    day = readable_time_24hrs_ago_folder + '_to_' + readable_time_now_folder
+    print('fetching previous 24hrs of data', day)
+    save_params = [
+        [day, readable_time_24hrs_ago, readable_time_now]
+    ]
+    ut2.save_data(save_params, datapoints_trailing, min_volume, minutes)
     
     
     
@@ -411,4 +411,4 @@ while True:
             print('###################################################################')
             print('###################################################################')
             
-    break
+    #break

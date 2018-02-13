@@ -368,7 +368,7 @@ def get_first_in_line_price(current_state):
 
 def sell_coin_with_order_book_use_min(current_state):
     
-    print('########### - Selling...', current_state['symbol'], 'at minimum prices', current_state['minimum_price_seen']*current_state['price_increase_factor'], current_state['price_to_sell'])
+    print('########### - Selling...', current_state['symbol'], 'at minimum price',  current_state['compare_price']*current_state['price_increase_factor'])
     
     try:
 
@@ -376,11 +376,12 @@ def sell_coin_with_order_book_use_min(current_state):
     
             started_selling = False
             minutes_since_start = int(round((int(time.time()) - current_state['original_buy_time'])/60))
-            minutes_to_run = current_state['minutes_until_sale'] - minutes_since_start
+            minutes_until_change = current_state['minutes_until_sale'] - minutes_since_start
+            minutes_to_run = current_state['minutes_until_sale_final'] - minutes_since_start
         
+            time_to_change = int(time.time()) + minutes_until_change * 60
             time_to_give_up = int(time.time()) + minutes_to_run * 60
             while True:
-                price_to_sell_min = compare_price*current_state['price_increase_factor']
                 if current_state['orderId'] != False:
                     sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
                     if sale_order_info['status'] == 'FILLED':
@@ -396,9 +397,15 @@ def sell_coin_with_order_book_use_min(current_state):
                     started_selling = True
         
                 first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check, first_bid = get_first_in_line_price(current_state)
-                
                 if time.localtime().tm_sec < 1:
-                    compare_price = first_bid
+                    current_state['compare_price'] = first_bid
+                    pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state 2nd sell******')
+                
+                if int(time.time()) < time_to_change:
+                    price_to_sell_min = current_state['price_to_sell']
+                else:
+                    price_to_sell_min = current_state['compare_price']*current_state['price_increase_factor']
+                
         
                 if float(first_in_line_price) >= price_to_sell_min or started_selling == True:
                     started_selling = True
@@ -418,9 +425,6 @@ def sell_coin_with_order_book_use_min(current_state):
         
                     else:
                         current_state = create_sale_order(current_state, first_in_line_price)
-                if first_bid < current_state['minimum_price_seen']:
-                    current_state['minimum_price_seen'] = first_bid
-                    pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state 2nd sell******')
                 time.sleep(.03)
         
         calculate_profit_and_free_coin(current_state)
@@ -634,11 +638,13 @@ def buy_coin(symbol, length, file_number):
         buy_price_increase_factor = 1.002
 
         price_to_buy_factor_array = [0,.977, .969, .973, .965, .962, .96, .958, .95, .956, .95]
-        price_to_sell_factor_array = [0,.995, .993, .987, .995, .992, .989, .991, .986, .986, .986]
+        price_to_sell_factor_array = [0,.977, .969, .973, .965, .962, .96, .958, .95, .956, .95]
         lower_band_buy_factor_array = [0,1.01, 1.15, 1.09, 1.055, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
         price_increase_factor_array = [0,1.021,1.021,1.021,1.021,1.021,1.021,1.021,1.021,1.021,1.021]
         
-        minutes_until_sale = 45
+        minutes_until_sale = 6
+        
+        minutes_until_sale_final = 45
 
         datapoints_trailing = 230
 
@@ -652,7 +658,7 @@ def buy_coin(symbol, length, file_number):
 
         for look_back in look_back_schedule:
             
-            look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '_V4.pklz')
+            look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '_V11.pklz')
             if look_back_optimized != False:
                 price_to_buy_factor_array[look_back] = look_back_optimized['optimal_buy_factor']
                 price_to_sell_factor_array[look_back] = look_back_optimized['optimal_sell_factor']
@@ -758,14 +764,14 @@ def buy_coin(symbol, length, file_number):
                             price_to_buy = float(data[index-look_back][4])*price_to_buy_factor
 
 
-                        print('-------------------buy!', symbol['symbol'], 'look_back', look_back, 'price', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back], 'price_to_sell_factor',price_to_sell_factor_array[look_back] , 'price_increase_factor',price_increase_factor_array[look_back] , minutes_until_sale, 'look_back_gain', look_back_gains[look_back], 'look_back_wins', look_back_wins[look_back], 'look_back_losses', look_back_losses[look_back], get_time())
+                        print('-------------------buy!', symbol['symbol'], 'look_back', look_back, 'price', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back] , 'price_increase_factor',price_increase_factor_array[look_back] , minutes_until_sale, 'look_back_gain', look_back_gains[look_back], 'look_back_wins', look_back_wins[look_back], 'look_back_losses', look_back_losses[look_back], get_time())
 
                         if lower_band_buy_factor < 100:
                             price_to_buy = min(lower_band_for_index*lower_band_buy_factor, float(data[index-look_back][4])*price_to_buy_factor)
                         else:
                             price_to_buy = float(data[index-look_back][4])*price_to_buy_factor
-                        price_to_sell = float(data[index-look_back][4])*price_to_sell_factor
                         
+                        price_to_sell = float(data[index-look_back][4])*price_to_sell_factor
 
                         amount_to_buy = part_of_bitcoin_to_use/price_to_buy
                         largest_buy_segment = largest_bitcoin_order/price_to_buy
@@ -790,8 +796,10 @@ def buy_coin(symbol, length, file_number):
                         current_state['executedQty'] = 0
                         current_state['total_revenue'] = 0
                         current_state['minutes_until_sale'] = minutes_until_sale
+                        current_state['minutes_until_sale_final'] = minutes_until_sale_final
                         current_state['price_to_buy'] = price_to_buy
                         current_state['price_to_sell'] = price_to_sell
+                        current_state['compare_price'] = price_to_buy
                         current_state['price_increase_factor'] = price_increase_factor
                         current_state['minimum_price_seen'] = price_to_buy
                         current_state['length'] = length

@@ -22,8 +22,11 @@ days = [
     # '20180202_24',
     # '20180203_24',
     # '20180204_24',
-    '20180205_24',
-    '20180206_24'
+    # '20180205_24',
+    # '20180206_24',
+    '20180210_24',
+    '20180211_24',
+    '20180212_24'
 ]
 
 future_candles_length = 15 # 20180205
@@ -53,7 +56,7 @@ all_day_results = {} # key = param combo, value = array of individual day result
 # 3 combos takes 20min or so
 # started @ 16:48 > 15:13
 # for a in range(0, 3):
-for a in [0.9,0.8,0.7]:
+for a in [0.9, 0.8, 0.7]:
 
     # optimizing params: 15_0.9_0.8 = $3800
         # ('15_0.2_0.1', '$', 75852.41, 41.605, '%', 98999)
@@ -137,6 +140,9 @@ for a in [0.9,0.8,0.7]:
         gain_percent = round(sum(trades['gain_percent'] for trades in trades_by_symbol), 4)
         gain_usd = round(sum(trades['gain_usd'] for trades in trades_by_symbol), 2)
         total_trades = sum(trades['trade_count'] for trades in trades_by_symbol)
+        trades_per_day = total_trades
+        trades_per_hour = round(total_trades/24, 2)
+        trades_per_minute = round(trades_per_hour, 4)
         trades_per_symbol = round(total_trades / len(trades_by_symbol), 3)
         volume_traded_btc = round(sum(trades['volume_traded_btc'] for trades in trades_by_symbol), 4)
         avg_volume_btc = round(volume_traded_btc / total_trades, 6)
@@ -147,6 +153,9 @@ for a in [0.9,0.8,0.7]:
             'gain_percent': gain_percent,
             'gain_usd': gain_usd,
             'total_trades': total_trades,
+            'trades_per_day': trades_per_day,
+            'trades_per_hour': trades_per_hour,
+            'trades_per_minute': trades_per_minute,
             'trades_per_symbol': trades_per_symbol,
             'volume_traded_btc': volume_traded_btc,
             'avg_volume_btc': avg_volume_btc,

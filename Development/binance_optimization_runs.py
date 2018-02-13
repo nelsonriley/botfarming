@@ -124,7 +124,7 @@ while True:
             #if False:
             price_to_buy_factor_array[look_back] = .97
             price_to_sell_factor_array[look_back] = .99
-            price_increase_factor_array[look_back] = 1.005
+            price_increase_factor_array[look_back] = 1.01
             lower_band_buy_factor_array[look_back] = 100
             minutes_until_sale_array[look_back] = 6
             # else:
@@ -145,7 +145,7 @@ while True:
             optimal_minutes_until_sale = minutes_until_sale_array[optimizing]
         
             #for iteration in range(0,2):
-            for iteration in range(0,7):
+            for iteration in range(0,6):
                 
                 if iteration > 0 and best_gain == -999999:
                     continue

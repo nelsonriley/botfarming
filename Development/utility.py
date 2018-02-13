@@ -374,8 +374,10 @@ def sell_coin_with_order_book_use_min(current_state):
 
         if current_state['executedQty'] >= current_state['min_quantity']:
     
-            started_selling = False
+            keep_price = False
             started_second_round = False
+            started_give_up = False
+            started_give_up_2 = False
             minutes_since_start = int(round((int(time.time()) - current_state['original_buy_time'])/60))
             minutes_until_change = current_state['minutes_until_sale'] - minutes_since_start
             minutes_to_run = current_state['minutes_until_sale_final'] - minutes_since_start
@@ -395,25 +397,41 @@ def sell_coin_with_order_book_use_min(current_state):
                             break
                     
                 if int(time.time()) >= time_to_give_up:
-                    started_selling = True
+                    if started_give_up == False:
+                        started_give_up = True
+                        print('Started give up 1, reduced price increase factor by half', current_state['symbol'])
+                        current_state['price_increase_factor'] = current_state['price_increase_factor']/2
+                        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state 2nd sell******')
+                
+                if int(time.time()) >= 2*time_to_give_up:
+                    if started_give_up_2 == False:
+                        started_give_up_2 = True
+                        print('Started give up 2, reduced price increase factor by half again', current_state['symbol'])
+                        current_state['price_increase_factor'] = current_state['price_increase_factor']/2
+                        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state 2nd sell******')
         
                 first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check, first_bid = get_first_in_line_price(current_state)
                 if time.localtime().tm_sec < 1:
-                    current_state['compare_price'] = first_bid
+                    if keep_price == True:
+                        if first_bid < current_state['compare_price']:
+                            current_state['compare_price'] = first_bid
+                    else:
+                        current_state['compare_price'] = first_bid
                     pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state 2nd sell******')
                 
                 if int(time.time()) < time_to_change:
                     price_to_sell_min = current_state['price_to_sell']
                 else:
                     if started_second_round == False:
-                        print('######## starting second round of selling', current_state['symbol'], 'sell at price', current_state['compare_price']*current_state['price_increase_factor'], get_time())
                         started_second_round = True
+                        print('######## starting second round of selling', current_state['symbol'], 'sell at price', current_state['compare_price']*current_state['price_increase_factor'], get_time())
                     price_to_sell_min_1 = current_state['compare_price']*current_state['price_increase_factor']
                     price_to_sell_min_2 = current_state['price_to_sell']
                     price_to_sell_min = min(price_to_sell_min_1, price_to_sell_min_2)
         
-                if float(first_in_line_price) >= price_to_sell_min or (started_selling == True and started_second_round == True):
-                    started_selling = True
+                if float(first_in_line_price) >= price_to_sell_min:
+                    if started_second_round == True:
+                        keep_price = True
                     if current_state['orderId'] != False:
                         sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
                         if first_ask != float(sale_order_info['price']):

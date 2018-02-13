@@ -37,10 +37,10 @@ for s in symbols_trimmed:
     total_symbols += 1
     
     for look_back in look_back_array:
-        look_back_optimized = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '_V11.pklz')
+        look_back_optimized = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '_V12.pklz')
         if look_back_optimized != False:
             print(symbol['symbol'], look_back_optimized['look_back'], look_back_optimized['gain'], look_back_optimized['wins'], look_back_optimized['losses'])
-            print(symbol['symbol'], look_back_optimized['optimal_buy_factor'], look_back_optimized['optimal_sell_factor'], look_back_optimized['optimal_band_factor'], look_back_optimized['optimal_increase_factor'])
+            print(symbol['symbol'], look_back_optimized['optimal_buy_factor'], look_back_optimized['optimal_sell_factor'], look_back_optimized['optimal_band_factor'], look_back_optimized['optimal_increase_factor'], look_back_optimized['optimal_minutes_until_sale'])
             if look_back_optimized['gain'] > 0:
                 total_gain += look_back_optimized['gain']
             

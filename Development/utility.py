@@ -308,7 +308,7 @@ def calculate_profit_and_free_coin(current_state, strategy='ryan'):
     print('PROFIT', current_state['symbol'] ,'profit was, absoulte profit, percent profit, amount invested', float_to_str(profit_from_trade, 8), float_to_str(percent_profit_from_trade, 5), float_to_str(invested_btc,8), get_time())
 
     if strategy == 'ryan':
-        recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['original_buy_time']]
+        recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['original_buy_time'], get_time()]
     if strategy == '24hr_1min_drop':
         recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['original_buy_time']]
 
@@ -368,13 +368,14 @@ def get_first_in_line_price(current_state):
 
 def sell_coin_with_order_book_use_min(current_state):
     
-    print('########### - Selling...', current_state['symbol'], 'at minimum price',  current_state['compare_price']*current_state['price_increase_factor'])
+    print('########### - Selling...', current_state['symbol'], 'at minimum price',  current_state['price_to_sell'], get_time())
     
     try:
 
         if current_state['executedQty'] >= current_state['min_quantity']:
     
             started_selling = False
+            started_second_round = False
             minutes_since_start = int(round((int(time.time()) - current_state['original_buy_time'])/60))
             minutes_until_change = current_state['minutes_until_sale'] - minutes_since_start
             minutes_to_run = current_state['minutes_until_sale_final'] - minutes_since_start
@@ -404,10 +405,14 @@ def sell_coin_with_order_book_use_min(current_state):
                 if int(time.time()) < time_to_change:
                     price_to_sell_min = current_state['price_to_sell']
                 else:
-                    price_to_sell_min = current_state['compare_price']*current_state['price_increase_factor']
-                
+                    if started_second_round == False:
+                        print('######## starting second round of selling', current_state['symbol'], 'sell at price', current_state['compare_price']*current_state['price_increase_factor'], get_time())
+                        started_second_round = True
+                    price_to_sell_min_1 = current_state['compare_price']*current_state['price_increase_factor']
+                    price_to_sell_min_2 = current_state['price_to_sell']
+                    price_to_sell_min = min(price_to_sell_min_1, price_to_sell_min_2)
         
-                if float(first_in_line_price) >= price_to_sell_min or started_selling == True:
+                if float(first_in_line_price) >= price_to_sell_min or (started_selling == True and started_second_round == True):
                     started_selling = True
                     if current_state['orderId'] != False:
                         sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
@@ -425,6 +430,9 @@ def sell_coin_with_order_book_use_min(current_state):
         
                     else:
                         current_state = create_sale_order(current_state, first_in_line_price)
+                else:
+                    if current_state['orderId'] != False:
+                        current_state = cancel_sale_order(current_state)
                 time.sleep(.03)
         
         calculate_profit_and_free_coin(current_state)
@@ -648,7 +656,7 @@ def buy_coin(symbol, length, file_number):
 
         datapoints_trailing = 230
 
-        look_back_schedule = [4,2,1]
+        look_back_schedule = [1,2,4]
         look_back_gains = [0,0,0,0,0,0,0,0,0,0]
         look_back_wins = [0,0,0,0,0,0,0,0,0,0]
         look_back_losses = [0,0,0,0,0,0,0,0,0,0]
@@ -658,7 +666,7 @@ def buy_coin(symbol, length, file_number):
 
         for look_back in look_back_schedule:
             
-            look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '_V11.pklz')
+            look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '_V12.pklz')
             if look_back_optimized != False:
                 price_to_buy_factor_array[look_back] = look_back_optimized['optimal_buy_factor']
                 price_to_sell_factor_array[look_back] = look_back_optimized['optimal_sell_factor']
@@ -764,7 +772,7 @@ def buy_coin(symbol, length, file_number):
                             price_to_buy = float(data[index-look_back][4])*price_to_buy_factor
 
 
-                        print('-------------------buy!', symbol['symbol'], 'look_back', look_back, 'price', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back] , 'price_increase_factor',price_increase_factor_array[look_back] , minutes_until_sale, 'look_back_gain', look_back_gains[look_back], 'look_back_wins', look_back_wins[look_back], 'look_back_losses', look_back_losses[look_back], get_time())
+                        print('-------------------buy!', symbol['symbol'], 'look_back', look_back, 'price', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back], 'price_to_sell_factor',price_to_sell_factor_array[look_back] , 'price_increase_factor',price_increase_factor_array[look_back] , minutes_until_sale, 'look_back_gain', look_back_gains[look_back], 'look_back_wins', look_back_wins[look_back], 'look_back_losses', look_back_losses[look_back], get_time())
 
                         if lower_band_buy_factor < 100:
                             price_to_buy = min(lower_band_for_index*lower_band_buy_factor, float(data[index-look_back][4])*price_to_buy_factor)

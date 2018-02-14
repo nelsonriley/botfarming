@@ -36,7 +36,7 @@ while True:
     # else:
     ###get previous 24 hours data
     epoch_now = int(time.time())
-    epoch_24hrs_ago = epoch_now - 1*60*60
+    epoch_24hrs_ago = epoch_now - 2*60*60
     readable_time_now = datetime.datetime.fromtimestamp(epoch_now-7*60*60).strftime('%Y-%m-%d %H:%M')
     readable_time_24hrs_ago = datetime.datetime.fromtimestamp(epoch_24hrs_ago-7*60*60).strftime('%Y-%m-%d %H:%M')
     readable_time_now_folder = datetime.datetime.fromtimestamp(epoch_now-7*60*60).strftime('%Y%m%d_%H:%M')
@@ -104,7 +104,7 @@ while True:
     optimal_buy_factor = 0
     optimal_sell_factor = 0
     
-    optimizing_array= [1,2,4]
+    optimizing_array= [1,2,4,5,7]
     
     
     symbols_started = 0

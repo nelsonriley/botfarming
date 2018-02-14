@@ -15,7 +15,7 @@ import math
 from binance.client import Client
 
 
-result = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/program_state_1m/program_state_1m_0_LINKBTC.pklz')
+result = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/program_state_1m/program_state_1m_0_DLTBTC_V0.pklz')
 
 pprint(result)
 # result['executedQty'] = 55963.0

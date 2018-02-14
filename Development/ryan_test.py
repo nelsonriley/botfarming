@@ -15,49 +15,59 @@ import math
 from binance.client import Client
 
 
-######
-symbols = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_btc_symbols.pklz')
-    
-total_btc_coins = 0
-symbols_trimmed = {}
 
-for s in symbols:
-    symbol = symbols[s]
-    if float(symbol['24hourVolume']) > 450:
-        total_btc_coins += 1
-        symbols_trimmed[s] = symbol
-        
+result = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/program_state_1m/program_state_1m_0_LINKBTC.pklz')
 
-total_gain = 0
-total_symbols = 0
-look_back_array = [1,2,4]
-for s in symbols_trimmed:
-    symbol = symbols_trimmed[s]
-    print(symbol['symbol'])
-    total_symbols += 1
-    
-    for look_back in look_back_array:
-        look_back_optimized = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '_V12.pklz')
-        if look_back_optimized != False:
-            print(symbol['symbol'], look_back_optimized['look_back'], look_back_optimized['gain'], look_back_optimized['wins'], look_back_optimized['losses'])
-            print(symbol['symbol'], look_back_optimized['optimal_buy_factor'], look_back_optimized['optimal_sell_factor'], look_back_optimized['optimal_band_factor'], look_back_optimized['optimal_increase_factor'], look_back_optimized['optimal_minutes_until_sale'])
-            if look_back_optimized['gain'] > 0:
-                total_gain += look_back_optimized['gain']
-            
-    
-print('total_gain', total_gain)
-print('total_symbols', total_symbols)
+pprint(result)
+# result['executedQty'] = 55963.0
+
+# ut.pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_1m/program_state_1m_0_RPXBTC.pklz', result)
+
+# result = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/program_state_1m/program_state_1m_0_RPXBTC.pklz')
+
+# pprint(result)
+
+# order_book = ut.get_order_book_local('GTOBTC')
+# pprint(order_book)
+# total_bitcoin_of_bids = 0
+# max_bitcoin_in_front = .02
+# for asks in order_book['asks']:
+#     total_bitcoin_of_bids += float(asks[0])*float(asks[1])
+#     if total_bitcoin_of_bids > max_bitcoin_in_front:
+#         price_to_buy = ut.float_to_str(round(float(asks[0]) - .00000001, 8))
+#         break
+# print('price_to_buy', price_to_buy)
+
+# time.sleep(1)
+# order_book = ut.get_order_book_local('GTOBTC')
+# pprint(order_book)
+# total_bitcoin_of_bids = 0
+# max_bitcoin_in_front = .2
+# for asks in order_book['asks']:
+#     total_bitcoin_of_bids += float(asks[0])*float(asks[1])
+#     if total_bitcoin_of_bids > max_bitcoin_in_front:
+#         price_to_buy = ut.float_to_str(round(float(asks[0]) - .00000001, 8))
+#         break
+# print('price_to_buy', price_to_buy)
 
 
-
+    # # pprint(order_book)
+    # # bids & asks.... 0=price, 1=qty
+    # first_ask = float(order_book['asks'][0][0])
+    # second_ask = float(order_book['asks'][1][0])
+    # first_bid = float(order_book['bids'][0][0])
+    # second_price_to_check = first_ask + 3*current_state['min_price']
+    # second_price_to_buy = float_to_str(round(second_ask - current_state['min_price'], current_state['price_decimals']))
+    # price_to_buy = float_to_str(round(first_ask - current_state['min_price'], current_state['price_decimals']))
+    # # print(first_ask)
+    # # print(price_to_buy)
+    # return price_to_buy,first_ask, second_price_to_buy, second_ask, second_price_to_check, first_bid
 
 
 
 # length = '1m'
 
-# result = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_2.pklz')
 
-# pprint(result)
 
 
 # file_path = '/home/ec2-user/environment/botfarming/Development/program_state_30m/program_state_30m_0_GXSBTC.pklz'

@@ -13,7 +13,7 @@ import utility as ut
 import json
 import math
 
-path = './botfarming/Development/binance_all_trades_history/binance_all_trades_history.pklz'
+path = './botfarming/Development/binance_all_trades_history/binance_all_trades_history_3.pklz'
 bot_trades = ut.pickle_read(path)
 # if bot_trades == False:
 #ut.pickle_write(path, [])

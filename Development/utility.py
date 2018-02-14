@@ -223,13 +223,15 @@ def cancel_buy_order(current_state):
 
     current_state['state'] = 'buying'
     current_state['orderId'] = False
-    pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state******')
+    current_state['last_update_time'] = int(time.time())
+    pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_V' + current_state['version'] + '.pklz', current_state, '******could not write state******')
     
     buy_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=order_id_of_current_state)
     current_state['executedQty'] = current_state['executedQty'] + float(buy_order_info['executedQty'])
     if float(buy_order_info['price']) != 0:
         current_state['original_price'] = float(buy_order_info['price'])
-    pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state******')
+    current_state['last_update_time'] = int(time.time())
+    pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_V' + current_state['version'] + '.pklz', current_state, '******could not write state******')
     
 
     return current_state
@@ -245,13 +247,15 @@ def cancel_sale_order(current_state):
 
     current_state['state'] = 'selling'
     current_state['orderId'] = False
-    current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz'
+    current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_V' + current_state['version'] + '.pklz'
+    current_state['last_update_time'] = int(time.time())
     pickle_write(current_state_path, current_state, '******could not write state******')
 
     sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=order_id_of_current_state)
 
     current_state['executedQty'] = current_state['executedQty'] - float(sale_order_info['executedQty'])
     current_state['total_revenue'] += float(sale_order_info['executedQty']) * float(sale_order_info['price'])
+    current_state['last_update_time'] = int(time.time())
     pickle_write(current_state_path, current_state, '******could not write state******')
 
     return current_state
@@ -262,7 +266,7 @@ def create_buy_order(current_state, price_to_buy):
     maximum_possible_buy = float_to_str(round(current_state['original_amount_to_buy'] - current_state['executedQty'], current_state['quantity_decimals']))
     #quantity_to_buy = min(float(maximum_order_to_buy), float(maximum_possible_buy))
     #quantity_to_buy = min(maximum_order_to_buy, maximum_possible_buy)
-    quantity_to_buy = maximum_possible_buy
+    quantity_to_buy = min(maximum_possible_buy,maximum_order_to_buy)
 
     # DEBUGGER
     # print('qty', quantity_to_buy, 'price', price_to_buy)
@@ -271,7 +275,8 @@ def create_buy_order(current_state, price_to_buy):
 
     current_state['state'] = 'buying'
     current_state['orderId'] = buy_order['orderId']
-    current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz'
+    current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_V' + current_state['version'] + '.pklz'
+    current_state['last_update_time'] = int(time.time())
     pickle_write(current_state_path, current_state, '******could not write state 2nd sell******')
 
     return current_state
@@ -294,7 +299,8 @@ def create_sale_order(current_state, price_to_sell, market=False):
 
     current_state['state'] = 'selling'
     current_state['orderId'] = sale_order['orderId']
-    current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz'
+    current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_V' + current_state['version'] + '.pklz'
+    current_state['last_update_time'] = int(time.time())
     pickle_write(current_state_path, current_state, '******could not write state 2nd sell******')
 
     return current_state
@@ -319,14 +325,14 @@ def calculate_profit_and_free_coin(current_state, strategy='ryan'):
     append_data(file_path_all_trades, recorded_trade)
 
     # update program state
-    current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz'
+    current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_V' + current_state['version'] + '.pklz'
     pickle_write(current_state_path, False)
     print('################## wrote profit and freed coin....', current_state['symbol'])
 
     # ignore trades we have big losses on for 1 hour
     if profit_from_trade < -.01:
         current_state['state'] = 'sleeping'
-        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state******')
+        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_V' + current_state['version'] + '.pklz', current_state, '******could not write state******')
         time.sleep(60*60*1)
 
 def get_order_book_local(symbol):
@@ -404,7 +410,8 @@ def sell_coin_with_order_book_use_min(current_state):
                         current_state['total_revenue'] += float(sale_order_info['executedQty']) * float(sale_order_info['price'])
                         current_state['state'] = 'selling'
                         current_state['orderId'] = False
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state 2nd sell******')
+                        current_state['last_update_time'] = int(time.time())
+                        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_V' + current_state['version'] + '.pklz', current_state, '******could not write state 2nd sell******')
                         if current_state['executedQty'] < current_state['min_quantity']:
                             break
                     
@@ -413,14 +420,16 @@ def sell_coin_with_order_book_use_min(current_state):
                         started_give_up = True
                         print('Started give up 1, reduced price increase factor by half', current_state['symbol'])
                         current_state['price_increase_factor'] = current_state['price_increase_factor']*.995
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state 2nd sell******')
+                        current_state['last_update_time'] = int(time.time())
+                        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_V' + current_state['version'] + '.pklz', current_state, '******could not write state 2nd sell******')
                 
                 if int(time.time()) >= 1.5*time_to_give_up:
                     if started_give_up_2 == False:
                         started_give_up_2 = True
                         print('Started give up 2, reduced price increase factor by half again', current_state['symbol'])
                         current_state['price_increase_factor'] = current_state['price_increase_factor']*.9975
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state 2nd sell******')
+                        current_state['last_update_time'] = int(time.time())
+                        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_V' + current_state['version'] + '.pklz', current_state, '******could not write state 2nd sell******')
         
                 first_in_line_price, first_bid = get_first_in_line_price(current_state, sale_order_info)
                 if time.localtime().tm_sec < 1:
@@ -429,7 +438,8 @@ def sell_coin_with_order_book_use_min(current_state):
                             current_state['compare_price'] = first_bid
                     else:
                         current_state['compare_price'] = first_bid
-                    pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state 2nd sell******')
+                    current_state['last_update_time'] = int(time.time())
+                    pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_V' + current_state['version'] + '.pklz', current_state, '******could not write state 2nd sell******')
                 
                 if int(time.time()) < time_to_change:
                     price_to_sell_min = current_state['price_to_sell']
@@ -497,7 +507,7 @@ def sell_with_order_book(current_state, price_to_sell, minutes_until_sale):
                 current_state['total_revenue'] += float(sale_order_info['executedQty']) * float(sale_order_info['price'])
                 current_state['state'] = 'selling'
                 current_state['orderId'] = False
-                pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state 2nd sell******')
+                pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_V' + current_state['version'] + '.pklz', current_state, '******could not write state 2nd sell******')
                 if current_state['executedQty'] < current_state['min_quantity']:
                     return True, current_state
 
@@ -580,7 +590,7 @@ def buy_coin_from_state(current_state, strategy='ryan'):
 
     try:
         print('buy coin from state', current_state['symbol'], 'strategy', strategy)
-        current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz'
+        current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_V' + current_state['version'] + '.pklz'
     
         if (current_state['state'] == 'sleeping'):
             print('sleeping...', current_state['symbol'])
@@ -653,12 +663,21 @@ def buy_coin(symbol, length, file_number):
     api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
     client = Client(api_key, api_secret)
 
-    current_state = load_current_state(symbol['symbol'], file_number, length)
-
-    if isinstance(current_state,dict):
-        print('loading state to sell coin..', current_state['symbol'])
-        buy_coin_from_state(current_state)
-        return
+    for version in range(0,10):
+        current_state = False
+        try:
+            f = gzip.open('/home/ec2-user/environment/botfarming/Development/program_state_' + length + '/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '_V' + str(version) +  '.pklz','rb')
+            current_state = pickle.load(f)
+            f.close()
+        except Exception as e:
+            current_state = False
+        
+        if isinstance(current_state,dict) and int(time.time()) - current_state['last_update_time'] > 65:
+            print('********#######****** starting thread to run buy_coin_from_state..', current_state['symbol'])
+            t = Thread(target=buy_coin_from_state, args=[current_state])
+            t.start()
+        
+    current_state = False        
 
     try:
 
@@ -815,15 +834,27 @@ def buy_coin(symbol, length, file_number):
 
                         quantity_decimals = get_min_decimals(symbol['filters'][1]['minQty'])
                         # quantity_decimals = get_min_decimals_new(symbol['filters'][2]['minNotional'])
+                        
+                        for version in range(0,10):
+                            state_of_version = pickle_read('/home/ec2-user/environment/botfarming/Development/program_state_' + length + '/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '_V'+ str(version) + '.pklz')
+                            if state_of_version == False:
+                                break
+                        if version == 9:
+                            print('too many versions of this coin are trading, exiting..')
+                            return True
+                            
+                            
 
                         current_state = {}
                         current_state['state'] = 'buying'
                         current_state['look_back'] = look_back
+                        current_state['version'] = str(version)
                         current_state['sell_price_drop_factor'] = sell_price_drop_factor
                         current_state['original_amount_to_buy'] = amount_to_buy
                         current_state['largest_bitcoin_order'] = largest_bitcoin_order
                         current_state['part_of_bitcoin_to_use'] = part_of_bitcoin_to_use
                         current_state['largest_buy_segment'] = largest_buy_segment
+                        current_state['last_update_time'] = int(time.time())
                         current_state['original_buy_time'] = int(time.time())
                         current_state['original_buy_time_readable'] = get_time()
                         current_state['symbol'] = symbol['symbol']
@@ -846,7 +877,7 @@ def buy_coin(symbol, length, file_number):
                         current_state['min_price'] = float(symbol['filters'][0]['minPrice'])
                         current_state['min_quantity'] = min(float(symbol['filters'][1]['minQty']), float(symbol['filters'][2]['minNotional']))
 
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + length + '/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '.pklz', current_state, '******could not write state******')
+                        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + length + '/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol']  + '_V' + current_state['version'] + '.pklz', current_state, '******could not write state******')
 
 
                         time_to_give_up = int(time.time()) + 60
@@ -862,7 +893,7 @@ def buy_coin(symbol, length, file_number):
                                     current_state['original_price'] = float(buy_order_info['price'])
                                     current_state['state'] = 'buying'
                                     current_state['orderId'] = False
-                                    pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not write state 2nd sell******')
+                                    pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_V' + current_state['version'] + '.pklz', current_state, '******could not write state 2nd sell******')
                                     if current_state['executedQty'] >= amount_to_stop_buying:
                                         break
 
@@ -893,23 +924,22 @@ def buy_coin(symbol, length, file_number):
 
                         if current_state['executedQty'] < current_state['min_quantity']:
                             print('[last line reached] no one bought cancel order - freeing coin', current_state['symbol'], get_time())
-                            pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + length + '/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '.pklz', False, '******could not write state inside buy coin - no one bought coin******')
+                            pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + length + '/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '_V' + current_state['version'] + '.pklz', False, '******could not write state inside buy coin - no one bought coin******')
                             return True
 
 
                         current_state['original_quantity'] = current_state['executedQty']
                         current_state['state'] = 'selling'
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz', current_state, '******could not update state to selling******')
+                        current_state['last_update_time'] = int(time.time())
+                        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_V' + current_state['version'] + '.pklz', current_state, '******could not update state to selling******')
 
-                        coin_sold = sell_coin_with_order_book_use_min(current_state)
-
-                        if coin_sold:
-                            print('finished order - freeing coin', current_state['symbol'])
-                            print('#########################')
-
-                            return True
-
-                        return False
+                        print('######Starting a thread to sell coin', current_state['symbol'])
+                        t = Thread(target=sell_coin_with_order_book_use_min, args=[current_state])
+                        t.start()
+                        
+                        time.sleep(60000)
+                
+                        return True
 
 
     except Exception as e:
@@ -931,7 +961,7 @@ def free_coin_after_candle(symbol, look_back):
 def load_current_state(symbol, file_number, length):
 
     try:
-        f = gzip.open('/home/ec2-user/environment/botfarming/Development/program_state_' + length + '/program_state_' + length + '_' + str(file_number) + '_' + symbol + '.pklz','rb')
+        f = gzip.open('/home/ec2-user/environment/botfarming/Development/program_state_' + length + '/program_state_' + length + '_' + str(file_number) + '_' + symbol + '_V' + current_state['version'] + '.pklz','rb')
         current_state = pickle.load(f)
         f.close()
     except Exception as e:

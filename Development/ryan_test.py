@@ -15,7 +15,6 @@ import math
 from binance.client import Client
 
 
-
 result = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/program_state_1m/program_state_1m_0_LINKBTC.pklz')
 
 pprint(result)

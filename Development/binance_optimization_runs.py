@@ -36,7 +36,7 @@ while True:
     # else:
     ###get previous 24 hours data
     epoch_now = int(time.time())
-    epoch_24hrs_ago = epoch_now - 2*60*60
+    epoch_24hrs_ago = epoch_now - 1*60*60
     readable_time_now = datetime.datetime.fromtimestamp(epoch_now-7*60*60).strftime('%Y-%m-%d %H:%M')
     readable_time_24hrs_ago = datetime.datetime.fromtimestamp(epoch_24hrs_ago-7*60*60).strftime('%Y-%m-%d %H:%M')
     readable_time_now_folder = datetime.datetime.fromtimestamp(epoch_now-7*60*60).strftime('%Y%m%d_%H:%M')
@@ -124,7 +124,7 @@ while True:
             #if False:
             price_to_buy_factor_array[look_back] = .97
             price_to_sell_factor_array[look_back] = .99
-            price_increase_factor_array[look_back] = 1.01
+            price_increase_factor_array[look_back] = 1.0075
             lower_band_buy_factor_array[look_back] = 100
             minutes_until_sale_array[look_back] = 6
             # else:
@@ -345,7 +345,7 @@ while True:
                                             for i in range(minutes_until_sale_array[look_back],minutes_until_sale_3):
                                                 sale_price = float(data[index + i][1])*price_increase_factor_array[look_back]
                                                 if float(data[index + i][2]) > sale_price:
-                                                    sale_price = sale_price*.99
+                                                    sale_price = sale_price*.97
                                                     sale_index = index + i
                                                     sold_it = True
                                                     break

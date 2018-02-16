@@ -197,10 +197,7 @@ def calculate_profit_and_free_coin(current_state, strategy='ryan'):
     invested_btc = current_state['original_quantity']*current_state['original_price']
     print('PROFIT', current_state['symbol'] ,'profit was, absoulte profit, percent profit, amount invested', float_to_str(profit_from_trade, 8), float_to_str(percent_profit_from_trade, 5), float_to_str(invested_btc,8), get_time())
 
-    try:
-        recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['a_b'], current_state['look_back_gains'], current_state['look_back_wins'], current_state['look_back_losses'], current_state['price_to_buy_factor'], current_state['price_to_sell_factor'], current_state['original_buy_time'], get_time()]
-    except Exception as e:
-        recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['original_buy_time'], get_time()]
+    recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['a_b'], current_state['look_back_gains'], current_state['look_back_wins'], current_state['look_back_losses'], current_state['price_to_buy_factor'], current_state['price_to_sell_factor'], current_state['original_buy_time'], get_time()]
     
     append_data('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history_3.pklz', recorded_trade)
 
@@ -252,7 +249,7 @@ def get_first_in_line_price(current_state):
     # print(price_to_buy)
     return price_to_buy,first_ask, second_price_to_buy, second_ask, second_price_to_check, first_bid
 
-def sell_coin_with_order_book_use_min_1(current_state):
+def sell_coin_with_order_book_use_min(current_state):
     print('########### - Selling...', current_state['symbol'], 'at minimum price',  current_state['price_to_sell'], get_time())
     
     try:
@@ -355,96 +352,7 @@ def sell_coin_with_order_book_use_min_1(current_state):
             return True
         print('error selling')
         return False
-
-def sell_coin_with_order_book_use_min(current_state):
-    
-    print('########### - Selling...', current_state['symbol'], 'at minimum price',  current_state['price_to_sell'], get_time())
-    
-    try:
-
-        if current_state['executedQty'] >= current_state['min_quantity']:
-    
-            started_selling = False
-            started_second_round = False
-            minutes_since_start = int(round((int(time.time()) - current_state['original_buy_time'])/60))
-            minutes_until_change = current_state['minutes_until_sale'] - minutes_since_start
-            minutes_to_run = current_state['minutes_until_sale_final'] - minutes_since_start
         
-            time_to_change = int(time.time()) + minutes_until_change * 60
-            time_to_give_up = int(time.time()) + minutes_to_run * 60
-            while True:
-                if current_state['orderId'] != False:
-                    sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
-                    if sale_order_info['status'] == 'FILLED':
-                        current_state['executedQty'] = current_state['executedQty'] - float(sale_order_info['executedQty'])
-                        current_state['total_revenue'] += float(sale_order_info['executedQty']) * float(sale_order_info['price'])
-                        current_state['state'] = 'selling'
-                        current_state['orderId'] = False
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_3.pklz', current_state, '******could not write state 2nd sell******')
-                        if current_state['executedQty'] < current_state['min_quantity']:
-                            break
-                    
-                if int(time.time()) >= time_to_give_up:
-                    started_selling = True
-        
-                first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check, first_bid = get_first_in_line_price(current_state)
-                if time.localtime().tm_sec < 1:
-                    current_state['compare_price'] = first_bid
-                    pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_3.pklz', current_state, '******could not write state 2nd sell******')
-                
-                if int(time.time()) < time_to_change:
-                    price_to_sell_min = current_state['price_to_sell']
-                else:
-                    if started_second_round == False:
-                        print('######## starting second round of selling', current_state['symbol'], 'sell at price', current_state['compare_price']*current_state['price_increase_factor'], get_time())
-                        started_second_round = True
-                    price_to_sell_min_1 = current_state['compare_price']*current_state['price_increase_factor']
-                    price_to_sell_min_2 = current_state['price_to_sell']
-                    price_to_sell_min = min(price_to_sell_min_1, price_to_sell_min_2)
-        
-                if float(first_in_line_price) >= price_to_sell_min or (started_selling == True and started_second_round == True):
-                    started_selling = True
-                    if current_state['orderId'] != False:
-                        sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
-                        if first_ask != float(sale_order_info['price']):
-                            current_state = cancel_sale_order(current_state)
-                            if current_state['executedQty'] < current_state['min_quantity']:
-                                break
-                            current_state = create_sale_order(current_state, first_in_line_price)
-                        else:
-                            if second_price_to_check < second_ask:
-                                current_state = cancel_sale_order(current_state)
-                                if current_state['executedQty'] < current_state['min_quantity']:
-                                    break
-                                current_state = create_sale_order(current_state, second_in_line_price)
-        
-                    else:
-                        current_state = create_sale_order(current_state, first_in_line_price)
-                else:
-                    if current_state['orderId'] != False:
-                        current_state = cancel_sale_order(current_state)
-                time.sleep(.03)
-        
-        calculate_profit_and_free_coin(current_state)
-        return True
-    
-    except Exception as e:
-        print(e)
-        print_exception()
-        error_as_string = str(e)
-        if error_as_string.find('Account has insufficient balance for requested action.') >= 0:
-            print('error selling, but account has insufficient balance, so calculating profit and freeing coin')
-            calculate_profit_and_free_coin(current_state)
-            return True
-        if error_as_string.find('Filter failure: MIN_NOTIONAL') >= 0:
-            print('error selling, MIN_NOTIONAL error, so probably coin has sold mostly, so calculating profit and freeing coin')
-            calculate_profit_and_free_coin(current_state)
-            return True
-        print('error selling')
-        return False
-    
-
-
 
 def buy_coin_from_state(current_state, strategy='ryan'):
 
@@ -489,10 +397,7 @@ def buy_coin_from_state(current_state, strategy='ryan'):
     
         print('buy_coin_from_state() no open orders, selling coin..', current_state['symbol'], 'strategy', strategy)
         
-        if current_state['a_b'] == 1:
-            coin_sold = sell_coin_with_order_book_use_min_1(current_state)
-        else:
-            coin_sold = sell_coin_with_order_book_use_min(current_state)
+        coin_sold = sell_coin_with_order_book_use_min(current_state)
         
         
         if coin_sold:
@@ -561,7 +466,7 @@ def buy_coin(symbol, length, file_number):
         look_back_losses = [0,0,0,0,0,0,0,0,0,0]
         max_look_back_gain = 0
         
-        a_b = random.randint(0,2)
+        a_b = random.randint(0,1)
         
         should_trade = False
 
@@ -573,10 +478,7 @@ def buy_coin(symbol, length, file_number):
                 price_to_sell_factor_array[look_back] = look_back_optimized['optimal_sell_factor']
                 lower_band_buy_factor_array[look_back] = look_back_optimized['optimal_band_factor']
                 price_increase_factor_array[look_back] = look_back_optimized['optimal_increase_factor']
-                if a_b == 1:
-                    price_increase_factor_array[look_back] = 1.01
-                else:
-                    price_increase_factor_array[look_back] = 1.005
+                price_increase_factor_array[look_back] = 1.01
                 look_back_gains[look_back] = look_back_optimized['gain']
                 look_back_wins[look_back] = look_back_optimized['wins']
                 look_back_losses[look_back] = look_back_optimized['losses']
@@ -791,10 +693,7 @@ def buy_coin(symbol, length, file_number):
                         current_state['state'] = 'selling'
                         pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_3.pklz', current_state, '******could not update state to selling******')
 
-                        if current_state['a_b'] == 1:
-                            coin_sold = sell_coin_with_order_book_use_min_1(current_state)
-                        else:
-                            coin_sold = sell_coin_with_order_book_use_min(current_state)
+                        coin_sold = sell_coin_with_order_book_use_min(current_state)
 
                         if coin_sold:
                             print('finished order - freeing coin', current_state['symbol'])

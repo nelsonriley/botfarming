@@ -24,9 +24,11 @@ days = [
     # '20180204_24',
     # '20180205_24',
     # '20180206_24',
-    '20180210_24',
-    '20180211_24',
-    '20180212_24'
+    # '20180210_24',
+    # '20180211_24',
+    '20180212_24',
+    '20180213_24',
+    '20180214_24',
 ]
 
 future_candles_length = 15 # 20180205
@@ -46,6 +48,7 @@ print_trades = False
 symbols = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_btc_symbols.pklz')
 symbols_filtered, symbol_list = ut2.get_trimmed_symbols(symbols, min_volume_btc)
 
+print('start @', ut.get_time())
 
 ####################################################################################
 # NOTES
@@ -56,7 +59,7 @@ all_day_results = {} # key = param combo, value = array of individual day result
 # 3 combos takes 20min or so
 # started @ 16:48 > 15:13
 # for a in range(0, 3):
-for a in [0.9, 0.8, 0.7]:
+for a in [0.6]:
 
     # optimizing params: 15_0.9_0.8 = $3800
         # ('15_0.2_0.1', '$', 75852.41, 41.605, '%', 98999)
@@ -142,7 +145,8 @@ for a in [0.9, 0.8, 0.7]:
         total_trades = sum(trades['trade_count'] for trades in trades_by_symbol)
         trades_per_day = total_trades
         trades_per_hour = round(total_trades/24, 2)
-        trades_per_minute = round(trades_per_hour, 4)
+        trades_per_minute = round(trades_per_hour/60, 4)
+        trades_per_minute_readable = round(1/(trades_per_hour/60), 3)
         trades_per_symbol = round(total_trades / len(trades_by_symbol), 3)
         volume_traded_btc = round(sum(trades['volume_traded_btc'] for trades in trades_by_symbol), 4)
         avg_volume_btc = round(volume_traded_btc / total_trades, 6)
@@ -156,6 +160,7 @@ for a in [0.9, 0.8, 0.7]:
             'trades_per_day': trades_per_day,
             'trades_per_hour': trades_per_hour,
             'trades_per_minute': trades_per_minute,
+            'trades_per_minute_readable': trades_per_minute_readable,
             'trades_per_symbol': trades_per_symbol,
             'volume_traded_btc': volume_traded_btc,
             'avg_volume_btc': avg_volume_btc,
@@ -203,8 +208,9 @@ for param_combo in all_day_results:
     avg_gain_percent = round(sum(day_result['avg_gain_percent'] for day_result in daily_results) / days, 4)
     
     trades_per_day = int(total_trades / days)
-    trades_per_hour = round(total_trades / days / 24, 1)
-    trades_per_minute = round(total_trades / days / 24 / 60, 2)
+    trades_per_hour = round(total_trades / days / 24.0, 1)
+    trades_per_minute = round(total_trades / days / 24.0 / 60.0, 2)
+    trades_per_minute_readable = round(1.0/(total_trades / days / 24.0 / 60.0), 3)
 
     param_result = {
         'gain_percent': gain_percent,
@@ -216,6 +222,7 @@ for param_combo in all_day_results:
         'trades_per_day': trades_per_day,
         'trades_per_hour': trades_per_hour,
         'trades_per_minute': trades_per_minute,
+        'trades_per_minute_readable': trades_per_minute_readable,
         # params
         'future_candles_length': daily_results[0]['future_candles_length'],
         'buy_trigger_drop_percent_factor': daily_results[0]['buy_trigger_drop_percent_factor'],
@@ -238,7 +245,7 @@ for param_combo in all_param_results:
         biggest_gain = result['gain_usd']
         best_params = result
     r = result
-    print(param_combo, '$', r['gain_usd'], r['gain_percent'], '%', r['total_trades'], 'day', r['trades_per_day'], 'hr', r['trades_per_hour'], 'min', r['trades_per_minute'])
+    print(param_combo, '$', r['gain_usd'], r['gain_percent'], '%', r['total_trades'], 'day', r['trades_per_day'], 'hr', r['trades_per_hour'], 'min', r['trades_per_minute_readable'])
 
 print('---------------------------------------------------------------- best_params (to save)')
 pprint(best_params)

@@ -35,6 +35,61 @@ start_time = int(time.time())
 
 
 
+################################################################################ ACCURATE ROUNDING
+# base_qty_for_order = ut.float_to_str(round(18.345, 0))
+# print('base_qty_for_order', base_qty_for_order)
+# base_qty_for_order = ut.float_to_str(0.00945, 2)
+# print('base_qty_for_order', base_qty_for_order)
+# base_qty_for_order = ut.float_to_str(0.00945, 3)
+# print('base_qty_for_order', base_qty_for_order)
+
+
+
+################################################################################ MAKE A LIMIT ORDER
+# WTF is min_notional etc?
+# https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md#filters
+# s = 'TRXBTC'
+# quantity_to_buy = 1000
+# price_to_buy = 0.00000174
+# notional = quantity_to_buy * price_to_buy
+# min_notional = 0.001
+# print('will pass MIN_NOTIONAL filter:', notional > min_notional)
+
+# api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
+# api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
+# client = Client(api_key, api_secret)
+
+# price_to_buy = ut.float_to_str(price_to_buy)
+# buy_order = client.order_limit_buy(symbol=s, quantity=quantity_to_buy, price=price_to_buy)
+# print('buy_order')
+# pprint(buy_order)
+# time.sleep(5)
+# cancelled_order = client.cancel_order(symbol=s, orderId=buy_order['orderId'])
+# print('cancelled_order')
+# pprint(cancelled_order)
+
+
+
+
+
+################################################################################ DEFINE A READABLE STOP TIME in EPOCH
+# t = datetime.datetime(2018, 2, 14, 18, 15)
+# s = int((t - datetime.datetime(1970, 1, 1)).total_seconds()) + 7 * 60 * 60
+# epoch_now = int(time.time())
+# diff = epoch_now - s
+# print('diff', diff)
+# print(ut.get_readable_time(int(time.time()+15*60)))
+
+
+
+################################################################################ ALWAYS USE FLOATS WHEN DIVIDING
+# print(1.0/(1/3.0), 'ok')
+# print(1.0/(1/3.0), 'ok')
+# print('1.0/(1/3)', 'will ERROR: float division by zero')
+
+
+
+
 ################################################################################ TEST FILE PATH WRITES ON AWS
 # path = '/home/ec2-user/environment/botfarming/Development/botfarming/Development/__test_pickle'
 # ut.pickle_write(path, 'it works!!!')
@@ -70,7 +125,7 @@ start_time = int(time.time())
 #     current_price = float(ticker['c'])
 #     return current_price
     
-s = 'ENJBTC'
+# s = 'ENJBTC'
 # price = ut2.get_current_price_from_ticker(s)
 # print(price)
 
@@ -78,11 +133,10 @@ s = 'ENJBTC'
 # ticker = ut.pickle_read(ticker_path)
 # pprint(ticker)
 
-while True:
-    price = ut2.get_current_price_from_ticker(s)
-    print(s, price)
-    time.sleep(0.3)
-
+# while True:
+#     price = ut2.get_current_price_from_ticker(s)
+#     print(s, price)
+#     time.sleep(0.3)
 
 
 

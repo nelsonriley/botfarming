@@ -210,7 +210,7 @@ def calculate_profit_and_free_coin(current_state, strategy='ryan'):
     if profit_from_trade < -.01:
         current_state['state'] = 'sleeping'
         pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_3.pklz', current_state, '******could not write state******')
-        time.sleep(60*60*12)
+        time.sleep(60*60*1)
 
 def get_order_book_local(symbol):
     while True:
@@ -363,7 +363,7 @@ def buy_coin_from_state(current_state, strategy='ryan'):
     
         if (current_state['state'] == 'sleeping'):
             print('sleeping...', current_state['symbol'])
-            time.sleep(60*60*10)
+            time.sleep(60*60)
             pickle_write(current_state_path, False, '******could not write state buy from stae******')
             return
     
@@ -472,7 +472,11 @@ def buy_coin(symbol, length, file_number):
 
         for look_back in look_back_schedule:
             
-            look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '_V13.pklz')
+            if a_b == 1:
+                look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '_V13.pklz')
+            else:
+                look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '_V13b.pklz')
+                
             if look_back_optimized != False:
                 price_to_buy_factor_array[look_back] = look_back_optimized['optimal_buy_factor']
                 price_to_sell_factor_array[look_back] = look_back_optimized['optimal_sell_factor']
@@ -485,13 +489,13 @@ def buy_coin(symbol, length, file_number):
                 if look_back_gains[look_back] > max_look_back_gain:
                     max_look_back_gain = look_back_gains[look_back]
             else:
-                print('No trading parameters for', symbol['symbol'], 'look_back', look_back)
-                time.sleep(30*30)
+                #print('No trading parameters for', symbol['symbol'], 'look_back', look_back)
+                time.sleep(60*1)
                 return
             
         if max_look_back_gain <= 0:
-            print('This symbol has bad or no results and we should not trade on it ', symbol['symbol'], 'max_look_back_gain', max_look_back_gain)
-            time.sleep(30*30)
+            #print('This symbol has bad or no results and we should not trade on it ', symbol['symbol'], 'max_look_back_gain', max_look_back_gain)
+            time.sleep(1*60)
             return
 
         while time.localtime().tm_sec < 3:
@@ -680,7 +684,8 @@ def buy_coin(symbol, length, file_number):
                                 else:
                                     current_state = create_buy_order(current_state, first_in_line_price)
 
-                            time.sleep(.03)
+                            
+                            time.sleep(.5)
 
 
                         if current_state['executedQty'] < current_state['min_quantity']:

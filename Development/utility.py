@@ -305,13 +305,17 @@ def create_buy_order(current_state, price_to_buy):
 
 def create_sale_order(current_state, price_to_sell, market=False):
 
-    max_quantity = float_to_str(current_state['largest_bitcoin_order']/float(price_to_sell), current_state['quantity_decimals'])
-    order_size = min(float(max_quantity), float(current_state['executedQty']))
+    s = current_state['symbol']
+    # max_quantity = float_to_str(current_state['largest_bitcoin_order']/float(price_to_sell), current_state['quantity_decimals'])
+    # order_size = min(float(max_quantity), float(current_state['executedQty']))
+    order_size = float(current_state['executedQty'])
 
-    if market:
-        sale_order = current_state['client'].order_market_sell(symbol=current_state['symbol'], quantity=order_size)
+    # print('create_sale_order() order_size', order_size, s)
+
+    if market == True:
+        sale_order = current_state['client'].order_market_sell(symbol=s, quantity=order_size)
     else:
-        sale_order = current_state['client'].order_limit_sell(symbol=current_state['symbol'], quantity=order_size, price=price_to_sell)
+        sale_order = current_state['client'].order_limit_sell(symbol=s, quantity=order_size, price=price_to_sell)
 
     current_state['state'] = 'selling'
     current_state['orderId'] = sale_order['orderId']
@@ -325,11 +329,16 @@ def create_sale_order(current_state, price_to_sell, market=False):
 def calculate_profit_and_free_coin(current_state, strategy='ryan'):
     # also save trade to trade history
 
-    print(current_state['symbol'], current_state['version'], 'coin sold, calculating profit and freeing coin', get_time())
+    s = current_state['symbol']
     percent_profit_from_trade = (current_state['total_revenue'] - current_state['original_quantity']*current_state['original_price'])/(current_state['original_quantity']*current_state['original_price'])
     profit_from_trade = current_state['total_revenue'] - current_state['original_quantity']*current_state['original_price']
     invested_btc = current_state['original_quantity']*current_state['original_price']
-    print(current_state['symbol'], current_state['version'], '#########PROFIT profit was, absoulte profit, percent profit, amount invested', float_to_str(profit_from_trade, 8), float_to_str(percent_profit_from_trade, 5), float_to_str(invested_btc,8), get_time())
+    
+    print('calculate_profit_and_free_coin()', s)
+    print('PROFIT revenue', float_to_str(current_state['total_revenue'], 8))
+    print('PROFIT absoulte', float_to_str(profit_from_trade, 8))
+    print('PROFIT percent profit', float_to_str(percent_profit_from_trade, 8))
+    print('PROFIT amount invested', float_to_str(invested_btc, 8))
 
     try:
         if strategy == 'ryan':
@@ -351,7 +360,7 @@ def calculate_profit_and_free_coin(current_state, strategy='ryan'):
     current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_V' + current_state['version'] + '.pklz'
     # current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '.pklz'
     pickle_write(current_state_path, False)
-    print(current_state['symbol'], current_state['version'], '################## wrote profit and freed coin....')
+    print(current_state['symbol'], current_state['version'], 'wrote profit and freed coin....')
 
     # ignore trades we have big losses on for 1 hour
     if profit_from_trade < -.01:
@@ -405,6 +414,20 @@ def get_first_in_line_price(current_state, sale_order_info):
     first_bid = float(order_book['bids'][0][0])
     
     return price_to_sell, first_bid
+    
+
+def get_first_in_line_price_old(current_state):
+    order_book = get_order_book_local(current_state['symbol'])
+    # pprint(order_book)
+    # bids & asks.... 0=price, 1=qty
+    first_ask = float(order_book['asks'][0][0])
+    second_ask = float(order_book['asks'][1][0])
+    second_price_to_check = first_ask + 3 * current_state['min_price']
+    second_price_to_buy = float_to_str(round(second_ask - current_state['min_price'], current_state['price_decimals']))
+    price_to_buy = float_to_str(round(first_ask - current_state['min_price'], current_state['price_decimals']))
+    # print(first_ask)
+    # print(price_to_buy)
+    return price_to_buy, first_ask, second_price_to_buy, second_ask, second_price_to_check
 
 
 def sell_coin_with_order_book_use_min(current_state):
@@ -522,7 +545,13 @@ def sell_with_order_book(current_state, price_to_sell, minutes_until_sale):
 
     time_to_give_up = int(time.time()) + minutes_to_run * 60
     price_to_sell_min = current_state['sell_price_drop_factor'] * price_to_sell
-    print(current_state['symbol'], current_state['version'], '########price_to_sell_min', price_to_sell_min)
+    
+    s = current_state['symbol']
+    current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + s + '_V' + current_state['version'] + '.pklz'
+    
+    print('SELLING via sell_with_order_book()', s, get_time())
+    # print(current_state['symbol'], current_state['version'], '########price_to_sell_min', price_to_sell_min)
+    
     while True:
         if current_state['orderId'] != False:
             sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
@@ -531,7 +560,9 @@ def sell_with_order_book(current_state, price_to_sell, minutes_until_sale):
                 current_state['total_revenue'] += float(sale_order_info['executedQty']) * float(sale_order_info['price'])
                 current_state['state'] = 'selling'
                 current_state['orderId'] = False
-                pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_V' + current_state['version'] + '.pklz', current_state, '******could not write state 2nd sell******')
+                current_state['sell_price'] = float(sale_order_info['price'])
+                pickle_write(current_state_path, current_state, 'ERROR: sell_with_order_book() could not write current_state')
+                
                 if current_state['executedQty'] < current_state['min_quantity']:
                     return True, current_state
 
@@ -544,7 +575,9 @@ def sell_with_order_book(current_state, price_to_sell, minutes_until_sale):
                     return False, current_state
             return False, current_state
 
-        first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check = get_first_in_line_price(current_state)
+        # price_to_sell, first_bid = get_first_in_line_price(current_state, False)
+        first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check = get_first_in_line_price_old(current_state)
+        # first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check = get_first_in_line_price(current_state)
 
         if float(first_in_line_price) >= price_to_sell_min or started_selling == True:
             started_selling = True
@@ -565,7 +598,10 @@ def sell_with_order_book(current_state, price_to_sell, minutes_until_sale):
             else:
                 current_state = create_sale_order(current_state, first_in_line_price)
 
-        time.sleep(.03)
+        time.sleep(.1)
+    
+    print('SOLD via sell_with_order_book()', s, get_time())
+    return True, current_state
 
 
 

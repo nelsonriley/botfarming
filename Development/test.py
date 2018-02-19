@@ -166,7 +166,9 @@ start_time = int(time.time())
 
 
 
-################################################# STUFF
+################################################# STUFF / INIT EMPTY ARRAY @ FILE PATH
+file_path_all_trades = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history_24hr_1min_drop.pklz'
+ut.pickle_write(file_path_all_trades, [])
 # file_path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history_attempts.pklz'
 # ut.pickle_write(file_path, [])
 # file_path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history.pklz'

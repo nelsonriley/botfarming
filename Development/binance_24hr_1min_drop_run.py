@@ -6,5 +6,6 @@ import utility_2 as ut2
 # ***DON'T FORGET to run these first:
 # binance_24hr_1min_drop_daily_update.py
 # binance_update_ticker.py
+# binance_update_order_book.py
 
 ut2.run_24hr_1min_drop_strategy()

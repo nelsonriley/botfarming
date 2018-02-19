@@ -33,20 +33,33 @@ profit_with_limit_4 = 0
 
 start_counting = False
 for bot_trade in bot_trades:
-    if '2018-02-14 12:16:07' in bot_trade[0]:
+    
+    # if '2018-02-15 21:11:04' in bot_trade[0]:
+    #     start_counting = True
+    # if start_counting == True:
+    #     print(bot_trade[0], bot_trade[1], bot_trade[2], bot_trade[3], bot_trade[4], bot_trade[5])
+    #     total_profit += bot_trade[2]
+    #     total_trades += 1
+    
+    if '2018-02-17 10:54:50' in bot_trade[0]:
         start_counting = True
     if start_counting == True:
         print(bot_trade[0], bot_trade[1], bot_trade[2], bot_trade[3], bot_trade[4], bot_trade[5], bot_trade[6], bot_trade[7], bot_trade[8], bot_trade[9], bot_trade[10], bot_trade[11], bot_trade[12], bot_trade[13])
         total_profit += bot_trade[2]
         total_trades += 1
     
-    if bot_trade[6] == 0:
-        total_profit_a += bot_trade[2]
-        total_trades_a += 1
+        if bot_trade[6] == 0:
+            total_profit_a += bot_trade[2]
+            total_trades_a += 1
     
-    if bot_trade[6] == 1:
-        total_profit_b += bot_trade[2]
-        total_trades_b += 1
+        if bot_trade[6] == 1:
+            total_profit_b += bot_trade[2]
+            total_trades_b += 1
+    
+    
+    
+    
+    
     
     # look_back_optimized = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + bot_trade[1] + '_1.pklz')
     # if look_back_optimized != False:

@@ -26,20 +26,25 @@ from binance.client import Client
 from binance.websockets import BinanceSocketManager
 import utility_2 as ut2
 
-
+btc_usd_price = 10900
 
 # part_of_bitcoin_to_use
 
-def get_readable_time(time_to_get):
+def get_readable_time(time_to_get, with_date=True):
     stamp = int(time_to_get)-7*60*60
     # handle millisecond time stamps (as well as seconds)
     if len(str(time_to_get)) > 10:
         stamp = int(int(time_to_get)/1000.0-7*60*60)
-    return datetime.datetime.fromtimestamp(stamp).strftime('%Y-%m-%d %H:%M:%S')
+    if with_date:
+        return datetime.datetime.fromtimestamp(stamp).strftime('%Y-%m-%d %H:%M:%S')
+    else:
+        return datetime.datetime.fromtimestamp(stamp).strftime('%H:%M:%S')
 
-def get_time():
-    return datetime.datetime.fromtimestamp(int(time.time())-7*60*60).strftime('%Y-%m-%d %H:%M:%S')
-
+def get_time(with_date=False):
+    if with_date:
+        return datetime.datetime.fromtimestamp(int(time.time())-7*60*60).strftime('%Y-%m-%d %H:%M:%S')
+    else:
+        return datetime.datetime.fromtimestamp(int(time.time())-7*60*60).strftime('%H:%M:%S')
 
 def print_exception():
     exc_type, exc_obj, tb = sys.exc_info()
@@ -336,9 +341,11 @@ def calculate_profit_and_free_coin(current_state, strategy='ryan'):
     
     print('calculate_profit_and_free_coin()', s)
     print('PROFIT revenue', float_to_str(current_state['total_revenue'], 8))
-    print('PROFIT absoulte', float_to_str(profit_from_trade, 8))
+    print('PROFIT btc', float_to_str(profit_from_trade, 8))
+    print('PROFIT usd', float_to_str(profit_from_trade * btc_usd_price, 8))
     print('PROFIT percent profit', float_to_str(percent_profit_from_trade, 8))
-    print('PROFIT amount invested', float_to_str(invested_btc, 8))
+    print('PROFIT invested btc', float_to_str(invested_btc, 8))
+    print('PROFIT invested usd', float_to_str(invested_btc * btc_usd_price, 8))
 
     try:
         if strategy == 'ryan':
@@ -567,6 +574,8 @@ def sell_with_order_book(current_state, price_to_sell, minutes_until_sale):
                     return True, current_state
 
         if int(time.time()) >= time_to_give_up:
+            print('ERROR', s, 'not sold by', get_readable_time(time_to_give_up))
+            current_state['sell_price'] = float(current_state['price_to_buy_for_order'])
             if current_state['orderId'] != False:
                 current_state = cancel_sale_order(current_state)
                 if current_state['executedQty'] < current_state['min_quantity']:

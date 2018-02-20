@@ -29,7 +29,7 @@ import utility as ut
 
 ################################################################################ 24hr 1min Drop Strategy
 
-btc_usd_price = 10500
+btc_usd_price = 10900
 
 def get_current_price_from_ticker(s):
     ticker_path = '/home/ec2-user/environment/botfarming/Development/recent_tickers/'+s+'.pklz'
@@ -47,8 +47,12 @@ def run_24hr_1min_drop_strategy(bot_index=-1, total_bots=-1):
     
     print('starting 24hr_1min_drop_strategy @', ut.get_time(), 'trading on', len(symbol_list), 'symbols')
 
+    # ryan
     api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
     api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
+    # nelson
+    api_key = '1tD2w1Vner9qgObI1FaeUaCkJQ5m2i34UyrbSWE3l20tIX66tnHDmAYUQp8HwLtq'
+    api_secret = 'Zst9mdv9MkLxB5JNoSYNkcuO2dWXhln3gHKxgqQZhNdzfxel4OEbEun8BW2TC5Fv'
     client = Client(api_key, api_secret)
 
     # support running multiple bots
@@ -97,10 +101,12 @@ def monitor_and_buy_for_24hr_1min_drop(symbol, interval, file_number, client):
         # PARAMS  777
         buy_trigger_drop_percent_factor = 0.5
         sell_trigger_gain_percent_factor = 0.2
-        future_candles_length = 4 # 20180205
+        future_candles_length = 15 # 4 is v bad for $earnings, 15 is 10x better
         btc_tradeable_volume_factor = 3 * 0.1 # multiplier of avg btc volume per minute over 24 hrs that we can buy & sell
         btc_tradeable_volume_factor = btc_tradeable_volume_factor * 0.1 # start testing at 1/10 of normal
-        stop_time = datetime.datetime(2018, 2, 18, 20, 18)
+        
+        stop_time = datetime.datetime(2018, 2, 20, 11, 0)
+        max_btc_qty = 0.666
 
         # DATA generated from previous 24 hours via cron (binance_24hr_1min_drop_daily_update.py)
         symbol_24hr_drop_path = '/home/ec2-user/environment/botfarming/Development/binance_24hr_1min_drop/24hr_1min_drops_by_symbol/'+s+'.pklz'
@@ -138,12 +144,9 @@ def monitor_and_buy_for_24hr_1min_drop(symbol, interval, file_number, client):
                 drop_percent = 0
             else:
                 drop_percent = drop / open_price
-            
-            # STILL ALIVE MSG (printing 3 or 4 per sec, good)
-            # if s == 'ETHBTC' and time.localtime().tm_sec == 55:
-            #     print(s, open_price, current_price, drop, drop_percent, ut.get_time())
 
-            if drop_percent >= buy_trigger_drop_percent:
+            # start buy process early
+            if drop_percent >= buy_trigger_drop_percent * 0.9985:
 
                 # start buy
                 price_to_buy = open_price - (buy_trigger_drop_percent * open_price)
@@ -154,12 +157,17 @@ def monitor_and_buy_for_24hr_1min_drop(symbol, interval, file_number, client):
                 epoch_stop_time = int((stop_time - datetime.datetime(1970, 1, 1)).total_seconds()) + 7 * 60 * 60
                 epoch_now = int(time.time())
                 if epoch_now > epoch_stop_time:
-                    print('NO BUY', s, 'time window expired')
+                    print('NO BUY', s, 'time window expired by', round((epoch_now - epoch_stop_time) / 60, 4), 'minutes... future_candles =', future_candles_length)
                     return False
                 
                 # calc buy params
                 one_min_avg_volume = float(symbol['24hourVolume']) / (24*60)
                 btc_qty = btc_tradeable_volume_factor * one_min_avg_volume
+                if btc_qty > max_btc_qty:
+                    print('CORRECTING VOLUME: btc_qty > max_btc_qty', s, ut.float_to_str(btc_qty), '>', max_btc_qty)
+                    btc_qty = max_btc_qty
+                if btc_qty > max_btc_qty * 0.2:
+                    print('VOLUME > 0.2 * max_btc_qty', s, ut.float_to_str(btc_qty), 'vs', max_btc_qty)
                 base_qty = btc_qty / price_to_buy
                 base_qty_min = float(symbol['filters'][1]['minQty'])
                 base_qty_decimals = ut.get_min_decimals(base_qty_min)
@@ -239,21 +247,36 @@ def monitor_and_buy_for_24hr_1min_drop(symbol, interval, file_number, client):
                 # buy until the end of the minute
                 time_to_give_up = int(time.time()) + ( 60 - time.localtime().tm_sec )
                 price_to_buy_max = float(price_to_buy_for_order)
-                amount_to_stop_buying = base_qty_for_order
+                amount_to_stop_buying = float(base_qty_for_order)
                 
-                print('---BUY', s, '@', ut.float_to_str(price_to_buy, 8), 'sell @', ut.float_to_str(price_to_sell, 8), ut.get_time())
-                print('---open', ut.float_to_str(open_price, 8), 'cur', ut.float_to_str(current_price, 8))
-                print('---btc_qty', ut.float_to_str(btc_qty), 'btc_tradeable_volume_factor', btc_tradeable_volume_factor)
-                print('---one_min_avg_volume', ut.float_to_str(one_min_avg_volume))
+                print('---BUY', s, ut.get_time())
+                print('---buy_price ', price_to_buy_for_order)
+                print('---sell_price', price_to_sell_for_order)
+                print('---open_price', ut.float_to_str(open_price, 8))
+                print('---current_price', ut.float_to_str(current_price, 8))
+                print('---usd_qty', ut.float_to_str(btc_qty * btc_usd_price))
+                # print('---one_min_avg_volume_usd', ut.float_to_str(one_min_avg_volume * btc_usd_price))
+                # print('---one_min_avg_volume', ut.float_to_str(one_min_avg_volume))
+                # print('---* btc_tradeable_volume_factor', btc_tradeable_volume_factor)
+                # print('---= btc_qty', ut.float_to_str(btc_qty))
+                # print('---base_qty', ut.float_to_str(base_qty))
                 # print('>>> BUY @', ut.float_to_str(price_to_buy, 8), s, ut.get_time())
                 # print('>>> SELL @', ut.float_to_str(price_to_sell, 8), 'by', time_to_sell_readable)
                 # print('>>> open', ut.float_to_str(open_price, 8))
                 # print('>>> current', ut.float_to_str(current_price, 8))
                 # print('>>> drop', ut.float_to_str(drop, 8))
                 
+                buy_trigger_price_touched = False
                 while True:
+                    
+                    # check if price did ever hit buy_trigger_price
+                    current_price = get_current_price_from_ticker(s)
+                    if current_price != False:
+                        buy_price_less_one_penny = float(price_to_buy_for_order) - current_state['min_price']
+                        if current_price <= buy_price_less_one_penny:
+                            buy_trigger_price_crossed = True
 
-                    # if end of minute, start selling
+                    # if end of minute, bail & start selling
                     if int(time.time()) >= time_to_give_up:
                         if current_state['orderId'] != False:
                             current_state = ut.cancel_buy_order(current_state)
@@ -261,7 +284,6 @@ def monitor_and_buy_for_24hr_1min_drop(symbol, interval, file_number, client):
                     
                     # place 1 limit buy order & wait
                     if current_state['orderId'] == False:
-                        # must use price_to_buy_for_order
                         current_state = ut.create_buy_order_basic(current_state, price_to_buy_for_order, base_qty_for_order)
                     else:
                         buy_order_info = current_state['client'].get_order(symbol=current_state['symbol'], orderId=current_state['orderId'])
@@ -272,14 +294,22 @@ def monitor_and_buy_for_24hr_1min_drop(symbol, interval, file_number, client):
                             current_state['orderId'] = False
                             ut.pickle_write(current_state_path, current_state, '******could not write state 2nd sell******')
                             if current_state['executedQty'] >= amount_to_stop_buying:
+                                print('---BUY COMPLETE base_qty_for_order', base_qty_for_order, '<=', ut.float_to_str(current_state['executedQty']))
                                 break
 
                     time.sleep(.2) # APIError(code=-1003): Too many requests; current limit is 1200
 
-                # update state if no buy orders filled & start monitoring again
+                # if no buy orders filled, update state & start monitoring again
                 if current_state['executedQty'] < current_state['min_quantity']:
-                    print('NOT FILLED', s, ut.get_time())
-                    ut.pickle_write(current_state_path, False, '******could not write state inside buy coin - no buy orders filled******')
+                    if buy_trigger_price_touched:
+                        print('---ERROR: BUY ORDER NOT FILLED', s, ut.get_time())
+                        print('---TRIGGER PRICE CROSSED', buy_trigger_price_crossed)
+                        print('---price_to_buy_for_order', price_to_buy_for_order)
+                        print('---buy_price_less_one_penny', ut.float_to_str(buy_price_less_one_penny))
+                        print('---start_of_candle_time', ut.get_readable_time(int(time.time()) - 60))
+                    else:
+                        print('---BUY ORDER NOT FILLED', s, ut.get_time())
+                    ut.pickle_write(current_state_path, False, 'ERROR could not write current_state - no buy orders filled')
                     return True
 
                 # otherwise, sell the coin!
@@ -292,16 +322,16 @@ def monitor_and_buy_for_24hr_1min_drop(symbol, interval, file_number, client):
                 current_state['buy_time_executed_readable'] = ut.get_time()
                 current_state['buy_price'] = current_state['original_price']
                 current_state['qty_base'] = current_state['executedQty']
-                # TODO quy_btc is too high, don't know why
                 current_state['qty_btc'] = current_state['buy_price'] * current_state['qty_base']
                 current_state['sell_partial_fill_qty'] = -1
+                current_state['buy_trigger_price_touched'] = buy_trigger_price_touched
                 
                 ut.pickle_write(current_state_path, current_state, '******could not update state to selling******')
                 coin_sold = sell_for_24hr_1min_drop(current_state)
 
                 # sale complete
                 if coin_sold:
-                    print('SALE COMPLETE', s, ut.get_time())
+                    print('---SALE COMPLETE', s, ut.get_time())
                     ut.pickle_write(current_state_path, False)
                     return True
                 else:
@@ -406,8 +436,8 @@ def sell_for_24hr_1min_drop(current_state):
         current_state['sell_time_executed_readable'] = ut.get_time()
         current_state['profit_percent'] = (current_state['total_revenue'] - current_state['original_quantity']*current_state['original_price'])/(current_state['original_quantity']*current_state['original_price'])
         current_state['profit_btc'] = current_state['total_revenue'] - current_state['original_quantity']*current_state['original_price']
-        get_live_vs_sim_stats(current_state)
-        
+        get_live_vs_sim_stats(current_state, do_print=True, do_print_each_candle=True)
+    
         # calc profit, save trade, & delete current_state
         ut.calculate_profit_and_free_coin(current_state, strategy='24hr_1min_drop')
         return True
@@ -427,25 +457,28 @@ def sell_for_24hr_1min_drop(current_state):
         return False
 
 
-def get_live_vs_sim_stats(current_state):
+def get_live_vs_sim_stats(current_state, do_print=True, do_print_each_candle=False):
     s = current_state['symbol']
     # get last 20 min of candles (or so)
     epoch_now = int(time.time())
-    epoch_ago = epoch_now - 60 * (current_state['future_candles_length'] + 2)
+    epoch_ago = epoch_now - 60 * (current_state['future_candles_length'] + 3)
     start = epoch_ago * 1000
     stop = epoch_now * 1000
     url = 'https://api.binance.com/api/v1/klines?symbol='+ s +'&interval=1m&startTime='+str(start)+'&endTime='+str(stop)
     data = requests.get(url).json()
     
-    # TODO print drop, time per candle
-    gain_percent, gain_usd, trades = trade_on_drops(current_state['symbol_data'], data, current_state['future_candles_length'], current_state['buy_trigger_drop_percent'], current_state['sell_trigger_gain_percent'], current_state['btc_tradeable_volume_factor'])
+    # simulate for 1 matching trade
+    min_buy_time = current_state['buy_time_triggered'] - 60
+    do_print_each_candle = do_print_each_candle
+    gain_percent, gain_usd, trades = trade_on_drops(current_state['symbol_data'], data, current_state['future_candles_length'], current_state['buy_trigger_drop_percent'], current_state['sell_trigger_gain_percent'], current_state['btc_tradeable_volume_factor'], do_print_each_candle, min_buy_time)
     
-    print('get_live_vs_sim_stats() len(trades)', len(trades), s)
-    print('get_live_vs_sim_stats() url', url)
-    for d in data:
-        print('candle open', ut.get_readable_time(d[0]))
-    
-    # sim
+    if do_print:
+        print('#### get_live_vs_sim_stats() len(trades)', len(trades), s)
+        # print('#### get_live_vs_sim_stats() url', url)
+        for d in data:
+            print('candle open', ut.get_readable_time(d[0]))
+
+    # sim should always get 1 trade
     if len(trades) == 1:
         sim = trades[0]
         sim['profit_btc'] = sim['gain_btc']
@@ -461,6 +494,7 @@ def get_live_vs_sim_stats(current_state):
     live = {}
     live['open_price'] = current_state['open_price']
     live['open_price_readable'] = ut.float_to_str(current_state['open_price'])
+    live['open_price_time'] = current_state['open_price_time']
     live['open_price_time_readable'] = current_state['open_price_time_readable']
     live['buy_time_triggered'] = current_state['buy_time_triggered']
     live['buy_time_triggered_readable'] = current_state['buy_time_triggered_readable']
@@ -468,8 +502,9 @@ def get_live_vs_sim_stats(current_state):
     live['buy_time_executed_readable'] = current_state['buy_time_executed_readable']
     live['buy_price'] = current_state['buy_price']
     live['buy_price_readable'] = ut.float_to_str(current_state['buy_price'])
-    live['sell_time_triggered'] = current_state['sell_time_triggered']
     live['sell_partial_fill_qty'] = current_state['sell_partial_fill_qty']
+    live['sell_time_triggered'] = current_state['sell_time_triggered']
+    live['sell_time_triggered_readable'] = ut.get_readable_time(current_state['sell_time_triggered'])
     live['sell_time_executed'] = current_state['sell_time_executed']
     live['sell_time_executed_readable'] = ut.get_readable_time(current_state['sell_time_executed'])
     live['sell_price'] = current_state['sell_price']
@@ -484,14 +519,44 @@ def get_live_vs_sim_stats(current_state):
     live['traded_by_sell_trigger'] = current_state['traded_by_sell_trigger']
     live['bet_size_usd'] = current_state['bet_size_usd']
     live['bet_size_usd_readable'] = ut.float_to_str(current_state['bet_size_usd'])
+    buy_to_sell_time = live['sell_time_triggered'] - live['buy_time_triggered']
+    secs_buy = int(live['buy_time_triggered']) % 60
+    secs_sell = int(live['sell_time_triggered']) % 60
+    live['traded_in_one_candle'] = buy_to_sell_time <= 60 and secs_sell - secs_buy > 0
     
-    print('live')
+    # track buy_minute_low_price for backtest overshoot calibration
+    live_open_time = current_state['open_price_time']
+    buy_candle = False
+    for i, d in enumerate(data):
+        if i > 0:
+            c = get_candle_as_dict(d)
+            prev_c = get_candle_as_dict(data[i-1])
+            if c['open_time'] < live_open_time + 5 and c['open_time'] > live_open_time - 5:
+                buy_candle = c
+                if prev_c['close_price'] > c['open_price']:
+                    buy_candle['open_price'] = prev_c['close_price']
+    if buy_candle != False:
+        buy_price_low_price_diff = live['buy_price'] - buy_candle['low_price']
+        # if buy_price_low_price_diff > 0:
+        #     print('>>>ERROR buy_price_low_price_diff is positive')
+        live['buy_price_low_price_diff_buy_candle_low_price'] = buy_candle['low_price']
+        live['buy_price_low_price_diff_percent'] = buy_price_low_price_diff / live['buy_price']
+        live['buy_price_low_price_diff_percent_readable'] = ut.float_to_str(live['buy_price_low_price_diff_percent'])
+    else:
+        live['buy_price_low_price_diff_percent'] = 999
+        live['buy_price_low_price_diff_percent_readable'] = '999'
+
+    print('@live')
     pprint(live)
     
     if len(trades) != 1:
         print('>>>ERROR:', s, 'no trade or too many trades made in back test', len(trades))
-        print('sim')
+        print('live TRADE DATA (compare to sim)')
         print('buy_trigger_drop_percent', ut.float_to_str(current_state['buy_trigger_drop_percent']))
+        print('buy_time_triggered_readable', live['buy_time_triggered_readable'])
+        print('buy_time_executed_readable', live['buy_time_executed_readable'])
+        print('sell_time_triggered_readable', live['sell_time_triggered_readable'])
+        print('sell_time_executed_readable', live['sell_time_executed_readable'])
         do_print_each_candle = True
         gain_percent, gain_usd, trades = trade_on_drops(current_state['symbol_data'], data, current_state['future_candles_length'], current_state['buy_trigger_drop_percent'], current_state['sell_trigger_gain_percent'], current_state['btc_tradeable_volume_factor'], do_print_each_candle)
         if len(trades) > 1:
@@ -527,24 +592,67 @@ def get_live_vs_sim_stats(current_state):
     stats['live_qty_btc_diff'] = live['qty_btc'] - sim['qty_btc']
     stats['live_qty_btc_diff_readable'] = ut.float_to_str(stats['live_qty_btc_diff'])
     stats['live_qty_btc_diff_percent'] = round(stats['live_qty_btc_diff'] / sim['qty_btc'], 10)
+    stats['live_qty_btc_fraction_of_sim'] = live['qty_btc'] / sim['qty_btc']
+    stats['live_qty_btc_fraction_of_sim_readable'] = ut.float_to_str(stats['live_qty_btc_fraction_of_sim'])
     stats['traded_by_sell_trigger_match'] = live['traded_by_sell_trigger'] == sim['traded_by_sell_trigger']
     stats['traded_by_sell_trigger_compare'] = str(live['traded_by_sell_trigger']) + '_' + str(sim['traded_by_sell_trigger'])
+    stats['traded_in_one_candle_match'] = live['traded_in_one_candle'] == sim['traded_in_one_candle']
+    stats['traded_in_one_candle_compare'] = str(live['traded_in_one_candle']) + '_' + str(sim['traded_in_one_candle'])
     if float(live['sell_partial_fill_qty']) > -1:
         stats['traded_by_sell_trigger_partial_fill_percent'] = round(live['sell_partial_fill_qty'] / current_state['original_amount_to_buy'], 10)
     else:
         stats['traded_by_sell_trigger_partial_fill_percent'] = 0
-    
-    # print('##############################################', s, 'LIVE vs SIM, STATS')
-    # pprint(live)
-    # pprint(sim)
 
-    print('stats')
+    print('@stats')
     pprint(stats)
-    
-    # TODO save to disk
 
+    # live vs sim: tests
+    tests = {}
+    passing_profit_percent_range = abs(0.2 * sim['profit_percent']) # based on profit percent
+    passing_profit_percent_range = abs(0.002 * 0.2) # based on absolute value, 20% of 0.2% (the avg gain)
+    passing_profit_percent_range = abs(0.0011) # just over 1/2 of avg gain
+    top_bound = abs(sim['profit_percent']) + passing_profit_percent_range
+    bottom_bound = abs(sim['profit_percent']) - passing_profit_percent_range
+    profit_percent_in_bounds = abs(live['profit_percent']) >= bottom_bound and abs(live['profit_percent']) <= top_bound
+    live_sim_same_side_of_zero = sim['profit_percent'] <= 0 and live['profit_percent'] <= 0 or sim['profit_percent'] > 0 and live['profit_percent'] > 0
+    advantageous_difference = live['profit_percent'] > sim['profit_percent']
+    tests['profit_in_range'] = advantageous_difference or live_sim_same_side_of_zero and profit_percent_in_bounds
+    tests['live_qty_in_range'] = live['qty_btc'] <= sim['qty_btc'] * 1.05
+    tests['buy_time_triggered_good'] = stats['live_buy_time_triggered_delay'] <= 60 and stats['live_buy_time_triggered_delay'] >= 0
+    tests['buy_time_executed_good'] = stats['live_buy_time_executed_delay'] <= 60 and stats['live_buy_time_executed_delay'] >= 0
+    # sell_time_triggered_good, allow for traded in 1 candle early trades on live
+    tests['sell_time_triggered_good'] = stats['live_sell_time_triggered_delay'] >= -120 and stats['live_sell_time_triggered_delay'] <= 60
+    # trade should complete within 3 minutes
+    tests['sell_time_executed_good'] = stats['live_sell_time_executed_delay'] <= 60 * 3
+    tests['all_tests_pass'] = tests['profit_in_range'] and tests['live_qty_in_range'] and tests['buy_time_triggered_good'] and tests['buy_time_executed_good'] and tests['sell_time_triggered_good'] and tests['sell_time_executed_good']
 
-def trade_on_drops(symbol, data, future_candles_length, buy_trigger_drop_percent, sell_trigger_gain_percent, btc_tradeable_volume_factor, do_print_each_candle=False, btc_usd_price=btc_usd_price):
+    tests['y_traded_in_one_candle_compare'] = stats['traded_in_one_candle_compare']
+    tests['y_traded_by_sell_trigger_compare'] = stats['traded_by_sell_trigger_compare']
+    tests['y_profit_usd_compare'] = live['profit_usd_readable'] + ' vs ' + sim['profit_usd_readable']
+    tests['y_qty_btc_compare'] = ut.float_to_str(live['qty_btc']) + ' vs ' + ut.float_to_str(sim['qty_btc'])
+    tests['y_live_qty_btc_fraction_of_sim'] = stats['live_qty_btc_fraction_of_sim_readable']
+
+    print('@tests')
+    pprint(tests)
+    if not tests['profit_in_range']:
+        print("sim['profit_percent']", ut.float_to_str(sim['profit_percent']))
+        print("live['profit_percent']", ut.float_to_str(live['profit_percent']))
+        print("stats['live_profit_percent_diff_readable']", stats['live_profit_percent_diff_readable'])
+    print('-------------------')
+
+    # Save ADVANCED trades to disk
+    trade = {
+        'time': int(time.time()),
+        'time_redable': ut.get_time(),
+        'live': live,
+        'sim': sim,
+        'stats': stats,
+        'tests': tests
+    }
+    file_path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history_24hr_1min_drop_ENHANCED.pklz'
+    ut.append_data(file_path, trade)
+
+def trade_on_drops(symbol, data, future_candles_length, buy_trigger_drop_percent, sell_trigger_gain_percent, btc_tradeable_volume_factor, do_print_each_candle=False, min_buy_time=0):
     s = symbol['symbol']
     one_min_avg_volume = float(symbol['24hourVolume']) / (24*60)
     btc_tradeable_volume =  btc_tradeable_volume_factor * one_min_avg_volume
@@ -552,16 +660,30 @@ def trade_on_drops(symbol, data, future_candles_length, buy_trigger_drop_percent
     sell_time = 0
     for i, c in enumerate(data):
         c = get_candle_as_dict(c)
+        is_last_candle = i + 1 == len(data)
+        
+        # to match reality, use highest of prev close and current open (they don't always match)
+        if i > 0:
+            c_prev = get_candle_as_dict(data[i-1])
+            working_open_price = max(c['open_price'], c_prev['close_price'])
+        else:
+            working_open_price = c['open_price']
 
-        drop = c['open_price'] - c['low_price']
+        drop = working_open_price - c['low_price']
         if drop == 0:
             drop_percent = 0
         else:
-            drop_percent = drop / c['open_price']
+            drop_percent = drop / working_open_price
+
+        # buy requirements
+        drop_percent_ok = drop_percent >= buy_trigger_drop_percent
+        no_overlap = c['open_time'] > sell_time
+        past_min_buy_time = c['open_time'] > min_buy_time
+        do_buy = drop_percent_ok and no_overlap and past_min_buy_time
         
         if do_print_each_candle:
             print('--------c:', c['open_time_readable'])
-            print('open_price', ut.float_to_str(c['open_price']))
+            print('open_price (working)', ut.float_to_str(working_open_price))
             print('low_price', ut.float_to_str(c['low_price']))
             print('drop', ut.float_to_str(drop))
             print('drop_percent', ut.float_to_str(drop_percent))
@@ -569,21 +691,21 @@ def trade_on_drops(symbol, data, future_candles_length, buy_trigger_drop_percent
                 print('DO BUY')
             print('i', i, 'of', len(data)-1)
 
-        # do not allow overlapping trades (for now)
-        no_overlap = c['open_time'] > sell_time
-        if drop_percent >= buy_trigger_drop_percent and no_overlap:
-            buy_price = (c['open_price'] - buy_trigger_drop_percent * c['open_price']) # * 1.002
+        if do_buy:
+            buy_price = (working_open_price - buy_trigger_drop_percent * working_open_price) # * 1.002
+            sell_trigger_price = (buy_price + sell_trigger_gain_percent * buy_price)
+            traded_by_sell_trigger = False
+            traded_in_one_candle = False
+
             future_candles = get_future_candles(future_candles_length, data, i)
             if future_candles:
                 if do_print_each_candle:
                     print('len(future_candles)', len(future_candles))
-                traded_by_sell_trigger = False
                 for f, f_c in enumerate(future_candles):
                     minute = f + 1
-                    sell_trigger_price = (buy_price + sell_trigger_gain_percent * buy_price)
                     if f_c['high_price'] > sell_trigger_price:
                         sell_price = sell_trigger_price # * 0.997
-                        sell_time = int(float(f_c['open_time']) / 1000)
+                        sell_time = f_c['open_time']
                         sell_time_readable = f_c['open_time_readable']
                         traded_by_sell_trigger = True
                         break
@@ -591,31 +713,42 @@ def trade_on_drops(symbol, data, future_candles_length, buy_trigger_drop_percent
                     sell_price = future_candles[-1]['close_price']
                     sell_time = future_candles[-1]['close_time']
                     sell_time_readable = future_candles[-1]['close_time_readable']
-                gain = sell_price - buy_price
-                gain_percent = gain / buy_price
-                gain_btc = btc_tradeable_volume * gain_percent
-                gain_btc_readable = ut.float_to_str(gain_btc)
-                gain_usd = gain_btc * btc_usd_price
-            
-                trade = {
-                    'gain_percent': gain_percent,
-                    'gain_btc': gain_btc,
-                    'gain_btc_readable': gain_btc_readable,
-                    'gain_usd': gain_usd,
-                    'volume_traded_btc': btc_tradeable_volume,
-                    'minute': minute,
-                    'open_price': c['open_price'],
-                    'buy_time_readable': c['open_time_readable'],
-                    'buy_time': c['open_time'],
-                    'buy_price': buy_price,
-                    'sell_time_readable': sell_time_readable,
-                    'sell_time': sell_time,
-                    'sell_price': sell_price,
-                    'traded_by_sell_trigger': traded_by_sell_trigger,
-                }
-                trades.append(trade)
             else:
-                print('ERROR: no future candles i', i, future_candles_length, len(data))
+                # allow trade if, buy & sell within same minute
+                # for real-time back test only
+                # ie bought & sold in last candle
+                minute = 0
+                sell_price = sell_trigger_price
+                sell_time = c['open_time']# will be same as buy time
+                sell_time_readable = c['open_time_readable']
+                traded_by_sell_trigger = True
+                traded_in_one_candle = True
+                    
+            # add the trade
+            gain = sell_price - buy_price
+            gain_percent = gain / buy_price
+            gain_btc = btc_tradeable_volume * gain_percent
+            gain_btc_readable = ut.float_to_str(gain_btc)
+            gain_usd = gain_btc * btc_usd_price
+        
+            trade = {
+                'gain_percent': gain_percent,
+                'gain_btc': gain_btc,
+                'gain_btc_readable': gain_btc_readable,
+                'gain_usd': gain_usd,
+                'volume_traded_btc': btc_tradeable_volume,
+                'minute': minute,
+                'open_price': working_open_price,
+                'buy_time_readable': c['open_time_readable'],
+                'buy_time': c['open_time'],
+                'buy_price': buy_price,
+                'sell_time_readable': sell_time_readable,
+                'sell_time': sell_time,
+                'sell_price': sell_price,
+                'traded_by_sell_trigger': traded_by_sell_trigger,
+                'traded_in_one_candle': traded_in_one_candle,
+            }
+            trades.append(trade) 
 
     gain_percent = sum(trade['gain_percent'] for trade in trades)
     gain_usd = sum(trade['gain_usd'] for trade in trades)

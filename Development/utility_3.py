@@ -333,7 +333,7 @@ def sell_coin_with_order_book_use_min(current_state):
                 else:
                     if current_state['orderId'] != False:
                         current_state = cancel_sale_order(current_state)
-                time.sleep(.03)
+                time.sleep(1)
         
         calculate_profit_and_free_coin(current_state)
         return True
@@ -473,9 +473,9 @@ def buy_coin(symbol, length, file_number):
         for look_back in look_back_schedule:
             
             if a_b == 1:
-                look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '_V13.pklz')
-            else:
                 look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '_V13b.pklz')
+            else:
+                look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '_V13.pklz')
                 
             if look_back_optimized != False:
                 price_to_buy_factor_array[look_back] = look_back_optimized['optimal_buy_factor']

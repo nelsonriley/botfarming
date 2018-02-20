@@ -26,17 +26,22 @@ days = [
     # '20180206_24',
     # '20180210_24',
     # '20180211_24',
-    '20180212_24',
-    '20180213_24',
-    '20180214_24',
+    # '20180212_24',
+    # '20180213_24',
+    # '20180214_24',
+    # '20180215_24',
+    '20180216_24',
+    '20180217_24',
+    '20180218_24',
 ]
 
 future_candles_length = 15 # 20180205
+future_candles_length = 4
 buy_trigger_drop_percent_factor = 0.3 # 20180205
 sell_trigger_gain_percent_factor = 0.25 # 20180205
 
 btc_tradeable_volume_factor = 3 * 0.1 # multiplier of avg btc volume per minute over 24 hrs that we can buy & sell
-btc_usd_price = 9000
+btc_tradeable_volume_factor = btc_tradeable_volume_factor * 0.1 # start @ 1/10 of full
 
 min_volume_btc = 0
 drops_to_collect = 1
@@ -59,7 +64,7 @@ all_day_results = {} # key = param combo, value = array of individual day result
 # 3 combos takes 20min or so
 # started @ 16:48 > 15:13
 # for a in range(0, 3):
-for a in [0.6]:
+for a in [0.6, 0.5]:
 
     # optimizing params: 15_0.9_0.8 = $3800
         # ('15_0.2_0.1', '$', 75852.41, 41.605, '%', 98999)
@@ -83,12 +88,12 @@ for a in [0.6]:
     # step = 0.1
     # buy_trigger_drop_percent_factor = start + (a * step)
     buy_trigger_drop_percent_factor = a
-    sell_trigger_gain_percent_factor = buy_trigger_drop_percent_factor - 0.1
+    sell_trigger_gain_percent_factor = buy_trigger_drop_percent_factor - 0.3
     
     # sell_trigger_gain_percent_factor = a
 
     for d, day in enumerate(days):
-        print('------------------------------', day, '-----------------------------')
+        print('--------------------------------------------------------', day, 'Finding largest drops in prev 24 hrs')
         day_1 = day
         try:
             day_2 = days[d+1]
@@ -124,7 +129,7 @@ for a in [0.6]:
                         print('no data found day 2')
                     symbols_not_found_day_2.append(s)
                 else:
-                    gain_percent, gain_usd, trades = ut2.trade_on_drops(symbol, data_2, future_candles_length, buy_trigger_drop_percent, sell_trigger_gain_percent, btc_tradeable_volume_factor, btc_usd_price)
+                    gain_percent, gain_usd, trades = ut2.trade_on_drops(symbol, data_2, future_candles_length, buy_trigger_drop_percent, sell_trigger_gain_percent, btc_tradeable_volume_factor)
                     if print_trades:
                         print('GAIN ON NEXT DAY DATA', s, round(gain_percent, 4), len(trades), round(gain_usd, 2))
 
@@ -171,7 +176,7 @@ for a in [0.6]:
             'sell_trigger_gain_percent_factor': sell_trigger_gain_percent_factor
         }
 
-        print('--------------------------------------------------------', day_2, 'Day Results')
+        print('--------------------------------------------------------', day_2, 'Sim Results', day_results['buy_trigger_drop_percent_factor'], day_results['sell_trigger_gain_percent_factor'], day_results['future_candles_length'])
         print('TOTAL_GAIN_PERCENT', gain_percent, len(trades_by_symbol), '$', gain_usd)
         pprint(day_results)
         # print('symbols_traded', len(trades_by_symbol))

@@ -41,7 +41,7 @@ for bot_trade in bot_trades:
     #     total_profit += bot_trade[2]
     #     total_trades += 1
     
-    if '2018-02-17 10:54:50' in bot_trade[0]:
+    if '2018-02-18 20:18:50' in bot_trade[0]:
         start_counting = True
     if start_counting == True:
         print(bot_trade[0], bot_trade[1], bot_trade[2], bot_trade[3], bot_trade[4], bot_trade[5], bot_trade[6], bot_trade[7], bot_trade[8], bot_trade[9], bot_trade[10], bot_trade[11], bot_trade[12], bot_trade[13])

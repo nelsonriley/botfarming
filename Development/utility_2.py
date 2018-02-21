@@ -76,11 +76,11 @@ def start_24hr_1min_drop_thread(symbol, client):
 def monitor_and_buy_for_24hr_1min_drop(symbol, interval, file_number, client):
     s = str(symbol['symbol'])
 
-    current_state = ut.load_current_state(s, file_number, interval)
     version = '24hr_1min_drop_v0'
     current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + interval + '/program_state_' + interval + '_' + str(file_number) + '_' + s + '_V' + version + '.pklz'
     # current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + interval + '/program_state_' + interval + '_' + str(file_number) + '_' + s + '.pklz'
 
+    current_state = ut.load_current_state(current_state_path)
     if isinstance(current_state, dict):
         print('monitor_and_buy_for_24hr_1min_drop() loading state to sell coin..', current_state['symbol'])
         ut.buy_coin_from_state(current_state, strategy='24hr_1min_drop')
@@ -102,9 +102,9 @@ def monitor_and_buy_for_24hr_1min_drop(symbol, interval, file_number, client):
         buy_trigger_drop_percent_factor = 0.5
         sell_trigger_gain_percent_factor = 0.2
         future_candles_length = 15 # 4 is v bad for $earnings, 15 is 10x better
-        btc_tradeable_volume_factor = 3 * 0.1 * 0.3 # multiplier of avg btc volume per minute over 24 hrs that we can buy & sell
+        btc_tradeable_volume_factor = 3 * 0.1 * 0.4 # multiplier of avg btc volume per minute over 24 hrs that we can buy & sell
 
-        stop_time = datetime.datetime(2018, 2, 21, 12, 15)
+        stop_time = datetime.datetime(2020, 2, 21, 12, 15)
         max_btc_qty = 2
 
         # DATA generated from previous 24 hours via cron (binance_24hr_1min_drop_daily_update.py)
@@ -346,7 +346,7 @@ def monitor_and_buy_for_24hr_1min_drop(symbol, interval, file_number, client):
         time.sleep(60*4)
         return False
 
-
+# also get_live_vs_sim_stats saves ENHANCED trades
 def sell_for_24hr_1min_drop(current_state):
     s = str(current_state['symbol'])
     print_current_price = True
@@ -358,6 +358,8 @@ def sell_for_24hr_1min_drop(current_state):
     else:
         time_to_give_up = int( time.time() + 60 * current_state['future_candles_length'] )
         current_state['time_to_give_up'] = time_to_give_up
+        current_state['original_quantity'] = current_state['executedQty']
+        current_state['state'] = 'selling'
         # print('time_to_give_up', ut.get_readable_time(time_to_give_up))
         ut.pickle_write(current_state_path, current_state)
 
@@ -386,6 +388,7 @@ def sell_for_24hr_1min_drop(current_state):
             # out of time, sell with order book
             if int(time.time()) >= time_to_give_up:
                 if current_state['orderId'] != False:
+                    current_state['sell_price'] = float(sale_order_info['price'])
                     current_state = ut.cancel_sale_order(current_state)
                     if current_state['executedQty'] < current_state['min_quantity']:
                         break
@@ -641,14 +644,16 @@ def get_live_vs_sim_stats(current_state, do_print=True, do_print_each_candle=Fal
 
     # Save ADVANCED trades to disk
     trade = {
+        'symbol': s,
         'time': int(time.time()),
         'time_redable': ut.get_time(),
         'live': live,
         'sim': sim,
         'stats': stats,
-        'tests': tests
+        'tests': tests,
+        'current_state': current_state
     }
-    print('file path may return boolan')
+    print('*file path for saving ENHANCED trades may return boolean')
     file_path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history_24hr_1min_drop_ENHANCED.pklz'
     ut.append_data(file_path, trade)
 

@@ -15,9 +15,17 @@ import math
 from binance.client import Client
 
 
-order_book = ut.get_order_book_local('FUELBTC')
+length = '4h'
 
-pprint(order_book)
+minutes = int(length[:1])*60
+
+print(minutes)
+
+
+
+# order_book = ut.get_order_book_local('FUELBTC')
+
+# pprint(order_book)
 
 # result = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/program_state_1m/program_state_1m_0_DLTBTC_V0.pklz')
 

@@ -28,6 +28,10 @@ start_time = int(time.time())
 
 ################################################################################ PLAY WITH CODE
 
+
+
+
+################################################################################ GET RESULTS for 24hr_1min_drop
 file_path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history_24hr_1min_drop_ENHANCED.pklz'
 trades = ut.pickle_read(file_path)
 print('trades', len(trades))
@@ -40,8 +44,10 @@ trades_passing_all_tests = 0
 trades_reporting = 0
 for i, t in enumerate(trades):
     # 20180220 = 62, 275
-    # 20180221 = 310 morning session
-    if i >= 310:
+    # 20180221 = 310 to 361 morning session ($54 profit, $70 in account, 30% volume)
+    if i >= 361:
+        if 'symbol' in t:
+            print('s', t['symbol'])
         trades_reporting += 1
         profit_usd += t['live']['profit_usd']
         if t['live']['profit_usd'] >= 0:
@@ -67,6 +73,21 @@ print('trades_negative', trades_negative)
 print('trades_positive_sum', trades_positive_sum)
 print('trades_negative_sum', trades_negative_sum)
 print('trades_passing_all_tests', trades_passing_all_tests)
+
+
+
+
+################################################################################ SET CURRENT STATE to FALSE for ALL
+# symbol_data = requests.get("https://api.binance.com/api/v1/exchangeInfo").json()
+# for symbol in symbol_data['symbols']:
+#     if symbol['quoteAsset'] == 'BTC':
+#         s = symbol['symbol']
+#         print(s)
+#         file_number = 2000
+#         interval = '1m'
+#         version = '24hr_1min_drop_v0'
+#         current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + interval + '/program_state_' + interval + '_' + str(file_number) + '_' + s + '_V' + version + '.pklz'
+#         ut.pickle_write(current_state_path, False)
 
 
 ################################################################################ TEST PASSING PROFIT % VALUES

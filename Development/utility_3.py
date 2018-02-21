@@ -8,6 +8,7 @@ import pickle
 import gzip
 import datetime
 import json
+import arrow
 import math
 from threading import Thread
 import threading
@@ -28,6 +29,11 @@ import utility_2 as ut2
 
 
 # part_of_bitcoin_to_use
+
+def write_current_state(current_state_info, current_state):
+    pickle_write('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + current_state_info['length'] + '_' + current_state_info['file_number'] + '_' + current_state_info['symbol'] + '.pklz', current_state, '******could not write state******')
+
+    
 
 def get_readable_time(time_to_get):
     stamp = int(time_to_get)-7*60*60
@@ -113,13 +119,13 @@ def cancel_buy_order(current_state):
 
     current_state['state'] = 'buying'
     current_state['orderId'] = False
-    pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_3.pklz', current_state, '******could not write state******')
+    write_current_state(current_state, current_state)
     
     buy_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=order_id_of_current_state)
     current_state['executedQty'] = current_state['executedQty'] + float(buy_order_info['executedQty'])
     if float(buy_order_info['price']) != 0:
         current_state['original_price'] = float(buy_order_info['price'])
-    pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_3.pklz', current_state, '******could not write state******')
+    write_current_state(current_state, current_state)
     
 
     return current_state
@@ -135,8 +141,7 @@ def cancel_sale_order(current_state):
 
     current_state['state'] = 'selling'
     current_state['orderId'] = False
-    current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_3.pklz'
-    pickle_write(current_state_path, current_state, '******could not write state******')
+    write_current_state(current_state, current_state)
 
     sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=order_id_of_current_state)
 
@@ -160,8 +165,7 @@ def create_buy_order(current_state, price_to_buy):
 
     current_state['state'] = 'buying'
     current_state['orderId'] = buy_order['orderId']
-    current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_3.pklz'
-    pickle_write(current_state_path, current_state, '******could not write state 2nd sell******')
+    write_current_state(current_state, current_state)
 
     return current_state
 
@@ -183,12 +187,11 @@ def create_sale_order(current_state, price_to_sell, market=False):
 
     current_state['state'] = 'selling'
     current_state['orderId'] = sale_order['orderId']
-    current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_3.pklz'
-    pickle_write(current_state_path, current_state, '******could not write state 2nd sell******')
+    write_current_state(current_state, current_state)
 
     return current_state
 
-def calculate_profit_and_free_coin(current_state, strategy='ryan'):
+def calculate_profit_and_free_coin(current_state):
     # also save trade to trade history
 
     print('coin sold, calculating profit and freeing coin', current_state['symbol'],get_time())
@@ -199,22 +202,21 @@ def calculate_profit_and_free_coin(current_state, strategy='ryan'):
 
     recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['a_b'], current_state['look_back_gains'], current_state['look_back_wins'], current_state['look_back_losses'], current_state['price_to_buy_factor'], current_state['price_to_sell_factor'], current_state['original_buy_time'], get_time()]
     
-    append_data('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history_3.pklz', recorded_trade)
+    append_data('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/'+ current_state['length'] + '_' + current_state['file_number'] + '_binance_all_trades_history.pklz', recorded_trade)
 
     # update program state
-    current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_3.pklz'
-    pickle_write(current_state_path, False)
+    write_current_state(current_state, False)
     print('################## wrote profit and freed coin....', current_state['symbol'])
 
     # ignore trades we have big losses on for 12 hours
-    if profit_from_trade < -.01:
-        current_state['state'] = 'sleeping'
-        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_3.pklz', current_state, '******could not write state******')
-        time.sleep(60*60*1)
+    # if profit_from_trade < -.01:
+    #     current_state['state'] = 'sleeping'
+    #     write_current_state(current_state, current_state)
+    #     time.sleep(60*60*1)
 
 def get_order_book_local(symbol):
     while True:
-        order_book = pickle_read('/home/ec2-user/environment/botfarming/Development/recent_order_books/'+symbol +'.pklz')
+        order_book = pickle_read('/home/ec2-user/environment/botfarming/Development/recent_order_books/3_'+symbol +'.pklz')
         if order_book == False:
             #print('could not get orderbook for ', symbol)
             time.sleep(.1)
@@ -250,7 +252,7 @@ def get_first_in_line_price(current_state):
     return price_to_buy,first_ask, second_price_to_buy, second_ask, second_price_to_check, first_bid
 
 def sell_coin_with_order_book_use_min(current_state):
-    print('########### - Selling...', current_state['symbol'], 'at minimum price',  current_state['price_to_sell'], get_time())
+    print('########### - Selling...', current_state['symbol'], 'at minimum price',  current_state['price_to_sell'], 'exectuedQty', current_state['executedQty'], get_time())
     
     try:
 
@@ -274,7 +276,7 @@ def sell_coin_with_order_book_use_min(current_state):
                         current_state['total_revenue'] += float(sale_order_info['executedQty']) * float(sale_order_info['price'])
                         current_state['state'] = 'selling'
                         current_state['orderId'] = False
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_3.pklz', current_state, '******could not write state 2nd sell******')
+                        write_current_state(current_state, current_state)
                         if current_state['executedQty'] < current_state['min_quantity']:
                             break
                     
@@ -283,15 +285,15 @@ def sell_coin_with_order_book_use_min(current_state):
                         started_give_up = True
                         print('Started give up 1, reduced price increase factor by half', current_state['symbol'])
                         current_state['price_increase_factor'] = current_state['price_increase_factor']/2
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_3.pklz', current_state, '******could not write state 2nd sell******')
-                
+                        write_current_state(current_state, current_state)
+                        
                 if int(time.time()) >= 2*time_to_give_up:
                     if started_give_up_2 == False:
                         started_give_up_2 = True
                         print('Started give up 2, reduced price increase factor by half again', current_state['symbol'])
                         current_state['price_increase_factor'] = current_state['price_increase_factor']/2
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_3.pklz', current_state, '******could not write state 2nd sell******')
-        
+                        write_current_state(current_state, current_state)
+                        
                 first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check, first_bid = get_first_in_line_price(current_state)
                 if time.localtime().tm_sec < 1:
                     if keep_price == True:
@@ -299,8 +301,8 @@ def sell_coin_with_order_book_use_min(current_state):
                             current_state['compare_price'] = first_bid
                     else:
                         current_state['compare_price'] = first_bid
-                    pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_3.pklz', current_state, '******could not write state 2nd sell******')
-                
+                    write_current_state(current_state, current_state)
+                    
                 if int(time.time()) < time_to_change:
                     price_to_sell_min = current_state['price_to_sell']
                 else:
@@ -333,6 +335,7 @@ def sell_coin_with_order_book_use_min(current_state):
                 else:
                     if current_state['orderId'] != False:
                         current_state = cancel_sale_order(current_state)
+                
                 if current_state['orderId'] != False:
                     time.sleep(5)
                 else:
@@ -357,17 +360,16 @@ def sell_coin_with_order_book_use_min(current_state):
         return False
         
 
-def buy_coin_from_state(current_state, strategy='ryan'):
+def buy_coin_from_state(current_state):
 
 
     try:
-        print('buy coin from state', current_state['symbol'], 'strategy', strategy)
-        current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_3.pklz'
-    
+        print('buy coin from state', current_state['symbol'])
+        
         if (current_state['state'] == 'sleeping'):
             print('sleeping...', current_state['symbol'])
             time.sleep(60*60)
-            pickle_write(current_state_path, False, '******could not write state buy from stae******')
+            write_current_state(current_state, False)
             return
     
         if (current_state['state'] == 'buying'):
@@ -377,14 +379,12 @@ def buy_coin_from_state(current_state, strategy='ryan'):
     
             if float(current_state['executedQty']) < current_state['min_quantity']:
                 print('buy order canceled, was never filled, exiting')
-                pickle_write(current_state_path, False, '******could not write state buy from stae******')
-                if strategy == 'ryan':
-                    pickle_write(current_state_path, False)
+                write_current_state(current_state, False)
                 return
             else:
                 current_state['state'] = 'selling'
                 current_state['original_quantity'] = current_state['executedQty']
-                pickle_write(current_state_path, current_state, '******could not write state******')
+                write_current_state(current_state, current_state)
     
     
         ##are selling...
@@ -398,7 +398,7 @@ def buy_coin_from_state(current_state, strategy='ryan'):
                 calculate_profit_and_free_coin(current_state)
                 return
     
-        print('buy_coin_from_state() no open orders, selling coin..', current_state['symbol'], 'strategy', strategy)
+        print('buy_coin_from_state() no open orders, selling coin..', current_state['symbol'])
         
         coin_sold = sell_coin_with_order_book_use_min(current_state)
         
@@ -418,23 +418,16 @@ def buy_coin_from_state(current_state, strategy='ryan'):
 
 def buy_coin(symbol, length, file_number):
 
-    # if (symbol['symbol'] == 'ETHBTC') and (time.localtime().tm_min%2 == 0 and time.localtime().tm_sec == 1 or time.localtime().tm_sec == 2):
-    #     print('buy_coin() still alive', symbol['symbol'], get_time())
-
-    # if time.localtime().tm_min == 2:
-    #     print("started buy coin ", symbol['symbol'], get_time())
-    #     order_book = pickle_read('/home/ec2-user/environment/botfarming/Development/recent_order_books/'+symbol['symbol'] +'.pklz')
-    #     try:
-    #         print("current price:", order_book['bids'][0][0], symbol['symbol'], get_time())
-    #     except Exception as e:
-    #         print('symbol does not have a price:', symbol['symbol'])
-    #         print(e)
-
     api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
     api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
     client = Client(api_key, api_secret)
 
-    current_state = load_current_state(symbol['symbol'], file_number, length)
+    try:
+        f = gzip.open('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '_3.pklz','rb')
+        current_state = pickle.load(f)
+        f.close()
+    except Exception as e:
+        current_state = False
 
     if isinstance(current_state,dict):
         print('loading state to sell coin..', current_state['symbol'])
@@ -442,11 +435,15 @@ def buy_coin(symbol, length, file_number):
         return
 
     try:
+        
+        if length == '12h':
+            minutes = 12*60
+        else:
+            minutes = int(length[:1])*60
 
-        minutes = 1
 
         largest_bitcoin_order = .1
-        part_of_bitcoin_to_use = .35
+        part_of_bitcoin_to_use = .5
         price_to_start_buy_factor = 1.003
 
         sell_price_drop_factor = .997
@@ -457,11 +454,11 @@ def buy_coin(symbol, length, file_number):
         lower_band_buy_factor_array = [0,1.01, 1.15, 1.09, 1.055, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
         price_increase_factor_array = [0,1.021,1.021,1.021,1.021,1.021,1.021,1.021,1.021,1.021,1.021]
         
-        minutes_until_sale = 6
+        minutes_until_sale = 2*minutes
         
-        minutes_until_sale_final = 45
+        minutes_until_sale_final = 4*minutes
 
-        datapoints_trailing = 230
+        datapoints_trailing = 4
 
         look_back_schedule = [1,2,4]
         look_back_gains = [0,0,0,0,0,0,0,0,0,0]
@@ -475,10 +472,8 @@ def buy_coin(symbol, length, file_number):
 
         for look_back in look_back_schedule:
             
-            if a_b == 1:
-                look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '_V13b.pklz')
-            else:
-                look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '_V13.pklz')
+            look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
+            
                 
             if look_back_optimized != False:
                 price_to_buy_factor_array[look_back] = look_back_optimized['optimal_buy_factor']
@@ -509,6 +504,7 @@ def buy_coin(symbol, length, file_number):
         end_time = int(time.time())*1000
         start_time = (end_time-60*1000*minutes*(datapoints_trailing+1))
         url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval='+length+'&startTime='+str(start_time)+'&endTime='+str(end_time)
+        #print(url)
         data = requests.get(url).json()
 
         if isinstance(data, basestring):
@@ -550,7 +546,7 @@ def buy_coin(symbol, length, file_number):
 
             for look_back in look_back_schedule:
                 
-                if look_back_gains[look_back] <= 0:
+                if look_back_wins[look_back] + look_back_losses[look_back] < 3 or look_back_gains[look_back]/(look_back_wins[look_back] + look_back_losses[look_back]) < .05:
                     continue
 
                 price_to_start_buy = float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy_factor
@@ -639,10 +635,9 @@ def buy_coin(symbol, length, file_number):
                         current_state['min_price'] = float(symbol['filters'][0]['minPrice'])
                         current_state['min_quantity'] = min(float(symbol['filters'][1]['minQty']), float(symbol['filters'][2]['minNotional']))
 
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + length + '/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '_3.pklz', current_state, '******could not write state******')
+                        write_current_state(current_state, current_state)
 
-
-                        time_to_give_up = int(time.time()) + 60
+                        time_to_give_up = int(time.time()) + 60*minutes/30
                         price_to_buy_max = price_to_buy*buy_price_increase_factor
                         amount_to_stop_buying = part_of_bitcoin_to_use/price_to_buy_max
                         print('max price for', symbol['symbol'], price_to_buy_max)
@@ -654,7 +649,7 @@ def buy_coin(symbol, length, file_number):
                                     current_state['original_price'] = float(buy_order_info['price'])
                                     current_state['state'] = 'buying'
                                     current_state['orderId'] = False
-                                    pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_3.pklz', current_state, '******could not write state 2nd sell******')
+                                    write_current_state(current_state, current_state)
                                     if current_state['executedQty'] >= amount_to_stop_buying:
                                         break
 
@@ -696,14 +691,14 @@ def buy_coin(symbol, length, file_number):
 
                         if current_state['executedQty'] < current_state['min_quantity']:
                             print('[last line reached] no one bought cancel order - freeing coin', current_state['symbol'], get_time())
-                            pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + length + '/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '_3.pklz', False, '******could not write state inside buy coin - no one bought coin******')
+                            write_current_state(current_state, False)
                             return True
 
 
                         current_state['original_quantity'] = current_state['executedQty']
                         current_state['state'] = 'selling'
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_3.pklz', current_state, '******could not update state to selling******')
-
+                        write_current_state(current_state, current_state)
+                        
                         coin_sold = sell_coin_with_order_book_use_min(current_state)
 
                         if coin_sold:
@@ -723,19 +718,7 @@ def buy_coin(symbol, length, file_number):
         return False
 
 
-def load_current_state(symbol, file_number, length):
-
-    try:
-        f = gzip.open('/home/ec2-user/environment/botfarming/Development/program_state_' + length + '/program_state_' + length + '_' + str(file_number) + '_' + symbol + '_3.pklz','rb')
-        current_state = pickle.load(f)
-        f.close()
-    except Exception as e:
-        current_state = False
-
-    return current_state
-
-
-def run_bot_parallel(file_number, total_files):
+def run_bot_parallel(file_number, length, total_files):
 
     print('running bot', file_number, 'of', total_files, 'ip address:')
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -746,7 +729,7 @@ def run_bot_parallel(file_number, total_files):
 
     try:
 
-        symbols = pickle_read('/home/ec2-user/environment/botfarming/Development/binance_btc_symbols.pklz')
+        symbols = pickle_read('/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz')
 
         total_btc_coins = 0
         symbols_trimmed = {}
@@ -774,23 +757,148 @@ def run_bot_parallel(file_number, total_files):
         symbol = symbols_trimmed[s]
 
         if loops >= file_start and loops < file_end:
-            t = Thread(target=buy_coin_thread, args=[symbol, file_number])
+            t = Thread(target=buy_coin_thread, args=[symbol, length, file_number])
             t.start()
 
         loops += 1
 
 
 # "worker"
-def buy_coin_thread(symbol, file_number):
+def buy_coin_thread(symbol, length, file_number):
 
     while True:
 
-        buy_coin(symbol, '1m', file_number)
+        buy_coin(symbol, length, file_number)
 
 
-# file_path = '/home/ec2-user/environment/botfarming/Development/binance_30m_trades/30m_trades.pklz'
 def append_data(file_path, data):
     data_points = pickle_read(file_path)
     data_points.append(data)
     pickle_write(file_path, data_points)
 
+def save_data(save_params, datapoints_trailing, min_volume, minutes):
+    
+    for settings in save_params:
+
+        day_folder = settings[0]
+        start_time = arrow.get(settings[1]).replace(tzinfo='America/Denver')
+        end_time = arrow.get(settings[2]).replace(tzinfo='America/Denver')
+
+        path = '/home/ec2-user/environment/botfarming/Development/binance_training_data/'+day_folder
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        start_end_style = True
+        if start_end_style:
+            
+            print('STARTING CANDLES DOWNLOAD', settings, get_time())
+
+            start = start_time.timestamp * 1000
+            # print('start', start, arrow.get(int(start/1000)).to('America/Denver'))
+            start = start - datapoints_trailing * minutes * 60 * 1000
+            # print('start with datapoints_trailing', start, arrow.get(int(start/1000)).to('America/Denver'))
+            end = end_time.timestamp * 1000
+            stop = start + 400 * minutes * 60 * 1000
+            last_loop = False
+            if stop > end:
+                stop = end
+                last_loop = True
+            symbols = pickle_read('/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz')
+            coins = {}
+            loops = 1
+            while True:
+                # print('loop', loops)
+                loops += 1
+                for s in symbols:
+                    symbol = symbols[s]
+                    if float(symbol['24hourVolume']) > min_volume:
+                        if not symbol['symbol'] in coins:
+                            coins[symbol['symbol']] = []
+                        # get data from binance
+                        if minutes >= 60:
+                            hours = minutes/60
+                            url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval='+str(hours)+'h&startTime='+str(start)+'&endTime='+str(stop)
+                        else:
+                            url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval='+str(minutes)+'m&startTime='+str(start)+'&endTime='+str(stop)
+                        r = requests.get(url)
+                        data = r.json()
+                        # if symbol['symbol'] == 'ETHBTC':
+                        #     print('--------------------ETHBTC')
+                        #     print(url)
+                        #     print(len(data))
+                        #     print(start, arrow.get(int(start/1000)).to('America/Denver'))
+                        #     print(stop, arrow.get(int(stop/1000)).to('America/Denver'))
+                        #     duration_in_minutes = int(stop - start)/(1000*60)
+                        #     print('duration_in_minutes', duration_in_minutes)
+                        #     print('--------------------ETHBTC')
+                        # watch for too many API requests
+                        if isinstance(data, dict):
+                            print('ERROR... API Failed')
+                            print(url)
+                            pprint(data)
+                            break
+                        # add to coins[symbol] array
+                        for candle in data:
+                            coins[symbol['symbol']].append(candle)
+                if last_loop:
+                    break
+                # update times for next round of API requests
+                start = stop
+                stop = start + 400 * minutes * 60 * 1000
+                if stop > end:
+                    stop = end
+                    last_loop = True
+
+            # save continuous data for each coin to disk
+            print('SAVING CANDLE DATA', settings, 'for', len(coins), 'symbols', get_time())
+            for symbol in coins:
+                data = coins[symbol]
+                # if symbol == 'ETHBTC':
+                #     print('--------------------ETHBTC')
+                #     print('candles =', len(data), '...should be', 12 * 60 + 230)
+                #     print('first candle')
+                #     pprint(data[0])
+                #     print('last candle')
+                #     pprint(data[-1])
+                #     print('--------------------ETHBTC')
+                candle_path = '/home/ec2-user/environment/botfarming/Development/binance_training_data/'+ day_folder + '/'+ symbol +'_data_'+str(minutes)+'m.pklz'
+                pickle_write(candle_path, data)
+
+    return True
+    
+def process_socket_pushes_order_book(msg):
+    if not 'stream' in msg:
+        return
+    elif 'depth' in msg['stream']:
+            
+        symbol = msg['stream'].split('@')[0].upper()
+        msg['data']['time'] = int(time.time())
+        pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/3_'+symbol+'.pklz', msg['data'])
+
+        if symbol == 'ETHBTC' and (time.localtime().tm_sec == 1 or time.localtime().tm_sec == 2):
+            print('process_socket_pushes_order_book() ETHBTC', msg['data']['bids'][0][0], get_time())
+            
+
+def update_symbol_list():
+    # save symbol list daily since API sometimes fail when getting live
+    symbol_data = requests.get("https://api.binance.com/api/v1/exchangeInfo").json()
+    ticker_data = requests.get("https://api.binance.com/api/v1/ticker/24hr").json()
+
+    symbols_for_save = {}
+    for symbol in symbol_data['symbols']:
+        if symbol['quoteAsset'] == 'BTC':
+            symbols_for_save[symbol['symbol']] = symbol
+    for symbol in ticker_data:
+        if 'BTC' in symbol['symbol'] and not 'BTC' in symbol['symbol'][:3]:
+            symbols_for_save[symbol['symbol']]['24hourVolume'] = symbol['quoteVolume']
+            symbols_for_save[symbol['symbol']]['24priceChangePercent'] = symbol['priceChangePercent']
+
+    # print('---------------ETHBTC')
+    # pprint(symbols_for_save['ETHBTC'])
+    # print('---------------ETHBTC')
+
+    print('btc symbols found:', len(symbols_for_save))
+    pickle_write('/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz', symbols_for_save)
+
+    symbols_saved = pickle_read('/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz')
+    print('btc symbols saved:', len(symbols_saved))

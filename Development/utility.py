@@ -507,6 +507,7 @@ def sell_with_order_book(current_state, price_to_sell, minutes_until_sale):
                     current_state = cancel_sale_order(current_state)
                     if current_state['executedQty'] < current_state['min_quantity']:
                         print('SOLD via sell_with_order_book() 2', s, get_time())
+                        current_state['sell_price'] = float(sale_order_info['price'])
                         return True, current_state
                     current_state = create_sale_order(current_state, first_in_line_price)
                 else:
@@ -514,6 +515,7 @@ def sell_with_order_book(current_state, price_to_sell, minutes_until_sale):
                         current_state = cancel_sale_order(current_state)
                         if current_state['executedQty'] < current_state['min_quantity']:
                             print('SOLD via sell_with_order_book() 3', s, get_time())
+                            current_state['sell_price'] = float(sale_order_info['price'])
                             return True, current_state
                         current_state = create_sale_order(current_state, second_in_line_price)
             else:
@@ -668,7 +670,6 @@ def sell_coin_with_order_book(current_state):
 
 def buy_coin_from_state(current_state, strategy='ryan'):
 
-
     try:
         print(current_state['symbol'], current_state['version'],'#######buy coin from state', 'strategy', strategy)
         current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_V' + current_state['version'] + '.pklz'
@@ -716,10 +717,10 @@ def buy_coin_from_state(current_state, strategy='ryan'):
         if strategy == 'ryan':
             coin_sold = sell_coin_with_order_book_use_min(current_state)
         if strategy == '24hr_1min_drop':
-            ut2.sell_for_24hr_1min_drop(current_state)
+            coin_sold = ut2.sell_for_24hr_1min_drop(current_state)
         
         if coin_sold:
-            print(current_state['symbol'], current_state['version'],'finished order - freeing coin')
+            print(current_state['symbol'], current_state['version'], 'finished order - freeing coin')
             print('#########################')
             return True
     
@@ -1049,13 +1050,15 @@ def free_coin_after_candle(symbol, look_back):
             return
 
 
-def load_current_state(symbol, file_number, length):
+def load_current_state(file_path):
 
     try:
-        f = gzip.open('/home/ec2-user/environment/botfarming/Development/program_state_' + length + '/program_state_' + length + '_' + str(file_number) + '_' + symbol + '_V' + current_state['version'] + '.pklz','rb')
+        # '/home/ec2-user/environment/botfarming/Development/program_state_' + length + '/program_state_' + length + '_' + str(file_number) + '_' + symbol + '_V' + current_state['version'] + '.pklz'
+        f = gzip.open(file_path, 'rb')
         current_state = pickle.load(f)
         f.close()
     except Exception as e:
+        print('ERROR could not load_current_state()')
         current_state = False
 
     return current_state

@@ -14,6 +14,8 @@ import json
 import math
 from binance.client import Client
 
+length = '4h'
+
 
 ######
 symbols = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_btc_symbols.pklz')
@@ -38,8 +40,8 @@ for s in symbols_trimmed:
     total_symbols += 1
     
     for look_back in look_back_array:
-        look_back_optimized = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/VLong_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
-        if look_back_optimized != False and look_back_optimized['wins'] + look_back_optimized['losses'] > 1 and look_back_optimized['gain']/(look_back_optimized['wins'] + look_back_optimized['losses']) > .05:
+        look_back_optimized = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/' + length  + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
+        if look_back_optimized != False and look_back_optimized['wins'] + look_back_optimized['losses'] > 3 and look_back_optimized['gain']/(look_back_optimized['wins'] + look_back_optimized['losses']) > .04:
             print(symbol['symbol'], look_back_optimized['look_back'], look_back_optimized['gain'], look_back_optimized['wins'], look_back_optimized['losses'])
             print(symbol['symbol'], look_back_optimized['optimal_buy_factor'], look_back_optimized['optimal_sell_factor'], look_back_optimized['optimal_band_factor'], look_back_optimized['optimal_increase_factor'], look_back_optimized['optimal_minutes_until_sale'])
             if look_back_optimized['gain'] > 0:

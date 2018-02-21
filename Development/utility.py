@@ -145,8 +145,8 @@ def buy_coin_socket(msg):
     if 'e' in msg and msg['e'] == 'error':
         # close and restart the socket, if socket can't reconnect itself
         print('restarting process_socket_pushes(msg)')
-        global socket_list
-        global bm
+        # global socket_list
+        # global bm
         bm.close()
         conn_key = bm.start_multiplex_socket(socket_list, buy_coin_socket)
         bm.start()
@@ -163,13 +163,14 @@ def buy_coin_socket(msg):
 
 def process_socket_pushes_order_book(msg):
     if not 'stream' in msg:
+        return
         # close and restart the socket, if socket can't reconnect itself
-        print('restarting process_socket_pushes(msg)')
-        global socket_list
-        global bm
-        bm.close()
-        conn_key = bm.start_multiplex_socket(socket_list, process_socket_pushes_order_book)
-        bm.start()
+        # print('restarting process_socket_pushes(msg)')
+        # global socket_list
+        # global bm
+        # bm.close()
+        # conn_key = bm.start_multiplex_socket(socket_list, process_socket_pushes_order_book)
+        # bm.start()
     else:
         # if 'kline_1m' in msg['stream']:
         #     print('--------------------------------------', msg['stream'], get_time())
@@ -429,12 +430,94 @@ def get_first_in_line_price_old(current_state):
     # bids & asks.... 0=price, 1=qty
     first_ask = float(order_book['asks'][0][0])
     second_ask = float(order_book['asks'][1][0])
+    first_bid = float(order_book['bids'][0][0])
+    second_bid = float(order_book['bids'][1][0])
     second_price_to_check = first_ask + 3 * current_state['min_price']
     second_price_to_buy = float_to_str(round(second_ask - current_state['min_price'], current_state['price_decimals']))
     price_to_buy = float_to_str(round(first_ask - current_state['min_price'], current_state['price_decimals']))
     # print(first_ask)
     # print(price_to_buy)
-    return price_to_buy, first_ask, second_price_to_buy, second_ask, second_price_to_check
+    return price_to_buy, first_ask, second_price_to_buy, second_ask, second_price_to_check, first_bid, second_bid
+
+def sell_with_order_book(current_state, price_to_sell, minutes_until_sale):
+
+    started_selling = False
+    minutes_since_start = int(round((int(time.time()) - current_state['original_buy_time'])/60))
+    minutes_to_run = minutes_until_sale - minutes_since_start
+
+    time_to_give_up = int(time.time()) + minutes_to_run * 60
+    price_to_sell_min = current_state['sell_price_drop_factor'] * price_to_sell
+    
+    s = current_state['symbol']
+    current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + s + '_V' + current_state['version'] + '.pklz'
+    
+    print('SELLING via sell_with_order_book()', s, get_time())
+    # print(current_state['symbol'], current_state['version'], '########price_to_sell_min', price_to_sell_min)
+    
+    while True:
+
+        time.sleep(.2)
+
+        if current_state['orderId'] != False:
+            sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
+            if sale_order_info['status'] == 'FILLED':
+                current_state['executedQty'] = current_state['executedQty'] - float(sale_order_info['executedQty'])
+                current_state['total_revenue'] += float(sale_order_info['executedQty']) * float(sale_order_info['price'])
+                current_state['state'] = 'selling'
+                current_state['orderId'] = False
+                current_state['sell_price'] = float(sale_order_info['price'])
+                pickle_write(current_state_path, current_state, 'ERROR: sell_with_order_book() could not write current_state')
+                if current_state['executedQty'] < current_state['min_quantity']:
+                    print('SOLD via sell_with_order_book() 1', s, get_time())
+                    return True, current_state
+
+        if int(time.time()) >= time_to_give_up:
+            print('>>>>>>>>>ERROR via sell_with_order_book()', s, 'not sold by', get_readable_time(time_to_give_up))
+            # current_state['sell_price'] = float(current_state['price_to_buy_for_order'])
+            if current_state['orderId'] != False:
+                current_state = cancel_sale_order(current_state)
+                if current_state['executedQty'] < current_state['min_quantity']:
+                    return True, current_state
+                else:
+                    return False, current_state
+            return False, current_state
+
+        # price_to_sell, first_bid = get_first_in_line_price(current_state, False)
+        first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check, first_bid, second_bid = get_first_in_line_price_old(current_state)
+        # first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check = get_first_in_line_price(current_state)
+
+        # we just want to get the sale done quickly
+        # if current_state['orderId'] != False:
+        #     sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
+        #     if first_ask != float(sale_order_info['price']):
+        #         current_state = cancel_sale_order(current_state)
+        #         if current_state['executedQty'] < current_state['min_quantity']:
+        #             print('SOLD via sell_with_order_book() 2', s, get_time())
+        #             return True, current_state
+        #         current_state = create_sale_order(current_state, first_ask)
+        # else:
+        #     current_state = create_sale_order(current_state, first_ask)
+        
+        # old way tried to get best price, but maybe didn't complete all sales      
+        if float(first_in_line_price) >= price_to_sell_min or started_selling == True:
+            started_selling = True
+            if current_state['orderId'] != False:
+                sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
+                if first_ask != float(sale_order_info['price']):
+                    current_state = cancel_sale_order(current_state)
+                    if current_state['executedQty'] < current_state['min_quantity']:
+                        print('SOLD via sell_with_order_book() 2', s, get_time())
+                        return True, current_state
+                    current_state = create_sale_order(current_state, first_in_line_price)
+                else:
+                    if second_price_to_check < second_ask:
+                        current_state = cancel_sale_order(current_state)
+                        if current_state['executedQty'] < current_state['min_quantity']:
+                            print('SOLD via sell_with_order_book() 3', s, get_time())
+                            return True, current_state
+                        current_state = create_sale_order(current_state, second_in_line_price)
+            else:
+                current_state = create_sale_order(current_state, first_in_line_price)
 
 
 def sell_coin_with_order_book_use_min(current_state):
@@ -542,77 +625,6 @@ def sell_coin_with_order_book_use_min(current_state):
             return True
         print(current_state['symbol'], current_state['version'], 'error selling')
         return False
-    
-
-def sell_with_order_book(current_state, price_to_sell, minutes_until_sale):
-
-    started_selling = False
-    minutes_since_start = int(round((int(time.time()) - current_state['original_buy_time'])/60))
-    minutes_to_run = minutes_until_sale - minutes_since_start
-
-    time_to_give_up = int(time.time()) + minutes_to_run * 60
-    price_to_sell_min = current_state['sell_price_drop_factor'] * price_to_sell
-    
-    s = current_state['symbol']
-    current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + s + '_V' + current_state['version'] + '.pklz'
-    
-    print('SELLING via sell_with_order_book()', s, get_time())
-    # print(current_state['symbol'], current_state['version'], '########price_to_sell_min', price_to_sell_min)
-    
-    while True:
-        if current_state['orderId'] != False:
-            sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
-            if sale_order_info['status'] == 'FILLED':
-                current_state['executedQty'] = current_state['executedQty'] - float(sale_order_info['executedQty'])
-                current_state['total_revenue'] += float(sale_order_info['executedQty']) * float(sale_order_info['price'])
-                current_state['state'] = 'selling'
-                current_state['orderId'] = False
-                current_state['sell_price'] = float(sale_order_info['price'])
-                pickle_write(current_state_path, current_state, 'ERROR: sell_with_order_book() could not write current_state')
-                
-                if current_state['executedQty'] < current_state['min_quantity']:
-                    return True, current_state
-
-        if int(time.time()) >= time_to_give_up:
-            print('ERROR', s, 'not sold by', get_readable_time(time_to_give_up))
-            current_state['sell_price'] = float(current_state['price_to_buy_for_order'])
-            if current_state['orderId'] != False:
-                current_state = cancel_sale_order(current_state)
-                if current_state['executedQty'] < current_state['min_quantity']:
-                    return True, current_state
-                else:
-                    return False, current_state
-            return False, current_state
-
-        # price_to_sell, first_bid = get_first_in_line_price(current_state, False)
-        first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check = get_first_in_line_price_old(current_state)
-        # first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check = get_first_in_line_price(current_state)
-
-        if float(first_in_line_price) >= price_to_sell_min or started_selling == True:
-            started_selling = True
-            if current_state['orderId'] != False:
-                sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
-                if first_ask != float(sale_order_info['price']):
-                    current_state = cancel_sale_order(current_state)
-                    if current_state['executedQty'] < current_state['min_quantity']:
-                        return True, current_state
-                    current_state = create_sale_order(current_state, first_in_line_price)
-                else:
-                    if second_price_to_check < second_ask:
-                        current_state = cancel_sale_order(current_state)
-                        if current_state['executedQty'] < current_state['min_quantity']:
-                            return True, current_state
-                        current_state = create_sale_order(current_state, second_in_line_price)
-
-            else:
-                current_state = create_sale_order(current_state, first_in_line_price)
-
-        time.sleep(.1)
-    
-    print('SOLD via sell_with_order_book()', s, get_time())
-    return True, current_state
-
-
 
 def sell_coin_with_order_book(current_state):
 
@@ -1113,9 +1125,13 @@ def buy_coin_thread(symbol, file_number):
 
 # file_path = '/home/ec2-user/environment/botfarming/Development/binance_30m_trades/30m_trades.pklz'
 def append_data(file_path, data):
-    data_points = pickle_read(file_path)
-    data_points.append(data)
-    pickle_write(file_path, data_points)
+    try:
+        data_points = pickle_read(file_path)
+        data_points.append(data)
+        pickle_write(file_path, data_points)
+    except Exception as e:
+        print('ERROR: append_data() file path not found', e)
+        
 
 def append_or_create_data(file_path, data):
     is_file = os.path.isfile(file_path)

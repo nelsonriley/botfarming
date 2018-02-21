@@ -9,15 +9,19 @@ import numpy
 import sys
 import pickle
 import gzip
-import utility as ut
+import utility_4 as ut
 import json
 import math
 from binance.client import Client
 
 
-result = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/program_state_1m/program_state_1m_0_DLTBTC_V0.pklz')
+order_book = ut.get_order_book_local('FUELBTC')
 
-pprint(result)
+pprint(order_book)
+
+# result = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/program_state_1m/program_state_1m_0_DLTBTC_V0.pklz')
+
+# pprint(result)
 # result['executedQty'] = 55963.0
 
 # ut.pickle_write('/home/ec2-user/environment/botfarming/Development/program_state_1m/program_state_1m_0_RPXBTC.pklz', result)

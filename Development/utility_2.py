@@ -102,11 +102,10 @@ def monitor_and_buy_for_24hr_1min_drop(symbol, interval, file_number, client):
         buy_trigger_drop_percent_factor = 0.5
         sell_trigger_gain_percent_factor = 0.2
         future_candles_length = 15 # 4 is v bad for $earnings, 15 is 10x better
-        btc_tradeable_volume_factor = 3 * 0.1 # multiplier of avg btc volume per minute over 24 hrs that we can buy & sell
-        btc_tradeable_volume_factor = btc_tradeable_volume_factor * 0.1 # start testing at 1/10 of normal
-        
-        stop_time = datetime.datetime(2018, 2, 20, 11, 0)
-        max_btc_qty = 0.666
+        btc_tradeable_volume_factor = 3 * 0.1 * 0.3 # multiplier of avg btc volume per minute over 24 hrs that we can buy & sell
+
+        stop_time = datetime.datetime(2018, 2, 21, 12, 15)
+        max_btc_qty = 2
 
         # DATA generated from previous 24 hours via cron (binance_24hr_1min_drop_daily_update.py)
         symbol_24hr_drop_path = '/home/ec2-user/environment/botfarming/Development/binance_24hr_1min_drop/24hr_1min_drops_by_symbol/'+s+'.pklz'
@@ -429,7 +428,7 @@ def sell_for_24hr_1min_drop(current_state):
                         print('FILLED', s, ut.get_time())
                         break
 
-            time.sleep(.03)
+            time.sleep(.3)
 
         # sale is complete (it always completes), compare sim vs live
         current_state['sell_time_executed'] = int(time.time())
@@ -649,6 +648,7 @@ def get_live_vs_sim_stats(current_state, do_print=True, do_print_each_candle=Fal
         'stats': stats,
         'tests': tests
     }
+    print('file path may return boolan')
     file_path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history_24hr_1min_drop_ENHANCED.pklz'
     ut.append_data(file_path, trade)
 
@@ -704,7 +704,7 @@ def trade_on_drops(symbol, data, future_candles_length, buy_trigger_drop_percent
                 for f, f_c in enumerate(future_candles):
                     minute = f + 1
                     if f_c['high_price'] > sell_trigger_price:
-                        sell_price = sell_trigger_price # * 0.997
+                        sell_price = sell_trigger_price
                         sell_time = f_c['open_time']
                         sell_time_readable = f_c['open_time_readable']
                         traded_by_sell_trigger = True
@@ -748,7 +748,7 @@ def trade_on_drops(symbol, data, future_candles_length, buy_trigger_drop_percent
                 'traded_by_sell_trigger': traded_by_sell_trigger,
                 'traded_in_one_candle': traded_in_one_candle,
             }
-            trades.append(trade) 
+            trades.append(trade)
 
     gain_percent = sum(trade['gain_percent'] for trade in trades)
     gain_usd = sum(trade['gain_usd'] for trade in trades)
@@ -911,7 +911,11 @@ def save_data(save_params, datapoints_trailing, min_volume, minutes):
                         if not symbol['symbol'] in coins:
                             coins[symbol['symbol']] = []
                         # get data from binance
-                        url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval='+str(minutes)+'m&startTime='+str(start)+'&endTime='+str(stop)
+                        if minutes >= 60:
+                            hours = minutes/60
+                            url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval='+str(hours)+'h&startTime='+str(start)+'&endTime='+str(stop)
+                        else:
+                            url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval='+str(minutes)+'m&startTime='+str(start)+'&endTime='+str(stop)
                         r = requests.get(url)
                         data = r.json()
                         # if symbol['symbol'] == 'ETHBTC':

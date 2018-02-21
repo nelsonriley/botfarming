@@ -37,8 +37,12 @@ trades_positive_sum = 0
 trades_negative = 0
 trades_negative_sum = 0
 trades_passing_all_tests = 0
+trades_reporting = 0
 for i, t in enumerate(trades):
-    if i >= 62:
+    # 20180220 = 62, 275
+    # 20180221 = 310 morning session
+    if i >= 310:
+        trades_reporting += 1
         profit_usd += t['live']['profit_usd']
         if t['live']['profit_usd'] >= 0:
             trades_positive += 1
@@ -48,13 +52,15 @@ for i, t in enumerate(trades):
             trades_negative_sum += t['live']['profit_usd']
         if t['tests']['all_tests_pass'] == True:
             trades_passing_all_tests += 1
-periods_in_24 = (24/8)
-print('profit_usd', profit_usd)
-print('profit_usd_24', profit_usd * periods_in_24 )
-print('profit_usd_365', profit_usd * periods_in_24 * 365 )
 
-print('profit_usd_full_24', profit_usd * 10 * periods_in_24)
-print('profit_usd_full_365', profit_usd * 10 * periods_in_24 * 365)
+print('trades_reporting', trades_reporting)
+print('profit_usd', profit_usd)
+# periods_in_24 = (24/8)
+# print('profit_usd_24', profit_usd * periods_in_24 )
+# print('profit_usd_365', profit_usd * periods_in_24 * 365 )
+
+# print('profit_usd_full_24', profit_usd * 10 * periods_in_24)
+# print('profit_usd_full_365', profit_usd * 10 * periods_in_24 * 365)
 
 print('trades_positive', trades_positive)
 print('trades_negative', trades_negative)

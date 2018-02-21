@@ -333,7 +333,10 @@ def sell_coin_with_order_book_use_min(current_state):
                 else:
                     if current_state['orderId'] != False:
                         current_state = cancel_sale_order(current_state)
-                time.sleep(1)
+                if current_state['orderId'] != False:
+                    time.sleep(5)
+                else:
+                    time.sleep(.03)
         
         calculate_profit_and_free_coin(current_state)
         return True
@@ -685,7 +688,10 @@ def buy_coin(symbol, length, file_number):
                                     current_state = create_buy_order(current_state, first_in_line_price)
 
                             
-                            time.sleep(.5)
+                            if current_state['orderId'] != False:
+                                time.sleep(5)
+                            else:
+                                time.sleep(.03)
 
 
                         if current_state['executedQty'] < current_state['min_quantity']:

@@ -423,7 +423,7 @@ def buy_coin(symbol, length, file_number):
     client = Client(api_key, api_secret)
 
     try:
-        f = gzip.open('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '_3.pklz','rb')
+        f = gzip.open('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '.pklz','rb')
         current_state = pickle.load(f)
         f.close()
     except Exception as e:
@@ -443,7 +443,16 @@ def buy_coin(symbol, length, file_number):
 
 
         largest_bitcoin_order = .1
-        part_of_bitcoin_to_use = .5
+        if length == '12h':
+            part_of_bitcoin_to_use = 1
+            gain_min = .06
+        elif length == '6h':
+            part_of_bitcoin_to_use = .6
+            gain_min = .05
+        elif length == '4h':
+            part_of_bitcoin_to_use = .4
+            gain_min = .05
+            
         price_to_start_buy_factor = 1.003
 
         sell_price_drop_factor = .997
@@ -454,9 +463,9 @@ def buy_coin(symbol, length, file_number):
         lower_band_buy_factor_array = [0,1.01, 1.15, 1.09, 1.055, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
         price_increase_factor_array = [0,1.021,1.021,1.021,1.021,1.021,1.021,1.021,1.021,1.021,1.021]
         
-        minutes_until_sale = 2*minutes
+        minutes_until_sale = 3*minutes
         
-        minutes_until_sale_final = 4*minutes
+        minutes_until_sale_final = 5*minutes
 
         datapoints_trailing = 4
 
@@ -546,7 +555,7 @@ def buy_coin(symbol, length, file_number):
 
             for look_back in look_back_schedule:
                 
-                if look_back_wins[look_back] + look_back_losses[look_back] < 3 or look_back_gains[look_back]/(look_back_wins[look_back] + look_back_losses[look_back]) < .05:
+                if look_back_wins[look_back] + look_back_losses[look_back] < 3 or look_back_gains[look_back]/(look_back_wins[look_back] + look_back_losses[look_back]) < gain_min:
                     continue
 
                 price_to_start_buy = float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy_factor

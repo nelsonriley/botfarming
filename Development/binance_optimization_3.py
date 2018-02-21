@@ -21,11 +21,27 @@ first_iteration = True
 # length = '2h'
 # minutes = 2*60
 
-length = '6h'
-minutes = 6*60
+# length = '6h'
+# minutes = 6*60
 
+# length = '12h'
+# minutes = 12*60
+
+
+loops = 0
 
 while True:
+    
+    if loops % 3 == 0:
+        length = '12h'
+        minutes = 12*60
+    elif loops % 3 == 1:
+        length = '6h'
+        minutes = 6*60
+    elif loops % 3 == 2:
+        length = '4h'
+        minutes = 4*60
+    
 
     print('starting..')
     
@@ -97,7 +113,7 @@ while True:
     lower_band_buy_factor_array = [0,1.025, 1.12, 1.09, 1.04, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
     minutes_until_sale_array = [6,6,6,6,6,6,6,6,6,6]
     
-    minutes_until_sale_3 = 4
+    minutes_until_sale_3 = 5
     
     combined_results = {}
     
@@ -130,7 +146,7 @@ while True:
             price_to_sell_factor_array[look_back] = .96
             price_increase_factor_array[look_back] = 1.02
             lower_band_buy_factor_array[look_back] = 100
-            minutes_until_sale_array[look_back] = 2
+            minutes_until_sale_array[look_back] = 3
             
                 
         for optimizing in optimizing_array:
@@ -454,4 +470,7 @@ while True:
             print('###################################################################')
             print('###################################################################')
     
-    time.sleep(60*60*3)        
+    loops += 1
+    
+    if loops % 3 == 0:
+        time.sleep(60*60*3)        

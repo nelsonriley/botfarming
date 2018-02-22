@@ -27,18 +27,24 @@ first_iteration = True
 # length = '12h'
 # minutes = 12*60
 
+# length = '12h'
+# minutes = 12*60
+
 
 loops = 0
 
 while True:
     
-    if loops % 3 == 0:
+    if loops % 4 == 0:
+        length = '1d'
+        minutes = 24*60
+    if loops % 4 == 1:
         length = '12h'
         minutes = 12*60
-    elif loops % 3 == 1:
+    elif loops % 4 == 2:
         length = '6h'
         minutes = 6*60
-    elif loops % 3 == 2:
+    elif loops % 4 == 3:
         length = '4h'
         minutes = 4*60
     
@@ -70,8 +76,6 @@ while True:
     ]
     ut.save_data(save_params, datapoints_trailing, min_volume, minutes)
     
-    
-    
     ################################################################################ RUN OPTIMIZER
     
     trailing_and_current_candles_array = {}
@@ -84,7 +88,7 @@ while True:
     
     for s in symbols:
         symbol = symbols[s]
-        if float(symbol['24hourVolume']) > 450:
+        if float(symbol['24hourVolume']) > 300:
             total_btc_coins += 1
             symbols_trimmed[s] = symbol
             
@@ -141,8 +145,14 @@ while True:
     
         for look_back in optimizing_array:
             
-            
-            price_to_buy_factor_array[look_back] = .88
+            if length == '1d':
+                price_to_buy_factor_array[look_back] = .8
+            elif length == '12h':
+                price_to_buy_factor_array[look_back] = .83
+            elif length == '6h':
+                price_to_buy_factor_array[look_back] = .86
+            elif length == '4h':
+                price_to_buy_factor_array[look_back] = .88
             price_to_sell_factor_array[look_back] = .96
             price_increase_factor_array[look_back] = 1.02
             lower_band_buy_factor_array[look_back] = 100
@@ -177,10 +187,10 @@ while True:
                 minutes_until_sale_array[optimizing] = optimal_minutes_until_sale
         
                 if iteration == 0:
-                    a_range = 23
+                    a_range = 35
                     b_range = 1
                     change_size = .005
-                    starting_buy_factor =  optimal_buy_factor - 11*change_size
+                    starting_buy_factor =  optimal_buy_factor - 17*change_size
                 elif iteration == 2:
                     a_range = 7
                     b_range = 1
@@ -472,5 +482,5 @@ while True:
     
     loops += 1
     
-    if loops % 3 == 0:
+    if loops % 4 == 0:
         time.sleep(60*60*3)        

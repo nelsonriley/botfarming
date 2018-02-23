@@ -8,6 +8,7 @@ import os
 import datetime
 from pprint import pprint
 import utility as ut
+import utility_2 as ut2
 import numpy
 from binance.client import Client
 
@@ -19,32 +20,84 @@ from Queue import Queue
 import requests
 import functions_financial as fn
 import math
+import sqlite3
 
 # start
 print('start @',  time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
 start_time = int(time.time())
 
 ################################################# PLAY WITH EXECUTABLE CODE HERE
-file_path_all_trades = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history_24hr_1min_drop.pklz'
-trades = ut.pickle_read(file_path_all_trades)
-pprint(trades)
-btc_usd_price = 6200
-print('---------------------------- TRADE STATS 24hr 1min drop')
-trades = trades[10:] # 20:50 reset
-stats = {
-    'gain_percent': ut.float_to_str(sum(trade[3] for trade in trades), 6),
-    'gain_btc': ut.float_to_str(sum(trade[2] for trade in trades), 8),
-    'real_gain_btc': round(sum(trade[2] for trade in trades), 8) * 10,
-    'real_gain_usd': round(sum(trade[2] for trade in trades), 8) * 10 * btc_usd_price,
-    'total_trades': len(trades)
-}
-pprint(stats)
+
+
+################################################# STUFF / INIT EMPTY ARRAY @ FILE PATH
+# DONE
+# buy_triggered_live_path = '/home/ec2-user/environment/botfarming/Development/binance_24hr_1min_drop/buys_triggered_live.pklz'
+# ut.pickle_write(buy_triggered_live_path, [])
+# buy_triggered_sim_path = '/home/ec2-user/environment/botfarming/Development/binance_24hr_1min_drop/buys_triggered_sim.pklz'
+# ut.pickle_write(buy_triggered_sim_path, [])
+# NEW
 
 
 
 
+# min_volume_btc = 0
+# symbols = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_btc_symbols.pklz')
+# symbols_filtered, symbol_list = ut2.get_trimmed_symbols(symbols, min_volume_btc)
+# day_1 = '20180222_24'
+# for s in symbol_list:
+#     data_1 = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_training_data/'+ day_1 + '/'+ s +'_data_1m.pklz')
+#     data_count = 0
+#     for d in data_1:
+#         c = ut2.get_candle_as_dict(d)
+#         data_count += 1
+#     print(s, data_count)
 
 
+
+################################################# SET CURRENT STATE TO FALSE FOR ALL
+# current_state = {}
+# current_state['symbol'] = 'OAXBTC' # 'HSRBTC'
+# current_state['version'] = '24hr_1min_drop_v0'
+# current_state['file_number'] = '2000'
+# current_state['length'] = '1m'
+# current_state_path = '/home/ec2-user/environment/botfarming/Development/program_state_' + current_state['length'] + '/program_state_' + current_state['length'] + '_' + current_state['file_number'] + '_' + current_state['symbol'] + '_V' + current_state['version'] + '.pklz'
+# ut.pickle_write(current_state_path, False)
+
+
+################################################# USE SQL-LITE TO SAVE CANDLES
+# db_path = '/home/ec2-user/environment/botfarming/Development/binance_training_data_db/candle_db'
+# db = sqlite3.connect(db_path)
+
+# cursor = db.cursor()
+# cursor.execute('''
+#     CREATE TABLE users(id INTEGER PRIMARY KEY,
+#                       name TEXT,
+#                       phone TEXT,
+#                       email TEXT unique,
+#                       password TEXT)
+# ''')
+# db.commit()
+
+# db.close()
+
+
+
+
+################################################# REPORT ON TRADES (pre ENHANCED)
+# file_path_all_trades = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history_24hr_1min_drop.pklz'
+# trades = ut.pickle_read(file_path_all_trades)
+# pprint(trades)
+# btc_usd_price = 6200
+# print('---------------------------- TRADE STATS 24hr 1min drop')
+# trades = trades[10:] # 20:50 reset
+# stats = {
+#     'gain_percent': ut.float_to_str(sum(trade[3] for trade in trades), 6),
+#     'gain_btc': ut.float_to_str(sum(trade[2] for trade in trades), 8),
+#     'real_gain_btc': round(sum(trade[2] for trade in trades), 8) * 10,
+#     'real_gain_usd': round(sum(trade[2] for trade in trades), 8) * 10 * btc_usd_price,
+#     'total_trades': len(trades)
+# }
+# pprint(stats)
 
 
 ################################################# CONFIRM MAX DROPS SAVED for 24 HOURS
@@ -779,9 +832,6 @@ pprint(stats)
 # print myObject
 # print myNewObject
 
-# end
-print('end @', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
-print('elapsed:', int(time.time()) - start_time, 'seconds')
 
 
 
@@ -901,4 +951,6 @@ print('elapsed:', int(time.time()) - start_time, 'seconds')
 # sys.exit()
 # ####################################################
 
-print('done')
+# end
+print('end @', time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
+print('elapsed:', int(time.time()) - start_time, 'seconds')

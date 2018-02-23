@@ -261,7 +261,7 @@ def cancel_sale_order(current_state):
 
     sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=order_id_of_current_state)
 
-    current_state['executedQty'] = current_state['executedQty'] - float(sale_order_info['executedQty'])
+    current_state['executedQty'] = float(current_state['executedQty']) - float(sale_order_info['executedQty'])
     current_state['total_revenue'] += float(sale_order_info['executedQty']) * float(sale_order_info['price'])
     current_state['last_update_time'] = int(time.time())
     pickle_write(current_state_path, current_state, '******could not write state******')
@@ -439,7 +439,7 @@ def get_first_in_line_price_old(current_state):
     # print(price_to_buy)
     return price_to_buy, first_ask, second_price_to_buy, second_ask, second_price_to_check, first_bid, second_bid
 
-def sell_with_order_book(current_state, price_to_sell, minutes_until_sale):
+def sell_with_order_book(current_state, price_to_sell, minutes_until_sale, mode='slow'):
 
     started_selling = False
     minutes_since_start = int(round((int(time.time()) - current_state['original_buy_time'])/60))
@@ -459,14 +459,18 @@ def sell_with_order_book(current_state, price_to_sell, minutes_until_sale):
         time.sleep(.2)
 
         if current_state['orderId'] != False:
-            sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
+            sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'], orderId=current_state['orderId'])
             if sale_order_info['status'] == 'FILLED':
                 current_state['executedQty'] = current_state['executedQty'] - float(sale_order_info['executedQty'])
                 current_state['total_revenue'] += float(sale_order_info['executedQty']) * float(sale_order_info['price'])
                 current_state['state'] = 'selling'
                 current_state['orderId'] = False
                 current_state['sell_price'] = float(sale_order_info['price'])
+                
                 pickle_write(current_state_path, current_state, 'ERROR: sell_with_order_book() could not write current_state')
+                
+                print('PARTIAL FILL', current_state['executedQty'], current_state['sell_price'])
+
                 if current_state['executedQty'] < current_state['min_quantity']:
                     print('SOLD via sell_with_order_book() 1', s, get_time())
                     return True, current_state
@@ -487,40 +491,54 @@ def sell_with_order_book(current_state, price_to_sell, minutes_until_sale):
         # first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check = get_first_in_line_price(current_state)
 
         # we just want to get the sale done quickly
-        # if current_state['orderId'] != False:
-        #     sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
-        #     if first_ask != float(sale_order_info['price']):
-        #         current_state = cancel_sale_order(current_state)
-        #         if current_state['executedQty'] < current_state['min_quantity']:
-        #             print('SOLD via sell_with_order_book() 2', s, get_time())
-        #             return True, current_state
-        #         current_state = create_sale_order(current_state, first_ask)
-        # else:
-        #     current_state = create_sale_order(current_state, first_ask)
-        
-        # old way tried to get best price, but maybe didn't complete all sales      
-        if float(first_in_line_price) >= price_to_sell_min or started_selling == True:
-            started_selling = True
+        if mode == 'fast':
             if current_state['orderId'] != False:
                 sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
-                if first_ask != float(sale_order_info['price']):
+                if first_bid != float(sale_order_info['price']):
                     current_state = cancel_sale_order(current_state)
                     if current_state['executedQty'] < current_state['min_quantity']:
-                        print('SOLD via sell_with_order_book() 2', s, get_time())
-                        current_state['sell_price'] = float(sale_order_info['price'])
+                        print('SOLD via sell_with_order_book() 2 fast', s, get_time())
                         return True, current_state
-                    current_state = create_sale_order(current_state, first_in_line_price)
-                else:
-                    if second_price_to_check < second_ask:
+                    current_state = create_sale_order(current_state, float_to_str(first_bid))
+            else:
+                notional = current_state['executedQty'] * float(first_bid)
+                min_notional = current_state['minNotional']
+                will_pass_min_notional = notional >= min_notional
+                print('notional', notional, 'min_notional', min_notional)
+                if not will_pass_min_notional:
+                    print('WILL NOT PASS MIN NOTIONAL', s, get_time(), 'first_bid', first_bid) 
+                    return True, current_state
+                current_state = create_sale_order(current_state, float_to_str(first_bid))
+
+        # old way tried to get best price, but maybe didn't complete all sales
+        if mode == 'slow':
+            if float(first_in_line_price) >= price_to_sell_min or started_selling == True:
+                started_selling = True
+                if current_state['orderId'] != False:
+                    sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
+                    if first_ask != float(sale_order_info['price']):
                         current_state = cancel_sale_order(current_state)
                         if current_state['executedQty'] < current_state['min_quantity']:
-                            print('SOLD via sell_with_order_book() 3', s, get_time())
+                            print('SOLD via sell_with_order_book() 2', s, get_time())
                             current_state['sell_price'] = float(sale_order_info['price'])
                             return True, current_state
-                        current_state = create_sale_order(current_state, second_in_line_price)
-            else:
-                current_state = create_sale_order(current_state, first_in_line_price)
-
+                        current_state = create_sale_order(current_state, first_in_line_price)
+                    else:
+                        if second_price_to_check < second_ask:
+                            current_state = cancel_sale_order(current_state)
+                            if current_state['executedQty'] < current_state['min_quantity']:
+                                print('SOLD via sell_with_order_book() 3', s, get_time())
+                                current_state['sell_price'] = float(sale_order_info['price'])
+                                return True, current_state
+                            current_state = create_sale_order(current_state, second_in_line_price)
+                else:
+                    notional = current_state['executedQty'] * float(first_in_line_price)
+                    min_notional = current_state['minNotional']
+                    will_pass_min_notional = notional >= min_notional
+                    if not will_pass_min_notional:
+                        print('WILL NOT PASS MIN NOTIONAL', s, get_time(), 'first_in_line_price', first_in_line_price)
+                        return True, current_state
+                    current_state = create_sale_order(current_state, first_in_line_price)
 
 def sell_coin_with_order_book_use_min(current_state):
     

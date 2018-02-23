@@ -30,18 +30,20 @@ days = [
     # '20180213_24',
     # '20180214_24',
     # '20180215_24',
-    '20180216_24',
-    '20180217_24',
-    '20180218_24',
+    # '20180216_24',
+    # '20180217_24',
+    # '20180218_24',
+    # '20180219_24',
+    '20180220_24',
+    '20180221_24',
+    '20180222_24',
 ]
 
 future_candles_length = 15 # 20180205
-future_candles_length = 4
 buy_trigger_drop_percent_factor = 0.3 # 20180205
 sell_trigger_gain_percent_factor = 0.25 # 20180205
 
-btc_tradeable_volume_factor = 3 * 0.1 # multiplier of avg btc volume per minute over 24 hrs that we can buy & sell
-btc_tradeable_volume_factor = btc_tradeable_volume_factor * 0.1 # start @ 1/10 of full
+btc_tradeable_volume_factor = 3 * 0.1 * 0.3 # multiplier of avg btc volume per minute over 24 hrs that we can buy & sell
 
 min_volume_btc = 0
 drops_to_collect = 1
@@ -60,11 +62,12 @@ print('start @', ut.get_time())
     # 15min & 25min for future_candles_length had nearly identical results
 
 all_day_results = {} # key = param combo, value = array of individual day results
+saved_outlier_drops = {}
 
 # 3 combos takes 20min or so
 # started @ 16:48 > 15:13
 # for a in range(0, 3):
-for a in [0.6, 0.5]:
+for a in [0.4]:
 
     # optimizing params: 15_0.9_0.8 = $3800
         # ('15_0.2_0.1', '$', 75852.41, 41.605, '%', 98999)
@@ -87,8 +90,9 @@ for a in [0.6, 0.5]:
     # start = 0.8
     # step = 0.1
     # buy_trigger_drop_percent_factor = start + (a * step)
-    buy_trigger_drop_percent_factor = a
-    sell_trigger_gain_percent_factor = buy_trigger_drop_percent_factor - 0.3
+    buy_trigger_drop_percent_factor = 0.5
+    # sell_trigger_gain_percent_factor = buy_trigger_drop_percent_factor - 0.3
+    sell_trigger_gain_percent_factor = a
     
     # sell_trigger_gain_percent_factor = a
 
@@ -115,7 +119,11 @@ for a in [0.6, 0.5]:
                     print('no data found day 1')
                 symbols_not_found_day_1.append(s)
             else:
-                outlier_drops = ut2.get_outlier_drops(data_1, symbol, future_candles_length, drops_to_collect)
+                if day_1 in saved_outlier_drops:
+                    outlier_drops = saved_outlier_drops[day_1]
+                else:
+                    outlier_drops = ut2.get_outlier_drops(data_1, symbol, future_candles_length, drops_to_collect)
+                    saved_outlier_drops[day_1] = outlier_drops
 
                 buy_trigger_drop_percent = outlier_drops[-1]['drop_percent'] * buy_trigger_drop_percent_factor
                 sell_trigger_gain_percent = outlier_drops[-1]['best_gain_percent'] * sell_trigger_gain_percent_factor

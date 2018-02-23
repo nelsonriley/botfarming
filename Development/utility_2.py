@@ -100,9 +100,9 @@ def monitor_and_buy_for_24hr_1min_drop(symbol, interval, file_number, client):
         
         # PARAMS  777
         buy_trigger_drop_percent_factor = 0.5
-        sell_trigger_gain_percent_factor = 0.2
+        sell_trigger_gain_percent_factor = 0.4
         future_candles_length = 15 # 4 is v bad for $earnings, 15 is 10x better
-        btc_tradeable_volume_factor = 3 * 0.1 * 0.4 # multiplier of avg btc volume per minute over 24 hrs that we can buy & sell
+        btc_tradeable_volume_factor = 3 * 0.1 * 0.3 # multiplier of avg btc volume per minute over 24 hrs that we can buy & sell
 
         stop_time = datetime.datetime(2020, 2, 21, 12, 15)
         max_btc_qty = 2
@@ -265,7 +265,7 @@ def monitor_and_buy_for_24hr_1min_drop(symbol, interval, file_number, client):
                 # print('>>> current', ut.float_to_str(current_price, 8))
                 # print('>>> drop', ut.float_to_str(drop, 8))
                 
-                buy_trigger_price_touched = False
+                buy_trigger_price_crossed = False
                 while True:
                     
                     # check if price did ever hit buy_trigger_price
@@ -274,6 +274,21 @@ def monitor_and_buy_for_24hr_1min_drop(symbol, interval, file_number, client):
                         buy_price_less_one_penny = float(price_to_buy_for_order) - current_state['min_price']
                         if current_price <= buy_price_less_one_penny:
                             buy_trigger_price_crossed = True
+                            # SAVE live triggered buys for MONITORING
+                            buy_triggered_live = {}
+                            buy_triggered_live['symbol'] = s
+                            buy_triggered_live['buy_price'] = buy_price
+                            buy_triggered_live['buy_price_less_one_penny'] = buy_price_less_one_penny
+                            buy_triggered_live['buy_time'] = int(time.time())
+                            buy_triggered_live['buy_time_readable'] = ut.get_time()
+                            buy_triggered_live['open_price'] = open_price
+                            buy_triggered_live['open_time'] = open_price_time
+                            buy_triggered_live['open_time_readable'] = open_price_time_readable
+                            buy_triggered_live['drop_percent'] = drop_percent
+                            buy_triggered_live['buy_trigger_drop_percent'] = buy_trigger_drop_percent
+                            
+                            buy_triggered_live_path = '/home/ec2-user/environment/botfarming/Development/binance_24hr_1min_drop/buys_triggered_live.pklz'
+                            ut.append_data(buy_triggered_live_path, buy_triggered_live)
 
                     # if end of minute, bail & start selling
                     if int(time.time()) >= time_to_give_up:
@@ -438,7 +453,7 @@ def sell_for_24hr_1min_drop(current_state):
         current_state['sell_time_executed_readable'] = ut.get_time()
         current_state['profit_percent'] = (current_state['total_revenue'] - current_state['original_quantity']*current_state['original_price'])/(current_state['original_quantity']*current_state['original_price'])
         current_state['profit_btc'] = current_state['total_revenue'] - current_state['original_quantity']*current_state['original_price']
-        get_live_vs_sim_stats(current_state, do_print=True, do_print_each_candle=True)
+        get_live_vs_sim_stats(current_state, do_print=False, do_print_each_candle=False)
     
         # calc profit, save trade, & delete current_state
         ut.calculate_profit_and_free_coin(current_state, strategy='24hr_1min_drop')
@@ -681,7 +696,7 @@ def trade_on_drops(symbol, data, future_candles_length, buy_trigger_drop_percent
             drop_percent = drop / working_open_price
 
         # buy requirements
-        drop_percent_ok = drop_percent >= buy_trigger_drop_percent
+        drop_percent_ok = drop_percent > buy_trigger_drop_percent
         no_overlap = c['open_time'] > sell_time
         past_min_buy_time = c['open_time'] > min_buy_time
         do_buy = drop_percent_ok and no_overlap and past_min_buy_time
@@ -835,8 +850,13 @@ def get_outlier_drops(data, symbol, future_candles_length, drops_to_collect):
     smallest_drop_percent = 0
     for i, c in enumerate(data):
         c = get_candle_as_dict(c)
-
         drop = c['open_price'] - c['low_price']
+        
+        # test with close of prev as start of drop XXXX doesn't improve performance
+        # if i > 0:
+        #     if c_prev['close_price'] > c['open_price']:
+        #         drop = c_prev['close_price'] - c['low_price']
+
         drop_percent = drop / c['open_price']
 
         if drop > 0 and drop_percent > smallest_drop_percent:
@@ -875,6 +895,7 @@ def get_outlier_drops(data, symbol, future_candles_length, drops_to_collect):
                 if len(outlier_drops) > drops_to_collect:
                     del outlier_drops[0]
                 smallest_drop_percent = outlier_drops[0]['drop_percent']
+        c_prev = c
     return outlier_drops
 
 
@@ -966,3 +987,11 @@ def save_data(save_params, datapoints_trailing, min_volume, minutes):
                 ut.pickle_write(candle_path, data)
 
     return True
+    
+def roundDown(n, d=8):
+    d = int('1' + ('0' * d))
+    return math.floor(n * d) / d
+
+def roundUp(n, d=8):
+    d = int('1' + ('0' * d))
+    return math.ceil(n * d) / d

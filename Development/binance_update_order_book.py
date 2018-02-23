@@ -3,7 +3,7 @@
 # binance_update_order_book.py
 
 import sys
-import utility as ut
+import utility_3 as ut
 import requests
 import time
 import socket
@@ -23,9 +23,9 @@ global bm
 bm = BinanceSocketManager(client)
 
 # limit symbols by 24hr volume
-min_volume = 0 # 450
-ut.update_symbol_list()
-symbol_path = '/home/ec2-user/environment/botfarming/Development/binance_btc_symbols.pklz'
+min_volume = 300
+#ut.update_symbol_list()
+symbol_path = '/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz'
 symbols = ut.pickle_read(symbol_path)
 total_btc_coins = 0
 symbols_trimmed = {}
@@ -37,10 +37,11 @@ for s in symbols:
         total_btc_coins += 1
         symbols_trimmed[s] = symbol
         socket_list.append(s.lower()+'@depth20')
-        ut.pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/'+s+'.pklz', False)
+        ut.pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/3_'+s+'.pklz', False)
 
 print('symbols with volume > ', min_volume, '=', len(socket_list))
 
 # start order_book web socket > call back saves most recent data to disk
 conn_key = bm.start_multiplex_socket(socket_list, ut.process_socket_pushes_order_book)
 bm.start()
+

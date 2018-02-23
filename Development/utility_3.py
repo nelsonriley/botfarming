@@ -214,9 +214,9 @@ def calculate_profit_and_free_coin(current_state):
     #     write_current_state(current_state, current_state)
     #     time.sleep(60*60*1)
 
-def get_order_book_local(symbol):
+def get_order_book_local(symbol, length):
     while True:
-        order_book = pickle_read('/home/ec2-user/environment/botfarming/Development/recent_order_books/3_'+symbol +'.pklz')
+        order_book = pickle_read('/home/ec2-user/environment/botfarming/Development/recent_order_books/' + length + '_'+symbol +'.pklz')
         if order_book == False:
             #print('could not get orderbook for ', symbol)
             time.sleep(.1)
@@ -225,7 +225,7 @@ def get_order_book_local(symbol):
 
 def get_first_in_line_price_buying(current_state):
 
-    order_book = get_order_book_local(current_state['symbol'])
+    order_book = get_order_book_local(current_state['symbol'], current_state['length'])
     # pprint(order_book)
     # bids & asks.... 0=price, 1=qty
     first_bid = float(order_book['bids'][0][0])
@@ -238,7 +238,7 @@ def get_first_in_line_price_buying(current_state):
 
 
 def get_first_in_line_price(current_state):
-    order_book = get_order_book_local(current_state['symbol'])
+    order_book = get_order_book_local(current_state['symbol'], current_state['length'])
     # pprint(order_book)
     # bids & asks.... 0=price, 1=qty
     first_ask = float(order_book['asks'][0][0])
@@ -339,7 +339,7 @@ def sell_coin_with_order_book_use_min(current_state):
                 if current_state['orderId'] != False:
                     time.sleep(5)
                 else:
-                    time.sleep(.03)
+                    time.sleep(.1)
         
         calculate_profit_and_free_coin(current_state)
         return True
@@ -423,7 +423,7 @@ def buy_coin(symbol, length, file_number):
     client = Client(api_key, api_secret)
 
     try:
-        f = gzip.open('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '_3.pklz','rb')
+        f = gzip.open('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '.pklz','rb')
         current_state = pickle.load(f)
         f.close()
     except Exception as e:
@@ -436,14 +436,28 @@ def buy_coin(symbol, length, file_number):
 
     try:
         
-        if length == '12h':
+        if length == '1d':
+            minutes = 24*60
+        elif length == '12h':
             minutes = 12*60
         else:
             minutes = int(length[:1])*60
 
 
         largest_bitcoin_order = .1
-        part_of_bitcoin_to_use = .5
+        if length == '1d':
+            part_of_bitcoin_to_use = 1.2
+            gain_min = .08
+        if length == '12h':
+            part_of_bitcoin_to_use = 1
+            gain_min = .07
+        elif length == '6h':
+            part_of_bitcoin_to_use = .6
+            gain_min = .05
+        elif length == '4h':
+            part_of_bitcoin_to_use = .4
+            gain_min = .05
+            
         price_to_start_buy_factor = 1.003
 
         sell_price_drop_factor = .997
@@ -454,9 +468,9 @@ def buy_coin(symbol, length, file_number):
         lower_band_buy_factor_array = [0,1.01, 1.15, 1.09, 1.055, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
         price_increase_factor_array = [0,1.021,1.021,1.021,1.021,1.021,1.021,1.021,1.021,1.021,1.021]
         
-        minutes_until_sale = 2*minutes
+        minutes_until_sale = 3*minutes
         
-        minutes_until_sale_final = 4*minutes
+        minutes_until_sale_final = 5*minutes
 
         datapoints_trailing = 4
 
@@ -528,7 +542,7 @@ def buy_coin(symbol, length, file_number):
 
         while time.localtime().tm_sec < 1 or time.localtime().tm_sec > 2:
 
-            order_book = get_order_book_local(symbol['symbol'])
+            order_book = get_order_book_local(symbol['symbol'], length)
             
             # if (symbol['symbol'] == 'ETHBTC'):
             #     print(symbol['symbol'],'time since orderbook update', int(time.time()) - order_book['time'])
@@ -538,7 +552,7 @@ def buy_coin(symbol, length, file_number):
                 time.sleep(1)
                 continue
 
-            time.sleep(.3)
+            time.sleep(2)
             current_price = float(order_book['bids'][0][0])
 
             # if (symbol['symbol'] == 'ETHBTC'):
@@ -546,7 +560,7 @@ def buy_coin(symbol, length, file_number):
 
             for look_back in look_back_schedule:
                 
-                if look_back_wins[look_back] + look_back_losses[look_back] < 3 or look_back_gains[look_back]/(look_back_wins[look_back] + look_back_losses[look_back]) < .05:
+                if look_back_wins[look_back] + look_back_losses[look_back] < 3 or look_back_gains[look_back]/(look_back_wins[look_back] + look_back_losses[look_back]) < gain_min:
                     continue
 
                 price_to_start_buy = float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy_factor
@@ -733,7 +747,7 @@ def run_bot_parallel(file_number, length, total_files):
 
         total_btc_coins = 0
         symbols_trimmed = {}
-        min_symbol_volume = 450
+        min_symbol_volume = 300
         global socket_list
         socket_list = []
         for s in symbols:
@@ -815,7 +829,10 @@ def save_data(save_params, datapoints_trailing, min_volume, minutes):
                         if not symbol['symbol'] in coins:
                             coins[symbol['symbol']] = []
                         # get data from binance
-                        if minutes >= 60:
+                        if minutes >= 24*60:
+                            days = minutes/(24*60)
+                            url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval=' + str(days) + 'd&startTime='+str(start)+'&endTime='+str(stop)
+                        elif minutes >= 60:
                             hours = minutes/60
                             url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval='+str(hours)+'h&startTime='+str(start)+'&endTime='+str(stop)
                         else:
@@ -873,7 +890,10 @@ def process_socket_pushes_order_book(msg):
             
         symbol = msg['stream'].split('@')[0].upper()
         msg['data']['time'] = int(time.time())
-        pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/3_'+symbol+'.pklz', msg['data'])
+        pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/4h_'+symbol+'.pklz', msg['data'])
+        pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/6h_'+symbol+'.pklz', msg['data'])
+        pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/12h_'+symbol+'.pklz', msg['data'])
+        pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/1d_'+symbol+'.pklz', msg['data'])
 
         if symbol == 'ETHBTC' and (time.localtime().tm_sec == 1 or time.localtime().tm_sec == 2):
             print('process_socket_pushes_order_book() ETHBTC', msg['data']['bids'][0][0], get_time())

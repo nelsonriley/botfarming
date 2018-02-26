@@ -58,7 +58,7 @@ while True:
     min_volume = 0
     
     # if first_iteration == True:
-    #day = '20180131_13:24_to_20180220_13:24'
+    #day = '20171029_10:54_to_20180226_10:54'
     #     first_iteration = False
     # else:
     ###get previous 24 hours data
@@ -111,11 +111,11 @@ while True:
     sell_price_drop_factor = .997
     buy_price_increase_factor = 1.002
     
-    price_to_buy_factor_array = [0,.978, .968, .973, .962, .962, .96, .958, .95, .956, .95]
-    price_to_sell_factor_array = [0,.99, .968, .973, .962, .962, .96, .958, .95, .956, .95]
-    price_increase_factor_array = [0,1.01,1.01,1.01,1.01,1.01,1.01,1.01,1.01,1.01,1.01]
-    lower_band_buy_factor_array = [0,1.025, 1.12, 1.09, 1.04, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
-    minutes_until_sale_array = [6,6,6,6,6,6,6,6,6,6]
+    price_to_buy_factor_array = {}
+    price_to_sell_factor_array = {}
+    price_increase_factor_array = {}
+    lower_band_buy_factor_array = {}
+    minutes_until_sale_array = {}
     
     minutes_until_sale_3 = 5
     
@@ -130,7 +130,7 @@ while True:
     optimal_buy_factor = 0
     optimal_sell_factor = 0
     
-    optimizing_array= [1,2,4]
+    optimizing_array= [1,2,3,4,5,7,9,11]
     
     
     symbols_started = 0
@@ -146,13 +146,13 @@ while True:
         for look_back in optimizing_array:
             
             if length == '1d':
-                price_to_buy_factor_array[look_back] = .8
+                price_to_buy_factor_array[look_back] = .78
             elif length == '12h':
-                price_to_buy_factor_array[look_back] = .83
+                price_to_buy_factor_array[look_back] = .81
             elif length == '6h':
-                price_to_buy_factor_array[look_back] = .86
+                price_to_buy_factor_array[look_back] = .83
             elif length == '4h':
-                price_to_buy_factor_array[look_back] = .88
+                price_to_buy_factor_array[look_back] = .85
             price_to_sell_factor_array[look_back] = .96
             price_increase_factor_array[look_back] = 1.02
             lower_band_buy_factor_array[look_back] = 100
@@ -187,15 +187,15 @@ while True:
                 minutes_until_sale_array[optimizing] = optimal_minutes_until_sale
         
                 if iteration == 0:
-                    a_range = 35
+                    a_range = 31
+                    b_range = 1
+                    change_size = .01
+                    starting_buy_factor =  optimal_buy_factor - 15*change_size
+                elif iteration == 2:
+                    a_range = 11
                     b_range = 1
                     change_size = .005
-                    starting_buy_factor =  optimal_buy_factor - 17*change_size
-                elif iteration == 2:
-                    a_range = 7
-                    b_range = 1
-                    change_size = .002
-                    starting_buy_factor =  optimal_buy_factor - 3*change_size
+                    starting_buy_factor =  optimal_buy_factor - 5*change_size
                 elif iteration == 1:
                     a_range = 1
                     b_range = 9
@@ -207,7 +207,10 @@ while True:
                     change_size = .002
                     starting_sell_factor =  optimal_sell_factor - 2*change_size
                 elif iteration == 4:
-                    continue
+                    a_range = 11
+                    b_range = 1
+                    change_size = .002
+                    starting_buy_factor =  optimal_buy_factor - 5*change_size
                 elif iteration == 5:
                     a_range = 5
                     b_range = 3
@@ -216,9 +219,9 @@ while True:
                     starting_sell_factor =  optimal_sell_factor - 1*change_size
                 elif iteration == 6:
                     a_range = 1
-                    b_range = 5
+                    b_range = 7
                     change_size = .005
-                    starting_increase_factor =  optimal_increase_factor - 2*change_size
+                    starting_increase_factor =  optimal_increase_factor - 3*change_size
                     
         
         
@@ -226,7 +229,7 @@ while True:
                     if iteration == 0 and a > 0 and best_gain == -999999:
                         continue
                     
-                    if iteration == 0 or iteration == 2 or iteration == 5:
+                    if iteration == 0 or iteration == 2 or iteration == 4 or iteration == 5:
                         price_to_buy_factor_array[optimizing] = starting_buy_factor + change_size*a
                     
                     if iteration == 0 and a == 0:
@@ -236,8 +239,6 @@ while True:
                         
                         if iteration == 1 or iteration == 3 or iteration == 5:
                             price_to_sell_factor_array[optimizing] = starting_sell_factor + change_size*b
-                        elif iteration == 4:
-                            minutes_until_sale_array[optimizing] = starting_minutes + change_size*b
                         elif iteration == 6:
                             price_increase_factor_array[optimizing] = starting_increase_factor + change_size*b
         

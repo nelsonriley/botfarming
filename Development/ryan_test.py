@@ -15,11 +15,25 @@ import math
 from binance.client import Client
 
 
-length = '4h'
+look_back_gains = {}
+look_back_gains[1] = .2
+look_back_gains[2] = .1
+look_back_gains[4] = .4
+look_back_gains[5] = .15
+look_back_gains[7] = .3
+look_back_gains[9] = .12
 
-minutes = int(length[:1])*60
+look_back_gains_sorted = sorted(look_back_gains, key=look_back_gains.get, reverse=True)
 
-print(minutes)
+pprint(look_back_gains_sorted)
+
+
+
+# length = '4h'
+
+# minutes = int(length[:1])*60
+
+# print(minutes)
 
 
 

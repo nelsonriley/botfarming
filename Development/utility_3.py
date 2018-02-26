@@ -147,7 +147,7 @@ def cancel_sale_order(current_state):
 
     current_state['executedQty'] = current_state['executedQty'] - float(sale_order_info['executedQty'])
     current_state['total_revenue'] += float(sale_order_info['executedQty']) * float(sale_order_info['price'])
-    pickle_write(current_state_path, current_state, '******could not write state******')
+    write_current_state(current_state, current_state)
 
     return current_state
 
@@ -463,21 +463,22 @@ def buy_coin(symbol, length, file_number):
         sell_price_drop_factor = .997
         buy_price_increase_factor = 1.002
 
-        price_to_buy_factor_array = [0,.977, .969, .973, .965, .962, .96, .958, .95, .956, .95]
-        price_to_sell_factor_array = [0,.977, .969, .973, .965, .962, .96, .958, .95, .956, .95]
-        lower_band_buy_factor_array = [0,1.01, 1.15, 1.09, 1.055, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
-        price_increase_factor_array = [0,1.021,1.021,1.021,1.021,1.021,1.021,1.021,1.021,1.021,1.021]
+        price_to_buy_factor_array = {}
+        price_to_sell_factor_array = {}
+        lower_band_buy_factor_array = {}
+        price_increase_factor_array = {}
         
         minutes_until_sale = 3*minutes
         
         minutes_until_sale_final = 5*minutes
 
-        datapoints_trailing = 4
+        datapoints_trailing = 11
 
-        look_back_schedule = [1,2,4]
-        look_back_gains = [0,0,0,0,0,0,0,0,0,0]
-        look_back_wins = [0,0,0,0,0,0,0,0,0,0]
-        look_back_losses = [0,0,0,0,0,0,0,0,0,0]
+        look_back_schedule = [1,2,3,4,5,7,9,11]
+        look_back_gains = {}
+        look_back_gains_ave = {}
+        look_back_wins = {}
+        look_back_losses = {}
         max_look_back_gain = 0
         
         a_b = random.randint(0,1)
@@ -498,6 +499,8 @@ def buy_coin(symbol, length, file_number):
                 look_back_gains[look_back] = look_back_optimized['gain']
                 look_back_wins[look_back] = look_back_optimized['wins']
                 look_back_losses[look_back] = look_back_optimized['losses']
+                if look_back_optimized['wins'] + look_back_optimized['losses'] > 0:
+                    look_back_gains_ave[look_back] = look_back_optimized['gain']/(look_back_optimized['wins'] + look_back_optimized['losses'])
                 if look_back_gains[look_back] > max_look_back_gain:
                     max_look_back_gain = look_back_gains[look_back]
             else:
@@ -557,8 +560,14 @@ def buy_coin(symbol, length, file_number):
 
             # if (symbol['symbol'] == 'ETHBTC'):
             #     print('about to check lookback', symbol['symbol'], 'current_price',  current_price, get_time())
+    
+            look_back_gains_ave_sorted = sorted(look_back_gains_ave, key=look_back_gains_ave.get, reverse=True)
 
-            for look_back in look_back_schedule:
+            for look_back in look_back_gains_ave_sorted:
+                
+                # if symbol['symbol'] == 'ICXBTC':
+                #     print(look_back, look_back_gains_ave[look_back])
+                    
                 
                 if look_back_wins[look_back] + look_back_losses[look_back] < 3 or look_back_gains[look_back]/(look_back_wins[look_back] + look_back_losses[look_back]) < gain_min:
                     continue
@@ -583,6 +592,9 @@ def buy_coin(symbol, length, file_number):
                         should_buy = True
 
                     if should_buy:
+                        
+                        # print ('should buy', symbol['symbol'])
+                        # sys.exit()
 
                         lower_band_buy_factor = lower_band_buy_factor_array[look_back]
                         price_to_buy_factor = price_to_buy_factor_array[look_back]

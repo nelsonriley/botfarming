@@ -13,7 +13,7 @@ import utility as ut
 import json
 import math
 
-path = './botfarming/Development/binance_all_trades_history/binance_all_trades_history_3.pklz'
+path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/6h_0_binance_all_trades_history.pklz'
 bot_trades = ut.pickle_read(path)
 # if bot_trades == False:
 #ut.pickle_write(path, [])
@@ -41,10 +41,11 @@ for bot_trade in bot_trades:
     #     total_profit += bot_trade[2]
     #     total_trades += 1
     
-    if '2018-02-20 14:55:57' in bot_trade[0]:
-        start_counting = True
+    #if '2018-02-20 14:55:57' in bot_trade[0]:
+    start_counting = True
     if start_counting == True:
-        print(bot_trade[0], bot_trade[1], bot_trade[2], bot_trade[3], bot_trade[4], bot_trade[5], bot_trade[6], bot_trade[7], bot_trade[8], bot_trade[9], bot_trade[10], bot_trade[11], bot_trade[12], bot_trade[13])
+        print('')
+        print('time start', bot_trade[0], 'symbol', bot_trade[1], 'asolute profit', bot_trade[2], 'percentage profit', bot_trade[3], 'bit coin invested', bot_trade[4], 'look_back', bot_trade[5], 'a_b', bot_trade[6], 'look_back_gains', bot_trade[7], 'look_back_wins', bot_trade[8], 'look_back_losses', bot_trade[9], 'price_to_buy_factor', bot_trade[10], 'price_to_sell_factor', bot_trade[11], 'original_buy_time', bot_trade[12], 'sell time', bot_trade[13])
         total_profit += bot_trade[2]
         total_trades += 1
     

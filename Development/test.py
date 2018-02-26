@@ -45,9 +45,11 @@ trades_reporting = 0
 for i, t in enumerate(trades):
     # 20180220 = 62, 275
     # 20180221 = 310 to 361 morning session ($54 profit, $70 in account, 30% volume)
-    if i >= 361:
-        if 'symbol' in t:
-            print('s', t['symbol'])
+        # 361 to 393, 0.4 session, made $13 negative $19 & positive $35
+    # 20180222 393 to 781 = 388
+    if i >= 781:
+        # if 'symbol' in t:
+        #     print('s', t['symbol'])
         trades_reporting += 1
         profit_usd += t['live']['profit_usd']
         if t['live']['profit_usd'] >= 0:

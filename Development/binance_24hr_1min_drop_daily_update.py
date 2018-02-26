@@ -46,11 +46,14 @@ symbols_filtered, symbol_list = ut2.get_trimmed_symbols(symbols, min_volume_btc)
 epoch_now = int(time.time())
 readable_date_folder = datetime.datetime.fromtimestamp(epoch_now-7*60*60).strftime('%Y%m%d')
 day_folder = readable_date_folder+'_24'
+time_of_day = ' 12:00'
+day_folder = readable_date_folder+'_24_special'
+time_of_day = ' 20:00'
 if save_24hr_candle_data:
     readable_date_start = datetime.datetime.fromtimestamp(epoch_now-7*60*60-24*60*60).strftime('%Y-%m-%d')
     readable_date_end = datetime.datetime.fromtimestamp(epoch_now-7*60*60).strftime('%Y-%m-%d')
-    start = readable_date_start+' 12:00'
-    end = readable_date_end+' 12:00'
+    start = readable_date_start+time_of_day
+    end = readable_date_end+time_of_day
     save_params = [
         [ day_folder, start, end ]
     ]

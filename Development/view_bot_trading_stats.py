@@ -41,9 +41,9 @@ for bot_trade in bot_trades:
     #     total_profit += bot_trade[2]
     #     total_trades += 1
     
-    #if '2018-02-20 14:55:57' in bot_trade[0]:
-    start_counting = True
-    if start_counting == True:
+    if '2018-02-26' in bot_trade[0]:
+        start_counting = True
+    if start_counting == True:  #and bot_trade[7]/(bot_trade[8]+bot_trade[9]) > .1:
         print('')
         print('time start', bot_trade[0], 'symbol', bot_trade[1], 'asolute profit', bot_trade[2], 'percentage profit', bot_trade[3], 'bit coin invested', bot_trade[4], 'look_back', bot_trade[5], 'a_b', bot_trade[6], 'look_back_gains', bot_trade[7], 'look_back_wins', bot_trade[8], 'look_back_losses', bot_trade[9], 'price_to_buy_factor', bot_trade[10], 'price_to_sell_factor', bot_trade[11], 'original_buy_time', bot_trade[12], 'sell time', bot_trade[13])
         total_profit += bot_trade[2]

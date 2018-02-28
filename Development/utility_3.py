@@ -252,7 +252,7 @@ def get_first_in_line_price(current_state):
     return price_to_buy,first_ask, second_price_to_buy, second_ask, second_price_to_check, first_bid
 
 def sell_coin_with_order_book_use_min(current_state):
-    print('########### - Selling...', current_state['symbol'], 'at minimum price',  current_state['price_to_sell'], 'exectuedQty', current_state['executedQty'], get_time())
+    print('########### - Selling...', current_state['symbol'], 'at minimum price',  current_state['price_to_sell'], 'original_buy_time_readable', current_state['original_buy_time_readable'], 'original investment', current_state['original_quantity']*current_state['original_price'], 'original price', current_state['original_price'], 'exectuedQty', current_state['executedQty'])
     
     try:
 
@@ -447,16 +447,13 @@ def buy_coin(symbol, length, file_number):
         largest_bitcoin_order = .1
         if length == '1d':
             part_of_bitcoin_to_use = 1.2
-            gain_min = .08
+            gain_min = .24
         if length == '12h':
             part_of_bitcoin_to_use = 1
-            gain_min = .07
+            gain_min = .19
         elif length == '6h':
             part_of_bitcoin_to_use = .6
-            gain_min = .05
-        elif length == '4h':
-            part_of_bitcoin_to_use = .4
-            gain_min = .05
+            gain_min = .15
             
         price_to_start_buy_factor = 1.003
 
@@ -569,7 +566,7 @@ def buy_coin(symbol, length, file_number):
                 #     print(look_back, look_back_gains_ave[look_back])
                     
                 
-                if look_back_wins[look_back] + look_back_losses[look_back] < 3 or look_back_gains[look_back]/(look_back_wins[look_back] + look_back_losses[look_back]) < gain_min:
+                if look_back_wins[look_back] + look_back_losses[look_back] < 1 or look_back_gains[look_back]/(look_back_wins[look_back] + look_back_losses[look_back]) < gain_min:
                     continue
 
                 price_to_start_buy = float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy_factor
@@ -768,6 +765,18 @@ def run_bot_parallel(file_number, length, total_files):
                 socket_list.append(symbol['symbol'].lower() + '@depth20')
                 total_btc_coins += 1
                 symbols_trimmed[s] = symbol
+            else:
+                try:
+                    f = gzip.open('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '.pklz','rb')
+                    current_state = pickle.load(f)
+                    f.close()
+                except Exception as e:
+                    current_state = False
+            
+                if isinstance(current_state,dict):
+                    print('loading state to sell coin..', current_state['symbol'])
+                    t = Thread(target=buy_coin_from_state, args=[current_state])
+                    t.start()
 
         print('total_btc_coins with volume >', min_symbol_volume, '---', total_btc_coins)
 
@@ -902,7 +911,6 @@ def process_socket_pushes_order_book(msg):
             
         symbol = msg['stream'].split('@')[0].upper()
         msg['data']['time'] = int(time.time())
-        pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/4h_'+symbol+'.pklz', msg['data'])
         pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/6h_'+symbol+'.pklz', msg['data'])
         pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/12h_'+symbol+'.pklz', msg['data'])
         pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/1d_'+symbol+'.pklz', msg['data'])

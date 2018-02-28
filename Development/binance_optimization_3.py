@@ -35,18 +35,18 @@ loops = 0
 
 while True:
     
-    if loops % 4 == 0:
+    if loops % 3 == 0:
         length = '1d'
         minutes = 24*60
-    if loops % 4 == 1:
+        max_price_to_buy_factor = .75
+    if loops % 3 == 1:
         length = '12h'
         minutes = 12*60
-    elif loops % 4 == 2:
+        max_price_to_buy_factor = .8
+    elif loops % 3 == 2:
         length = '6h'
         minutes = 6*60
-    elif loops % 4 == 3:
-        length = '4h'
-        minutes = 4*60
+        max_price_to_buy_factor = .82
     
 
     print('starting..')
@@ -58,7 +58,7 @@ while True:
     min_volume = 0
     
     # if first_iteration == True:
-    #day = '20171029_10:54_to_20180226_10:54'
+    #day = '20180208_05:58_to_20180228_05:58'
     #     first_iteration = False
     # else:
     ###get previous 24 hours data
@@ -145,14 +145,7 @@ while True:
     
         for look_back in optimizing_array:
             
-            if length == '1d':
-                price_to_buy_factor_array[look_back] = .78
-            elif length == '12h':
-                price_to_buy_factor_array[look_back] = .81
-            elif length == '6h':
-                price_to_buy_factor_array[look_back] = .83
-            elif length == '4h':
-                price_to_buy_factor_array[look_back] = .85
+            price_to_buy_factor_array[look_back] = max_price_to_buy_factor - .2
             price_to_sell_factor_array[look_back] = .96
             price_increase_factor_array[look_back] = 1.02
             lower_band_buy_factor_array[look_back] = 100
@@ -176,7 +169,7 @@ while True:
                 if iteration > 0 and best_gain == -999999:
                     continue
                 
-                print('##################################### New Iteration', iteration, '###########')
+                print('##################################### New Iteration', iteration, '###########', symbol['symbol'], 'total symbols', total_btc_coins, 'symbols started: ', symbols_started)
                 print('optimizing:', optimizing ,'optimal_buy_factor, optimal_sell_factor, optimal_band_factor,optimal_increase_factor', optimal_buy_factor, optimal_sell_factor, optimal_band_factor, optimal_increase_factor)
                 print('##################################### New Iteration', iteration, '###########')
         
@@ -187,10 +180,10 @@ while True:
                 minutes_until_sale_array[optimizing] = optimal_minutes_until_sale
         
                 if iteration == 0:
-                    a_range = 31
+                    a_range = 41
                     b_range = 1
                     change_size = .01
-                    starting_buy_factor =  optimal_buy_factor - 15*change_size
+                    starting_buy_factor =  optimal_buy_factor - 20*change_size
                 elif iteration == 2:
                     a_range = 11
                     b_range = 1
@@ -226,14 +219,9 @@ while True:
         
         
                 for a in range(0, a_range):
-                    if iteration == 0 and a > 0 and best_gain == -999999:
-                        continue
                     
                     if iteration == 0 or iteration == 2 or iteration == 4 or iteration == 5:
                         price_to_buy_factor_array[optimizing] = starting_buy_factor + change_size*a
-                    
-                    if iteration == 0 and a == 0:
-                        price_to_buy_factor_array[optimizing] = .99
                     
                     for b in range(0, b_range):
                         
@@ -247,7 +235,7 @@ while True:
         
                         #print('********', minutes_until_sale_2_array[optimizing])
                         
-                        if price_to_buy_factor_array[optimizing] >= .993:
+                        if price_to_buy_factor_array[optimizing] >= max_price_to_buy_factor:
                             continue
         
                         trades_count = 0
@@ -483,5 +471,5 @@ while True:
     
     loops += 1
     
-    if loops % 4 == 0:
+    if loops % 3 == 0:
         time.sleep(60*60*3)        

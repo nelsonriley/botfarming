@@ -23,8 +23,8 @@ global bm
 bm = BinanceSocketManager(client)
 
 # limit symbols by 24hr volume
-min_volume = 300
-#ut.update_symbol_list()
+min_volume = 0
+ut.update_symbol_list()
 symbol_path = '/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz'
 symbols = ut.pickle_read(symbol_path)
 total_btc_coins = 0

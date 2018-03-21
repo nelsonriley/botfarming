@@ -252,7 +252,7 @@ def get_first_in_line_price(current_state):
     return price_to_buy,first_ask, second_price_to_buy, second_ask, second_price_to_check, first_bid
 
 def sell_coin_with_order_book_use_min(current_state):
-    print('########### - Selling...', current_state['symbol'], 'at minimum price',  current_state['price_to_sell'], 'original_buy_time_readable', current_state['original_buy_time_readable'], 'original investment', current_state['original_quantity']*current_state['original_price'], 'original price', current_state['original_price'], 'exectuedQty', current_state['executedQty'])
+    print('########### - Selling...', current_state['symbol'], 'at minimum price',  current_state['price_to_sell'], 'original_buy_time_readable', current_state['original_buy_time_readable'], 'original investment', current_state['original_quantity']*current_state['original_price'], 'original price', current_state['original_price'], 'exectuedQty', current_state['executedQty'], 'look_back', current_state['look_back'], 'price to buy factor', current_state['price_to_buy_factor'], 'price_to_sell_factor', current_state['price_to_sell_factor'])
     
     try:
 
@@ -446,13 +446,13 @@ def buy_coin(symbol, length, file_number):
 
         largest_bitcoin_order = .1
         if length == '1d':
-            part_of_bitcoin_to_use = 1.2
+            part_of_bitcoin_to_use = 2.4
             gain_min = .24
         if length == '12h':
-            part_of_bitcoin_to_use = 1
+            part_of_bitcoin_to_use = 2.2
             gain_min = .19
         elif length == '6h':
-            part_of_bitcoin_to_use = .6
+            part_of_bitcoin_to_use = 2
             gain_min = .15
             
         price_to_start_buy_factor = 1.003

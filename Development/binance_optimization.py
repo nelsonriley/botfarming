@@ -10,33 +10,50 @@ import sys
 import pickle
 import gzip
 import datetime
-import utility as ut
-import utility_2 as ut2
+import utility_3 as ut
 import functions_financial as fn
 
 first_iteration = True
 
+# length = '4h'
+# minutes = 4*60
+
+# length = '2h'
+# minutes = 2*60
+
+# length = '6h'
+# minutes = 6*60
+
+# length = '12h'
+# minutes = 12*60
+
+# length = '12h'
+# minutes = 12*60
+
+length = '1m'
+minutes = 1
+max_price_to_buy_factor = .99
+
 
 while True:
+    
 
     print('starting..')
-    
-    minutes = 1
     
     
     continuous_mode = True
     continous_length = 1
-    datapoints_trailing = 230
+    datapoints_trailing = 7
     min_volume = 0
-    minutes = 1
     
     # if first_iteration == True:
-    #day = '20180212_15:38_to_20180212_21:38'
+    #day = '20180208_05:58_to_20180228_05:58'
     #     first_iteration = False
     # else:
     ###get previous 24 hours data
     epoch_now = int(time.time())
-    epoch_24hrs_ago = epoch_now - 2*60*60
+    #120 is just a random variable that works here, 120 units of the minutes
+    epoch_24hrs_ago = epoch_now - 360*minutes*60
     readable_time_now = datetime.datetime.fromtimestamp(epoch_now-7*60*60).strftime('%Y-%m-%d %H:%M')
     readable_time_24hrs_ago = datetime.datetime.fromtimestamp(epoch_24hrs_ago-7*60*60).strftime('%Y-%m-%d %H:%M')
     readable_time_now_folder = datetime.datetime.fromtimestamp(epoch_now-7*60*60).strftime('%Y%m%d_%H:%M')
@@ -46,23 +63,21 @@ while True:
     save_params = [
         [day, readable_time_24hrs_ago, readable_time_now]
     ]
-    ut2.save_data(save_params, datapoints_trailing, min_volume, minutes)
-    
-    
+    ut.save_data(save_params, datapoints_trailing, min_volume, minutes)
     
     ################################################################################ RUN OPTIMIZER
     
     trailing_and_current_candles_array = {}
     smart_trailing_candles_array = {}
     
-    symbols = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_btc_symbols.pklz')
+    symbols = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz')
     
     total_btc_coins = 0
     symbols_trimmed = {}
     
     for s in symbols:
         symbol = symbols[s]
-        if float(symbol['24hourVolume']) > 450:
+        if float(symbol['24hourVolume']) > 300:
             total_btc_coins += 1
             symbols_trimmed[s] = symbol
             
@@ -85,13 +100,13 @@ while True:
     sell_price_drop_factor = .997
     buy_price_increase_factor = 1.002
     
-    price_to_buy_factor_array = [0,.978, .968, .973, .962, .962, .96, .958, .95, .956, .95]
-    price_to_sell_factor_array = [0,.99, .968, .973, .962, .962, .96, .958, .95, .956, .95]
-    price_increase_factor_array = [0,1.01,1.01,1.01,1.01,1.01,1.01,1.01,1.01,1.01,1.01]
-    lower_band_buy_factor_array = [0,1.025, 1.12, 1.09, 1.04, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
-    minutes_until_sale_array = [6,6,6,6,6,6,6,6,6,6]
+    price_to_buy_factor_array = {}
+    price_to_sell_factor_array = {}
+    price_increase_factor_array = {}
+    lower_band_buy_factor_array = {}
+    minutes_until_sale_array = {}
     
-    minutes_until_sale_3 = 45
+    minutes_until_sale_3 = 5
     
     combined_results = {}
     
@@ -104,7 +119,7 @@ while True:
     optimal_buy_factor = 0
     optimal_sell_factor = 0
     
-    optimizing_array= [1,2,4]
+    optimizing_array= [1,3,5,7]
     
     
     symbols_started = 0
@@ -119,19 +134,12 @@ while True:
     
         for look_back in optimizing_array:
             
-            # look_back_optimized = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '_V2.pklz')
-            # if look_back_optimized != False:
-            #if False:
-            price_to_buy_factor_array[look_back] = .97
+            price_to_buy_factor_array[look_back] = max_price_to_buy_factor - .04
             price_to_sell_factor_array[look_back] = .99
-            price_increase_factor_array[look_back] = 1.005
+            price_increase_factor_array[look_back] = 1.02
             lower_band_buy_factor_array[look_back] = 100
-            minutes_until_sale_array[look_back] = 6
-            # else:
-            #     price_to_buy_factor_array = [0,.978, .968, .973, .962, .962, .96, .958, .95, .956, .95]
-            #     price_to_sell_factor_array = [0,.992, .991, .987, .994, .992, .989, .991, .986, .986, .986]
-            #     lower_band_buy_factor_array = [0,1.025, 1.12, 1.09, 1.04, 1.09, 1.12, 1.15, 1.16, 1.19, 1.19]
-            #     price_increase_factor_array = [0,1.015,1.015,1.015,1.015,1.015,1.015,1.015,1.015,1.015,1.015]
+            minutes_until_sale_array[look_back] = 3
+            
                 
         for optimizing in optimizing_array:
         
@@ -150,7 +158,7 @@ while True:
                 if iteration > 0 and best_gain == -999999:
                     continue
                 
-                print('##################################### New Iteration', iteration, '###########')
+                print('##################################### New Iteration', iteration, '###########', symbol['symbol'], 'total symbols', total_btc_coins, 'symbols started: ', symbols_started)
                 print('optimizing:', optimizing ,'optimal_buy_factor, optimal_sell_factor, optimal_band_factor,optimal_increase_factor', optimal_buy_factor, optimal_sell_factor, optimal_band_factor, optimal_increase_factor)
                 print('##################################### New Iteration', iteration, '###########')
         
@@ -161,62 +169,53 @@ while True:
                 minutes_until_sale_array[optimizing] = optimal_minutes_until_sale
         
                 if iteration == 0:
-                    a_range = 13
-                    b_range = 1
-                    change_size = .005
-                    starting_buy_factor =  optimal_buy_factor - 6*change_size
-                elif iteration == 2:
-                    a_range = 7
+                    a_range = 41
                     b_range = 1
                     change_size = .002
-                    starting_buy_factor =  optimal_buy_factor - 3*change_size
+                    starting_buy_factor =  optimal_buy_factor - 20*change_size
+                elif iteration == 2:
+                    a_range = 11
+                    b_range = 1
+                    change_size = .001
+                    starting_buy_factor =  optimal_buy_factor - 5*change_size
                 elif iteration == 1:
                     a_range = 1
                     b_range = 9
                     change_size = .002
-                    starting_sell_factor =  optimal_sell_factor - 3*change_size
+                    starting_sell_factor =  optimal_sell_factor - 4*change_size
                 elif iteration == 3:
                     a_range = 1
-                    b_range = 9
-                    change_size = .015
-                    starting_band = 1.07 - 4*change_size
-                elif iteration == 4:
-                    a_range = 1
                     b_range = 5
-                    change_size = 2
-                    starting_minutes = 4
+                    change_size = .001
+                    starting_sell_factor =  optimal_sell_factor - 2*change_size
+                elif iteration == 4:
+                    a_range = 11
+                    b_range = 1
+                    change_size = .001
+                    starting_buy_factor =  optimal_buy_factor - 5*change_size
                 elif iteration == 5:
                     a_range = 5
                     b_range = 3
                     change_size = .001
                     starting_buy_factor =  optimal_buy_factor - 2*change_size
-                    starting_sell_factor =  optimal_sell_factor - 3*change_size
+                    starting_sell_factor =  optimal_sell_factor - 1*change_size
                 elif iteration == 6:
                     a_range = 1
-                    b_range = 11
-                    change_size = .001
-                    starting_increase_factor =  optimal_increase_factor - 5*change_size
+                    b_range = 7
+                    change_size = .005
+                    starting_increase_factor =  optimal_increase_factor - 3*change_size
                     
         
         
                 for a in range(0, a_range):
-                    if iteration == 0 and a > 0 and best_gain == -999999:
-                        continue
                     
-                    if iteration == 0 or iteration == 2 or iteration == 5:
+                    if iteration == 0 or iteration == 2 or iteration == 4 or iteration == 5:
                         price_to_buy_factor_array[optimizing] = starting_buy_factor + change_size*a
-                    
-                    if iteration == 0 and a == 0:
-                        price_to_buy_factor_array[optimizing] = .99
                     
                     for b in range(0, b_range):
                         
-                        if iteration == 1 or iteration == 5:
+                        if iteration == 1 or iteration == 3 or iteration == 5:
                             price_to_sell_factor_array[optimizing] = starting_sell_factor + change_size*b
-                        elif iteration == 3:
-                            lower_band_buy_factor_array[optimizing] = starting_band + change_size*b
-                        elif iteration == 4:
-                            minutes_until_sale_array[optimizing] = starting_minutes + change_size*b
                         elif iteration == 6:
                             price_increase_factor_array[optimizing] = starting_increase_factor + change_size*b
         
@@ -225,7 +224,7 @@ while True:
         
                         #print('********', minutes_until_sale_2_array[optimizing])
                         
-                        if price_to_buy_factor_array[optimizing] >= .993:
+                        if price_to_buy_factor_array[optimizing] >= max_price_to_buy_factor:
                             continue
         
                         trades_count = 0
@@ -268,9 +267,9 @@ while True:
     
                             #print(symbol['symbol'])
     
-                            # prevent bots buying at same time
-                            # if float(candle[0]) < float(sale_time):
-                            #     continue
+                            #prevent bots buying at same time
+                            if float(candle[0]) < float(sale_time):
+                                continue
     
                             #**cuts approx 45 min off whatever data is made available
                             # try:
@@ -452,9 +451,14 @@ while True:
             optimization_factors['gain'] = best_gain
             optimization_factors['wins'] = best_wins
             optimization_factors['losses'] = best_losses
-            ut.pickle_write('/home/ec2-user/environment/botfarming/Development/optimization_factors/optimal_for_' + symbol['symbol'] + '_' + str(optimizing) + '_V13.pklz', optimization_factors)
+            ut.pickle_write('/home/ec2-user/environment/botfarming/Development/optimization_factors/' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(optimizing) + '.pklz', optimization_factors)
             print('###################################################################')
             print('###################################################################')
             print('###################################################################')
             print('###################################################################')
             print('###################################################################')
+    
+    loops += 1
+    
+    if loops % 3 == 0:
+        time.sleep(60*60*3)        

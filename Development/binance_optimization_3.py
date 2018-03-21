@@ -58,7 +58,7 @@ while True:
     min_volume = 0
     
     # if first_iteration == True:
-    #day = '20180208_05:58_to_20180228_05:58'
+    #day = '20171102_18:22_to_20180302_18:22'
     #     first_iteration = False
     # else:
     ###get previous 24 hours data
@@ -259,10 +259,11 @@ while True:
                             print('no data for symbol', symbol['symbol'])
                             continue
                         continous_length = len(data)
+                       
                         
                         # if data != False:
                         #     print(path)
-                        if not data:
+                        if not data or len(data) < 100:
                             continue
     
                         trailing_closes = []

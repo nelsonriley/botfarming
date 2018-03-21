@@ -17,19 +17,32 @@ from binance.client import Client
 # length = '4h'
 # min_gain = .05
 # minutes = 4*60
+#look_back_array = [1,2,3,4,5,7,9,11]
+#optimization_length = 120
 
-length = '6h'
-min_gain = .15
-minutes = 6*60
+# length = '6h'
+# min_gain = .15
+# minutes = 6*60
+#look_back_array = [1,2,3,4,5,7,9,11]
+#optimization_length = 120
 
 # length = '12h'
 # min_gain = .19
 # minutes = 12*60
+#look_back_array = [1,2,3,4,5,7,9,11]
+#optimization_length = 120
 
 # length = '1d'
 # min_gain = .2
 # minutes = 24*60
+#look_back_array = [1,2,3,4,5,7,9,11]
+#optimization_length = 120
 
+length = '1m'
+min_gain = .01
+minutes = 1
+look_back_array = [1,3,5,7]
+optimization_length = 360
 
 
 
@@ -50,7 +63,7 @@ for s in symbols:
 total_gain = 0
 total_symbols = 0
 total_trades = 0
-look_back_array = [1,2,3,4,5,7,9,11]
+
 for s in symbols_trimmed:
     symbol = symbols_trimmed[s]
     print('')
@@ -70,5 +83,5 @@ for s in symbols_trimmed:
 print('total_gain', total_gain)
 print('total_symbols', total_symbols)
 print('total_trades', total_trades)
-print('trades per minute', float(total_trades)/(minutes*120))
-print('trades per day', float(total_trades)/(minutes*120/(24*60)))
+print('trades per minute', float(total_trades)/(minutes*optimization_length))
+print('trades per day', float(total_trades)/(float(minutes)*optimization_length/(24*60)))

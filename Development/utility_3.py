@@ -24,7 +24,6 @@ from six.moves import urllib
 global number_of_api_requests
 from binance.client import Client
 from binance.websockets import BinanceSocketManager
-import utility_2 as ut2
 
 
 
@@ -155,8 +154,13 @@ def create_buy_order(current_state, price_to_buy):
 
     maximum_order_to_buy = float_to_str(round(current_state['largest_buy_segment'], current_state['quantity_decimals']))
     maximum_possible_buy = float_to_str(round(current_state['original_amount_to_buy'] - current_state['executedQty'], current_state['quantity_decimals']))
-    #quantity_to_buy = min(float(maximum_order_to_buy), float(maximum_possible_buy))
-    quantity_to_buy = maximum_possible_buy
+    
+    
+    
+    if current_state['length'] == '1m':
+        quantity_to_buy = min(float(maximum_order_to_buy), float(maximum_possible_buy))
+    else:
+        quantity_to_buy = maximum_possible_buy
 
     # DEBUGGER
     # print('qty', quantity_to_buy, 'price', price_to_buy)
@@ -283,15 +287,15 @@ def sell_coin_with_order_book_use_min(current_state):
                 if int(time.time()) >= time_to_give_up:
                     if started_give_up == False:
                         started_give_up = True
-                        print('Started give up 1, reduced price increase factor by half', current_state['symbol'])
-                        current_state['price_increase_factor'] = current_state['price_increase_factor']/2
+                        current_state['price_increase_factor'] = (float(current_state['price_increase_factor'])-1)/2+1
+                        print('Started give up 1, reduced price increase factor by half', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
                         write_current_state(current_state, current_state)
                         
                 if int(time.time()) >= 2*time_to_give_up:
                     if started_give_up_2 == False:
                         started_give_up_2 = True
-                        print('Started give up 2, reduced price increase factor by half again', current_state['symbol'])
-                        current_state['price_increase_factor'] = current_state['price_increase_factor']/2
+                        current_state['price_increase_factor'] = (float(current_state['price_increase_factor'])-1)/2+1
+                        print('Started give up 2, reduced price increase factor by half again', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
                         write_current_state(current_state, current_state)
                         
                 first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check, first_bid = get_first_in_line_price(current_state)
@@ -440,25 +444,37 @@ def buy_coin(symbol, length, file_number):
             minutes = 24*60
         elif length == '12h':
             minutes = 12*60
-        else:
-            minutes = int(length[:1])*60
+        elif length == '6h':
+            minutes = 6*60
+        elif length == '1m':
+            minutes = 1
 
 
         largest_bitcoin_order = .1
         if length == '1d':
             part_of_bitcoin_to_use = 2.4
             gain_min = .24
+            buy_price_increase_factor = 1.002
+            look_back_schedule = [1,2,3,4,5,7,9,11]
         if length == '12h':
             part_of_bitcoin_to_use = 2.2
             gain_min = .19
+            buy_price_increase_factor = 1.002
+            look_back_schedule = [1,2,3,4,5,7,9,11]
         elif length == '6h':
             part_of_bitcoin_to_use = 2
             gain_min = .15
+            buy_price_increase_factor = 1.002
+            look_back_schedule = [1,2,3,4,5,7,9,11]
+        elif length == '1m':
+            part_of_bitcoin_to_use = .6
+            gain_min = .001
+            buy_price_increase_factor = 1.001
+            look_back_schedule = [1,3,5,7]
             
         price_to_start_buy_factor = 1.003
-
         sell_price_drop_factor = .997
-        buy_price_increase_factor = 1.002
+        
 
         price_to_buy_factor_array = {}
         price_to_sell_factor_array = {}
@@ -471,7 +487,6 @@ def buy_coin(symbol, length, file_number):
 
         datapoints_trailing = 11
 
-        look_back_schedule = [1,2,3,4,5,7,9,11]
         look_back_gains = {}
         look_back_gains_ave = {}
         look_back_wins = {}
@@ -515,7 +530,7 @@ def buy_coin(symbol, length, file_number):
 
         data = []
 
-        end_time = int(time.time())*1000
+        end_time = int(time.time())*1000 + 60000
         start_time = (end_time-60*1000*minutes*(datapoints_trailing+1))
         url = 'https://api.binance.com/api/v1/klines?symbol='+ symbol['symbol'] +'&interval='+length+'&startTime='+str(start_time)+'&endTime='+str(end_time)
         #print(url)
@@ -524,6 +539,19 @@ def buy_coin(symbol, length, file_number):
         if isinstance(data, basestring):
             print('API request failed, exiting', symbol['symbol'])
             return
+        
+        # if length == '1m' and (symbol['symbol'] == 'XEMBTC' or symbol['symbol'] == 'SNTBTC' or symbol['symbol'] == 'ETHBTC'):
+        #     print(symbol['symbol'],'price', data[-1][4], 'price two ago', data[-2][4], 'candle end time', data[-1][0], get_readable_time(data[-1][0]), 'candle end time 2 ago', data[-2][0],  get_readable_time(data[-2][0]), 'requested end time', end_time, get_readable_time(end_time), 'need time within', get_readable_time(end_time - 60000))
+        #     time.sleep(5)
+        #     return
+        
+        if length == '1m':
+            for check_back in range(1, 7):
+                if data[-1*check_back][0] < end_time-2*65000*check_back:
+                    print('messed up candle end time', get_readable_time(data[-1*check_back][0]), 'need time within', get_readable_time(end_time - 2*60000*check_back), 'requested end time', get_readable_time(end_time), symbol['symbol'],'price', data[-1][4], 'price two ago', data[-2][4],'check_back', check_back, )
+                    time.sleep(10)
+                    return
+                
 
         trailing_volumes = []
         trailing_movement = []
@@ -531,8 +559,6 @@ def buy_coin(symbol, length, file_number):
         trailing_highs = []
         trailing_candles = []
         for index, candle in enumerate(data):
-            if len(trailing_movement) >= datapoints_trailing:
-                break
             trailing_volumes.append(float(candle[7])) # 5 is symbol volume, 7 is quote asset volume (BTC)
             trailing_movement.append(abs(float(candle[4])-float(candle[1])))
             trailing_highs.append(float(candle[2]))
@@ -563,7 +589,7 @@ def buy_coin(symbol, length, file_number):
             for look_back in look_back_gains_ave_sorted:
                 
                 # if symbol['symbol'] == 'ICXBTC':
-                #     print(look_back, look_back_gains_ave[look_back])
+                #     print(get_readable_time(data[index-look_back][0]))
                     
                 
                 if look_back_wins[look_back] + look_back_losses[look_back] < 1 or look_back_gains[look_back]/(look_back_wins[look_back] + look_back_losses[look_back]) < gain_min:
@@ -603,16 +629,13 @@ def buy_coin(symbol, length, file_number):
                             price_to_buy = min(lower_band_for_index*lower_band_buy_factor, float(data[index-look_back][4])*price_to_buy_factor)
                         else:
                             price_to_buy = float(data[index-look_back][4])*price_to_buy_factor
-
-
-                        print('-------------------buy!', symbol['symbol'], 'look_back', look_back, 'price', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back], 'price_to_sell_factor',price_to_sell_factor_array[look_back] , 'price_increase_factor',price_increase_factor_array[look_back] , minutes_until_sale, 'look_back_gain', look_back_gains[look_back], 'look_back_wins', look_back_wins[look_back], 'look_back_losses', look_back_losses[look_back], get_time())
-
-                        if lower_band_buy_factor < 100:
-                            price_to_buy = min(lower_band_for_index*lower_band_buy_factor, float(data[index-look_back][4])*price_to_buy_factor)
-                        else:
-                            price_to_buy = float(data[index-look_back][4])*price_to_buy_factor
-                        
+                            
                         price_to_sell = float(data[index-look_back][4])*price_to_sell_factor
+
+
+                        print('-------------------buy!', symbol['symbol'], 'current price', current_price, 'current price time', get_readable_time(order_book['time']), 'look_back', look_back, 'look back original price', data[index-look_back][4], 'look back original time', get_readable_time(data[index-look_back][0]),   'price_to_buy', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back], 'price_to_sell', price_to_sell,  'price_to_sell_factor',price_to_sell_factor_array[look_back] , 'price_increase_factor',price_increase_factor_array[look_back] , minutes_until_sale, 'look_back_gain', look_back_gains[look_back], 'look_back_wins', look_back_wins[look_back], 'look_back_losses', look_back_losses[look_back], get_time())
+                        
+                        
 
                         amount_to_buy = part_of_bitcoin_to_use/price_to_buy
                         largest_buy_segment = largest_bitcoin_order/price_to_buy
@@ -660,7 +683,10 @@ def buy_coin(symbol, length, file_number):
 
                         write_current_state(current_state, current_state)
 
-                        time_to_give_up = int(time.time()) + 60*minutes/30
+                        if length == '1m':
+                            time_to_give_up = int(time.time()) + 120
+                        else:
+                            time_to_give_up = int(time.time()) + 60*minutes/15
                         price_to_buy_max = price_to_buy*buy_price_increase_factor
                         amount_to_stop_buying = part_of_bitcoin_to_use/price_to_buy_max
                         print('max price for', symbol['symbol'], price_to_buy_max)
@@ -903,7 +929,7 @@ def save_data(save_params, datapoints_trailing, min_volume, minutes):
                 pickle_write(candle_path, data)
 
     return True
-    
+
 def process_socket_pushes_order_book(msg):
     if not 'stream' in msg:
         return
@@ -911,13 +937,54 @@ def process_socket_pushes_order_book(msg):
             
         symbol = msg['stream'].split('@')[0].upper()
         msg['data']['time'] = int(time.time())
+        pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/1m_'+symbol+'.pklz', msg['data'])
         pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/6h_'+symbol+'.pklz', msg['data'])
         pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/12h_'+symbol+'.pklz', msg['data'])
         pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/1d_'+symbol+'.pklz', msg['data'])
 
-        if symbol == 'ETHBTC' and (time.localtime().tm_sec == 1 or time.localtime().tm_sec == 2):
-            print('process_socket_pushes_order_book() ETHBTC', msg['data']['bids'][0][0], get_time())
-            
+        if (symbol == 'ETHBTC'):  #and (time.localtime().tm_sec == 1 or time.localtime().tm_sec == 2):
+            print('process_socket_pushes_order_book()', symbol, msg['data']['bids'][0][0], 'time given', get_readable_time(msg['data']['time']), 'current time', get_time())
+
+        if (symbol == 'WAVESBTC'):
+            print('process_socket_pushes_order_book()', symbol, msg['data']['bids'][0][0], 'time given', get_readable_time(msg['data']['time']), 'current time', get_time())
+
+
+
+    
+def update_order_book(min_volume, max_volume):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    print(s.getsockname()[0])
+    s.close()
+    
+    api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
+    api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
+    client = Client(api_key, api_secret)
+    global bm
+    bm = BinanceSocketManager(client)
+    
+    # limit symbols by 24hr volume
+    
+    symbol_path = '/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz'
+    symbols = pickle_read(symbol_path)
+    total_btc_coins = 0
+    symbols_trimmed = {}
+    global socket_list
+    socket_list = []
+    for s in symbols:
+        symbol = symbols[s]
+        if float(symbol['24hourVolume']) > min_volume and float(symbol['24hourVolume']) < max_volume:
+            total_btc_coins += 1
+            symbols_trimmed[s] = symbol
+            socket_list.append(s.lower()+'@depth20')
+            pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/3_'+s+'.pklz', False)
+    
+    print('symbols with volume > ', min_volume, 'and less than', max_volume, '=', len(socket_list))
+    
+    # start order_book web socket > call back saves most recent data to disk
+    conn_key = bm.start_multiplex_socket(socket_list, process_socket_pushes_order_book)
+    bm.start()
+    
 
 def update_symbol_list():
     # save symbol list daily since API sometimes fail when getting live

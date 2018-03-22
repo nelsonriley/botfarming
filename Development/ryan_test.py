@@ -9,23 +9,49 @@ import numpy
 import sys
 import pickle
 import gzip
-import utility_4 as ut
+import utility_3 as ut
 import json
 import math
 from binance.client import Client
 
 
-look_back_gains = {}
-look_back_gains[1] = .2
-look_back_gains[2] = .1
-look_back_gains[4] = .4
-look_back_gains[5] = .15
-look_back_gains[7] = .3
-look_back_gains[9] = .12
+order_book_history = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/order_book_history/BNBBTC_1521686067')
 
-look_back_gains_sorted = sorted(look_back_gains, key=look_back_gains.get, reverse=True)
+pprint(order_book_history)
 
-pprint(look_back_gains_sorted)
+# save_data_until = int(time.time()) + 30*60
+# print ut.get_readable_time(save_data_until)
+
+# ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/ETHBTC_should_save', save_data_until)
+
+# ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/ETHBTC_already_saved', False)
+
+# should_save = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/ETHBTC_should_save')
+
+# print('should_save', should_save, ut.get_readable_time(should_save))
+
+# if should_save != False and should_save > int(time.time()):
+#     print('hi')
+
+
+
+# ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/1m_stop_trading', True)
+# stop_trading = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/1m_stop_trading')
+
+# if stop_trading == True:
+#     print('should stop trading')
+
+# look_back_gains = {}
+# look_back_gains[1] = .2
+# look_back_gains[2] = .1
+# look_back_gains[4] = .4
+# look_back_gains[5] = .15
+# look_back_gains[7] = .3
+# look_back_gains[9] = .12
+
+# look_back_gains_sorted = sorted(look_back_gains, key=look_back_gains.get, reverse=True)
+
+# pprint(look_back_gains_sorted)
 
 
 

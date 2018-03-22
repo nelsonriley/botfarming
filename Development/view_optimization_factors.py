@@ -39,7 +39,7 @@ from binance.client import Client
 #optimization_length = 120
 
 length = '1m'
-min_gain = .01
+min_gain = .001
 minutes = 1
 look_back_array = [1,3,5,7]
 optimization_length = 360

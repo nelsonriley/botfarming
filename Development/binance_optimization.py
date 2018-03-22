@@ -106,7 +106,7 @@ while True:
     lower_band_buy_factor_array = {}
     minutes_until_sale_array = {}
     
-    minutes_until_sale_3 = 5
+    minutes_until_sale_3 = 14
     
     combined_results = {}
     
@@ -136,9 +136,9 @@ while True:
             
             price_to_buy_factor_array[look_back] = max_price_to_buy_factor - .04
             price_to_sell_factor_array[look_back] = .99
-            price_increase_factor_array[look_back] = 1.02
+            price_increase_factor_array[look_back] = 1.01
             lower_band_buy_factor_array[look_back] = 100
-            minutes_until_sale_array[look_back] = 3
+            minutes_until_sale_array[look_back] = 12
             
                 
         for optimizing in optimizing_array:
@@ -153,7 +153,7 @@ while True:
             optimal_minutes_until_sale = minutes_until_sale_array[optimizing]
         
             #for iteration in range(0,2):
-            for iteration in range(0,7):
+            for iteration in range(0,6):
                 
                 if iteration > 0 and best_gain == -999999:
                     continue
@@ -199,11 +199,6 @@ while True:
                     change_size = .001
                     starting_buy_factor =  optimal_buy_factor - 2*change_size
                     starting_sell_factor =  optimal_sell_factor - 1*change_size
-                elif iteration == 6:
-                    a_range = 1
-                    b_range = 7
-                    change_size = .005
-                    starting_increase_factor =  optimal_increase_factor - 3*change_size
                     
         
         
@@ -216,8 +211,6 @@ while True:
                         
                         if iteration == 1 or iteration == 3 or iteration == 5:
                             price_to_sell_factor_array[optimizing] = starting_sell_factor + change_size*b
-                        elif iteration == 6:
-                            price_increase_factor_array[optimizing] = starting_increase_factor + change_size*b
         
         
                         #minutes_until_sale = 2

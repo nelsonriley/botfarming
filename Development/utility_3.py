@@ -35,14 +35,14 @@ def write_current_state(current_state_info, current_state):
     
 
 def get_readable_time(time_to_get):
-    stamp = int(time_to_get)-7*60*60
+    stamp = int(time_to_get)-6*60*60
     # handle millisecond time stamps (as well as seconds)
     if len(str(time_to_get)) > 10:
-        stamp = int(int(time_to_get)/1000.0-7*60*60)
+        stamp = int(int(time_to_get)/1000.0-6*60*60)
     return datetime.datetime.fromtimestamp(stamp).strftime('%Y-%m-%d %H:%M:%S')
 
 def get_time():
-    return datetime.datetime.fromtimestamp(int(time.time())-7*60*60).strftime('%Y-%m-%d %H:%M:%S')
+    return datetime.datetime.fromtimestamp(int(time.time())-6*60*60).strftime('%Y-%m-%d %H:%M:%S')
 
 
 def print_exception():
@@ -220,7 +220,7 @@ def calculate_profit_and_free_coin(current_state):
 
 def get_order_book_local(symbol, length):
     while True:
-        order_book = pickle_read('/home/ec2-user/environment/botfarming/Development/recent_order_books/' + length + '_'+symbol +'.pklz')
+        order_book = pickle_read('/home/ec2-user/environment/botfarming/Development/recent_order_books/'+ symbol +'.pklz')
         if order_book == False:
             #print('could not get orderbook for ', symbol)
             time.sleep(.1)
@@ -266,7 +266,7 @@ def sell_coin_with_order_book_use_min(current_state):
             started_second_round = False
             started_give_up = False
             started_give_up_2 = False
-            minutes_since_start = int(round((int(time.time()) - current_state['original_buy_time'])/60))
+            minutes_since_start = int(round((int(time.time()) - current_state['finish_buy_time'])/60))
             minutes_until_change = current_state['minutes_until_sale'] - minutes_since_start
             minutes_to_run = current_state['minutes_until_sale_final'] - minutes_since_start
         
@@ -323,23 +323,28 @@ def sell_coin_with_order_book_use_min(current_state):
                     if current_state['orderId'] != False:
                         sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
                         if first_ask != float(sale_order_info['price']):
+                            #print(current_state['symbol'], 'cancel sale order, price is in range, but we are not the first bid, so cancel and make us first bid. first_in_line_price', first_in_line_price, 'price_to_sell_min', price_to_sell_min, 'first_ask', first_ask, 'sale_order_info[price]', sale_order_info['price'])
                             current_state = cancel_sale_order(current_state)
                             if current_state['executedQty'] < current_state['min_quantity']:
                                 break
                             current_state = create_sale_order(current_state, first_in_line_price)
                         else:
                             if second_price_to_check < second_ask:
+                                #print(current_state['symbol'], 'cancel sale order, price is in range, we are first bid, but the next price is far back, so cancel and move us back. first_in_line_price', first_in_line_price, 'price_to_sell_min', price_to_sell_min, 'first_ask', first_ask, 'second_ask', second_ask, 'second_price_to_check', second_price_to_check, 'sale_order_info[price]', sale_order_info['price'])
                                 current_state = cancel_sale_order(current_state)
                                 if current_state['executedQty'] < current_state['min_quantity']:
                                     break
                                 current_state = create_sale_order(current_state, second_in_line_price)
         
                     else:
+                        #print(current_state['symbol'], 'price that would make us first is in range, but no sale order so create one', 'first_in_line_price', first_in_line_price, 'price_to_sell_min', price_to_sell_min)
                         current_state = create_sale_order(current_state, first_in_line_price)
                 else:
                     if current_state['orderId'] != False:
+                        #print(current_state['symbol'], 'cancel sale order, price that would make us first is out of range', 'first_in_line_price', first_in_line_price, 'price_to_sell_min', price_to_sell_min)
                         current_state = cancel_sale_order(current_state)
-                
+                        if current_state['executedQty'] < current_state['min_quantity']:
+                                break
                 if current_state['orderId'] != False:
                     time.sleep(5)
                 else:
@@ -420,11 +425,7 @@ def buy_coin_from_state(current_state):
         return False
 
 
-def buy_coin(symbol, length, file_number):
-
-    api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
-    api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
-    client = Client(api_key, api_secret)
+def buy_coin(symbol, length, file_number, client):
 
     try:
         f = gzip.open('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '.pklz','rb')
@@ -440,6 +441,11 @@ def buy_coin(symbol, length, file_number):
 
     try:
         
+        stop_trading = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/' + length + '_stop_trading')
+        if stop_trading == True:
+            time.sleep(60)
+            return
+        
         if length == '1d':
             minutes = 24*60
         elif length == '12h':
@@ -449,28 +455,35 @@ def buy_coin(symbol, length, file_number):
         elif length == '1m':
             minutes = 1
 
-
         largest_bitcoin_order = .1
         if length == '1d':
             part_of_bitcoin_to_use = 2.4
             gain_min = .24
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,2,3,4,5,7,9,11]
+            minutes_until_sale = 3*minutes
+            minutes_until_sale_final = 5*minutes
         if length == '12h':
             part_of_bitcoin_to_use = 2.2
             gain_min = .19
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,2,3,4,5,7,9,11]
+            minutes_until_sale = 3*minutes
+            minutes_until_sale_final = 5*minutes
         elif length == '6h':
             part_of_bitcoin_to_use = 2
             gain_min = .15
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,2,3,4,5,7,9,11]
+            minutes_until_sale = 3*minutes
+            minutes_until_sale_final = 5*minutes
         elif length == '1m':
             part_of_bitcoin_to_use = .6
             gain_min = .001
             buy_price_increase_factor = 1.001
             look_back_schedule = [1,3,5,7]
+            minutes_until_sale = 10
+            minutes_until_sale_final = 12
             
         price_to_start_buy_factor = 1.003
         sell_price_drop_factor = .997
@@ -481,9 +494,7 @@ def buy_coin(symbol, length, file_number):
         lower_band_buy_factor_array = {}
         price_increase_factor_array = {}
         
-        minutes_until_sale = 3*minutes
         
-        minutes_until_sale_final = 5*minutes
 
         datapoints_trailing = 11
 
@@ -506,7 +517,6 @@ def buy_coin(symbol, length, file_number):
                 price_to_buy_factor_array[look_back] = look_back_optimized['optimal_buy_factor']
                 price_to_sell_factor_array[look_back] = look_back_optimized['optimal_sell_factor']
                 lower_band_buy_factor_array[look_back] = look_back_optimized['optimal_band_factor']
-                price_increase_factor_array[look_back] = look_back_optimized['optimal_increase_factor']
                 price_increase_factor_array[look_back] = 1.01
                 look_back_gains[look_back] = look_back_optimized['gain']
                 look_back_wins[look_back] = look_back_optimized['wins']
@@ -578,7 +588,11 @@ def buy_coin(symbol, length, file_number):
                 time.sleep(1)
                 continue
 
-            time.sleep(2)
+            if length == '1m':
+                time.sleep(2)
+            else:
+                time.sleep(22)
+                
             current_price = float(order_book['bids'][0][0])
 
             # if (symbol['symbol'] == 'ETHBTC'):
@@ -636,6 +650,11 @@ def buy_coin(symbol, length, file_number):
                         print('-------------------buy!', symbol['symbol'], 'current price', current_price, 'current price time', get_readable_time(order_book['time']), 'look_back', look_back, 'look back original price', data[index-look_back][4], 'look back original time', get_readable_time(data[index-look_back][0]),   'price_to_buy', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back], 'price_to_sell', price_to_sell,  'price_to_sell_factor',price_to_sell_factor_array[look_back] , 'price_increase_factor',price_increase_factor_array[look_back] , minutes_until_sale, 'look_back_gain', look_back_gains[look_back], 'look_back_wins', look_back_wins[look_back], 'look_back_losses', look_back_losses[look_back], get_time())
                         
                         
+                        if length == '1m':
+                            save_data_until = int(time.time()) + 30*60
+                            pickle_write('/home/ec2-user/environment/botfarming/Development/variables/should_save_' + symbol['symbol'], save_data_until)
+                            pickle_write('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol['symbol'], False)
+                            pickle_write('/home/ec2-user/environment/botfarming/Development/order_book_history/' + symbol['symbol'] + '_' + str(save_data_until), [symbol['symbol'], 'current price', current_price, 'current price time', get_readable_time(order_book['time']), 'look_back', look_back, 'look back original price', data[index-look_back][4], 'look back original time', get_readable_time(data[index-look_back][0]),   'price_to_buy', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back], 'price_to_sell', price_to_sell,  'price_to_sell_factor',price_to_sell_factor_array[look_back] , 'price_increase_factor',price_increase_factor_array[look_back] , minutes_until_sale, 'look_back_gain', look_back_gains[look_back], 'look_back_wins', look_back_wins[look_back], 'look_back_losses', look_back_losses[look_back], get_time()])
 
                         amount_to_buy = part_of_bitcoin_to_use/price_to_buy
                         largest_buy_segment = largest_bitcoin_order/price_to_buy
@@ -708,30 +727,33 @@ def buy_coin(symbol, length, file_number):
                                 break
 
                             first_in_line_price, first_bid, second_in_line_price, second_bid, second_price_to_check = get_first_in_line_price_buying(current_state)
-                            if float(first_in_line_price) > price_to_buy_max:
-                                if current_state['orderId'] != False:
-                                    current_state = cancel_buy_order(current_state)
-                                    if current_state['executedQty'] >= amount_to_stop_buying:
-                                        break
-                            else:
+                            if float(first_in_line_price) <= price_to_buy_max:
                                 if current_state['orderId'] != False:
                                     buy_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
                                     if first_bid != float(buy_order_info['price']):
+                                        #print(current_state['symbol'], 'cancel buy order, price is in range, but we are not the first bid, so cancel and make us first bid. first_in_line_price', first_in_line_price, 'price_to_buy_max', price_to_buy_max, 'first_bid', first_bid)
                                         current_state = cancel_buy_order(current_state)
                                         if current_state['executedQty'] >= amount_to_stop_buying:
                                             break
                                         current_state = create_buy_order(current_state, first_in_line_price)
                                     else:
                                         if second_price_to_check > second_bid:
+                                            #print(current_state['symbol'], 'cancel buy order, price is in range, we are the first but, but the second bid is pretty far back, so cancel and move our bid back. first_in_line_price', first_in_line_price, 'price_to_buy_max', price_to_buy_max, 'first_bid', first_bid, 'second_bid', second_bid, 'second_price_to_check', second_price_to_check)
                                             current_state = cancel_buy_order(current_state)
                                             if current_state['executedQty'] >= amount_to_stop_buying:
                                                 break
                                             current_state = create_buy_order(current_state, second_in_line_price)
 
                                 else:
+                                    #print(current_state['symbol'], 'price is in range and no order, so creating one.. first_in_line_price ',  first_in_line_price, 'price_to_buy_max', price_to_buy_max)
                                     current_state = create_buy_order(current_state, first_in_line_price)
+                            else:
+                                if current_state['orderId'] != False:
+                                    #print(current_state['symbol'], 'cancel buy order because price that would make us first is greater than the max price we would pay, first_in_line_price', first_in_line_price, 'price_to_buy_max', price_to_buy_max)
+                                    current_state = cancel_buy_order(current_state)
+                                    if current_state['executedQty'] >= amount_to_stop_buying:
+                                        break
 
-                            
                             if current_state['orderId'] != False:
                                 time.sleep(5)
                             else:
@@ -743,7 +765,8 @@ def buy_coin(symbol, length, file_number):
                             write_current_state(current_state, False)
                             return True
 
-
+                        current_state['finish_buy_time'] = int(time.time())
+                        current_state['finish_buy_time_readable'] = get_time()
                         current_state['original_quantity'] = current_state['executedQty']
                         current_state['state'] = 'selling'
                         write_current_state(current_state, current_state)
@@ -767,7 +790,7 @@ def buy_coin(symbol, length, file_number):
         return False
 
 
-def run_bot_parallel(file_number, length, total_files):
+def run_bot_parallel(file_number, length, total_files, client):
 
     print('running bot', file_number, 'of', total_files, 'ip address:')
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -818,18 +841,18 @@ def run_bot_parallel(file_number, length, total_files):
         symbol = symbols_trimmed[s]
 
         if loops >= file_start and loops < file_end:
-            t = Thread(target=buy_coin_thread, args=[symbol, length, file_number])
+            t = Thread(target=buy_coin_thread, args=[symbol, length, file_number, client])
             t.start()
 
         loops += 1
 
 
 # "worker"
-def buy_coin_thread(symbol, length, file_number):
+def buy_coin_thread(symbol, length, file_number, client):
 
     while True:
 
-        buy_coin(symbol, length, file_number)
+        buy_coin(symbol, length, file_number, client)
 
 
 def append_data(file_path, data):
@@ -937,18 +960,25 @@ def process_socket_pushes_order_book(msg):
             
         symbol = msg['stream'].split('@')[0].upper()
         msg['data']['time'] = int(time.time())
-        pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/1m_'+symbol+'.pklz', msg['data'])
-        pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/6h_'+symbol+'.pklz', msg['data'])
-        pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/12h_'+symbol+'.pklz', msg['data'])
-        pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/1d_'+symbol+'.pklz', msg['data'])
+        pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/'+symbol+'.pklz', msg['data'])
 
-        if (symbol == 'ETHBTC'):  #and (time.localtime().tm_sec == 1 or time.localtime().tm_sec == 2):
+        if (symbol == 'ETHBTC'):# and (time.localtime().tm_sec == 1 or time.localtime().tm_sec == 2):
             print('process_socket_pushes_order_book()', symbol, msg['data']['bids'][0][0], 'time given', get_readable_time(msg['data']['time']), 'current time', get_time())
 
-        if (symbol == 'WAVESBTC'):
-            print('process_socket_pushes_order_book()', symbol, msg['data']['bids'][0][0], 'time given', get_readable_time(msg['data']['time']), 'current time', get_time())
-
-
+        if time.localtime().tm_sec < 30:
+            should_save = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/should_save_' + symbol)
+            if should_save != False and should_save > int(time.time()):
+                already_saved = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol)
+                if already_saved == False:
+                    order_book_history = pickle_read('/home/ec2-user/environment/botfarming/Development/order_book_history/' + symbol + '_' + str(should_save))
+                    order_book_history.append(msg['data'])
+                    pickle_write('/home/ec2-user/environment/botfarming/Development/order_book_history/' + symbol + '_' + str(should_save), order_book_history)
+                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol, True)
+        elif time.localtime().tm_sec > 30:
+            should_save = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/should_save_' + symbol)
+            if should_save != False and should_save > int(time.time()):
+                pickle_write('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol, False)
+            
 
     
 def update_order_book(min_volume, max_volume):
@@ -977,7 +1007,7 @@ def update_order_book(min_volume, max_volume):
             total_btc_coins += 1
             symbols_trimmed[s] = symbol
             socket_list.append(s.lower()+'@depth20')
-            pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/3_'+s+'.pklz', False)
+            pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/'+s+'.pklz', False)
     
     print('symbols with volume > ', min_volume, 'and less than', max_volume, '=', len(socket_list))
     

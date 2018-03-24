@@ -206,7 +206,7 @@ def calculate_profit_and_free_coin(current_state):
 
     recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['a_b'], current_state['look_back_gains'], current_state['look_back_wins'], current_state['look_back_losses'], current_state['price_to_buy_factor'], current_state['price_to_sell_factor'], current_state['original_buy_time'], get_time()]
     
-    append_data('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/'+ current_state['length'] + '_' + current_state['file_number'] + '_binance_all_trades_history.pklz', recorded_trade)
+    pickle_write('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/'+ current_state['length'] + '_' + current_state['file_number'] + '_' + str(current_state['original_buy_time']) + '_binance_all_trades_history.pklz', recorded_trade)
 
     # update program state
     write_current_state(current_state, False)
@@ -266,12 +266,26 @@ def sell_coin_with_order_book_use_min(current_state):
             started_second_round = False
             started_give_up = False
             started_give_up_2 = False
-            minutes_since_start = int(round((int(time.time()) - current_state['finish_buy_time'])/60))
+            try:
+                minutes_since_start = int(round((int(time.time()) - current_state['finish_buy_time'])/60))
+            except Exception as e:
+                minutes_since_start = int(round((int(time.time()) - current_state['original_buy_time'])/60))-2
+                
             minutes_until_change = current_state['minutes_until_sale'] - minutes_since_start
             minutes_to_run = current_state['minutes_until_sale_final'] - minutes_since_start
         
             time_to_change = int(time.time()) + minutes_until_change * 60
             time_to_give_up = int(time.time()) + minutes_to_run * 60
+            time_to_give_up_2 = int(time.time()) + minutes_to_run * 60 + minutes_to_run * 60
+            
+            if int(time.time()) >= time_to_give_up:
+                started_give_up = True
+                print('Started give up 1, reduced price increase factor by half', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
+                    
+            if int(time.time()) >= time_to_give_up_2:
+                started_give_up_2 = True
+                print('Started give up 2, reduced price increase factor by half again', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
+            
             while True:
                 if current_state['orderId'] != False:
                     sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
@@ -291,7 +305,7 @@ def sell_coin_with_order_book_use_min(current_state):
                         print('Started give up 1, reduced price increase factor by half', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
                         write_current_state(current_state, current_state)
                         
-                if int(time.time()) >= 2*time_to_give_up:
+                if int(time.time()) >= time_to_give_up_2:
                     if started_give_up_2 == False:
                         started_give_up_2 = True
                         current_state['price_increase_factor'] = (float(current_state['price_increase_factor'])-1)/2+1
@@ -481,7 +495,7 @@ def buy_coin(symbol, length, file_number, client):
             part_of_bitcoin_to_use = .6
             gain_min = .001
             buy_price_increase_factor = 1.001
-            look_back_schedule = [1,3,5,7]
+            look_back_schedule = [1,3,5,7,9,11,13,15,17]
             minutes_until_sale = 10
             minutes_until_sale_final = 12
             
@@ -651,7 +665,7 @@ def buy_coin(symbol, length, file_number, client):
                         
                         
                         if length == '1m':
-                            save_data_until = int(time.time()) + 30*60
+                            save_data_until = int(time.time()) + 60*60
                             pickle_write('/home/ec2-user/environment/botfarming/Development/variables/should_save_' + symbol['symbol'], save_data_until)
                             pickle_write('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol['symbol'], False)
                             pickle_write('/home/ec2-user/environment/botfarming/Development/order_book_history/' + symbol['symbol'] + '_' + str(save_data_until), [symbol['symbol'], 'current price', current_price, 'current price time', get_readable_time(order_book['time']), 'look_back', look_back, 'look back original price', data[index-look_back][4], 'look back original time', get_readable_time(data[index-look_back][0]),   'price_to_buy', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back], 'price_to_sell', price_to_sell,  'price_to_sell_factor',price_to_sell_factor_array[look_back] , 'price_increase_factor',price_increase_factor_array[look_back] , minutes_until_sale, 'look_back_gain', look_back_gains[look_back], 'look_back_wins', look_back_wins[look_back], 'look_back_losses', look_back_losses[look_back], get_time()])
@@ -970,10 +984,13 @@ def process_socket_pushes_order_book(msg):
             if should_save != False and should_save > int(time.time()):
                 already_saved = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol)
                 if already_saved == False:
-                    order_book_history = pickle_read('/home/ec2-user/environment/botfarming/Development/order_book_history/' + symbol + '_' + str(should_save))
-                    order_book_history.append(msg['data'])
-                    pickle_write('/home/ec2-user/environment/botfarming/Development/order_book_history/' + symbol + '_' + str(should_save), order_book_history)
-                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol, True)
+                    try:
+                        order_book_history = pickle_read('/home/ec2-user/environment/botfarming/Development/order_book_history/' + symbol + '_' + str(should_save))
+                        order_book_history.append(msg['data'])
+                        pickle_write('/home/ec2-user/environment/botfarming/Development/order_book_history/' + symbol + '_' + str(should_save), order_book_history)
+                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol, True)
+                    except Exception as e:
+                        return
         elif time.localtime().tm_sec > 30:
             should_save = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/should_save_' + symbol)
             if should_save != False and should_save > int(time.time()):

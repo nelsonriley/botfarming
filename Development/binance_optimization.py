@@ -32,7 +32,7 @@ first_iteration = True
 
 length = '1m'
 minutes = 1
-max_price_to_buy_factor = .99
+max_price_to_buy_factor = .985
 
 
 while True:
@@ -47,7 +47,7 @@ while True:
     min_volume = 0
     
     # if first_iteration == True:
-    #day = '20180208_05:58_to_20180228_05:58'
+    #day = '20180324_01:34_to_20180324_07:34'
     #     first_iteration = False
     # else:
     ###get previous 24 hours data
@@ -119,7 +119,7 @@ while True:
     optimal_buy_factor = 0
     optimal_sell_factor = 0
     
-    optimizing_array= [1,3,5,7]
+    optimizing_array= [1,3,5,7,9,11,13,15,17]
     
     
     symbols_started = 0
@@ -135,7 +135,7 @@ while True:
         for look_back in optimizing_array:
             
             price_to_buy_factor_array[look_back] = max_price_to_buy_factor - .04
-            price_to_sell_factor_array[look_back] = .99
+            price_to_sell_factor_array[look_back] = max_price_to_buy_factor + .005
             price_increase_factor_array[look_back] = 1.01
             lower_band_buy_factor_array[look_back] = 100
             minutes_until_sale_array[look_back] = 12
@@ -161,6 +161,7 @@ while True:
                 print('##################################### New Iteration', iteration, '###########', symbol['symbol'], 'total symbols', total_btc_coins, 'symbols started: ', symbols_started)
                 print('optimizing:', optimizing ,'optimal_buy_factor, optimal_sell_factor, optimal_band_factor,optimal_increase_factor', optimal_buy_factor, optimal_sell_factor, optimal_band_factor, optimal_increase_factor)
                 print('##################################### New Iteration', iteration, '###########')
+                
         
                 price_to_buy_factor_array[optimizing] = optimal_buy_factor
                 price_to_sell_factor_array[optimizing] = optimal_sell_factor
@@ -176,13 +177,13 @@ while True:
                 elif iteration == 2:
                     a_range = 11
                     b_range = 1
-                    change_size = .001
+                    change_size = .002
                     starting_buy_factor =  optimal_buy_factor - 5*change_size
                 elif iteration == 1:
                     a_range = 1
-                    b_range = 9
+                    b_range = 41
                     change_size = .002
-                    starting_sell_factor =  optimal_sell_factor - 4*change_size
+                    starting_sell_factor =  optimal_sell_factor - 40*change_size
                 elif iteration == 3:
                     a_range = 1
                     b_range = 5
@@ -218,6 +219,9 @@ while True:
                         #print('********', minutes_until_sale_2_array[optimizing])
                         
                         if price_to_buy_factor_array[optimizing] >= max_price_to_buy_factor:
+                            continue
+                        
+                        if price_to_sell_factor_array[optimizing] < price_to_buy_factor_array[optimizing] + .005:
                             continue
         
                         trades_count = 0

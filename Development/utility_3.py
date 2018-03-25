@@ -524,7 +524,7 @@ def buy_coin(symbol, length, file_number, client):
 
         for look_back in look_back_schedule:
             
-            look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
+            look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/1_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
             
                 
             if look_back_optimized != False:
@@ -874,7 +874,7 @@ def append_data(file_path, data):
     data_points.append(data)
     pickle_write(file_path, data_points)
 
-def save_data(save_params, datapoints_trailing, min_volume, minutes):
+def save_data(save_params, datapoints_trailing, min_volume, minutes, symbols_to_download = False):
     
     for settings in save_params:
 
@@ -901,7 +901,10 @@ def save_data(save_params, datapoints_trailing, min_volume, minutes):
             if stop > end:
                 stop = end
                 last_loop = True
-            symbols = pickle_read('/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz')
+            if symbols_to_download == False:
+                symbols = pickle_read('/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz')
+            else:
+                symbols = symbols_to_download
             coins = {}
             loops = 1
             while True:

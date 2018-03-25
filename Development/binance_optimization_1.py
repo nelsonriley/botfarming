@@ -121,8 +121,8 @@ while True:
         min_volume = 0
         
         epoch_now = int(time.time())
-        #120 is just a random variable that works here, 120 units of the minutes
-        epoch_24hrs_ago = epoch_now - 360*minutes*60
+        #Let's get 2600 minutes ago
+        epoch_24hrs_ago = epoch_now - 48*60*minutes*60
         readable_time_now = datetime.datetime.fromtimestamp(epoch_now-7*60*60).strftime('%Y-%m-%d %H:%M')
         readable_time_24hrs_ago = datetime.datetime.fromtimestamp(epoch_24hrs_ago-7*60*60).strftime('%Y-%m-%d %H:%M')
         readable_time_now_folder = datetime.datetime.fromtimestamp(epoch_now-7*60*60).strftime('%Y%m%d_%H:%M')
@@ -295,7 +295,38 @@ while True:
                                 current_look_back = 0
                                 for look_back in look_back_schedule:
     
-                                    compare_price = float(data[index-look_back][4])
+                                    total_of_prices = 0
+                                    total_counts_of_prices = 0
+                                    
+                                    # if look_back == 1:
+                                    #     total_of_prices = 6*float(data[index-1][4])+2*float(data[index-2][4])+float(data[index-3][4])
+                                    #     total_counts_of_prices = 9
+                                    # if look_back >= 3:
+                                    #     total_of_prices = float(data[index-look_back + 2][4]) + 2*float(data[index-look_back + 1][4]) + 12*float(data[index-look_back][4]) + 2*float(data[index-look_back-1][4]) + float(data[index-look_back-2][4])
+                                    #     total_counts_of_prices = 18
+                                    
+                                    
+                                    if look_back == 1:
+                                        total_of_prices = 6*float(data[index-1][4])+2*float(data[index-2][4])+float(data[index-3][4])
+                                        total_counts_of_prices = 9
+                                    else:
+                                        for x in range(1,look_back+1):
+                                            total_of_prices += float(data[index-x][4])*x**2
+                                            total_counts_of_prices += x**2
+                                        
+                                        for x in range(1,look_back):
+                                            total_of_prices += float(data[index-2*look_back+x][4])*x**2
+                                            total_counts_of_prices += x**2
+                                        
+                                        
+                                    compare_price = float(total_of_prices)/float(total_counts_of_prices)
+                                    
+                                    # print('weighted average: compare_price:', compare_price)
+                                    # print('exact price', data[index-look_back][4])
+                                    
+                                    # if(float(compare_price) != float(data[index-look_back][4])):
+                                    #     time.sleep(1)
+                                    
                                     buy_price = compare_price*price_to_buy_factor_array[look_back]
     
                                     if float(candle[3]) < buy_price:
@@ -454,7 +485,7 @@ while True:
             optimization_factors['gain'] = best_gain
             optimization_factors['wins'] = best_wins
             optimization_factors['losses'] = best_losses
-            ut.pickle_write('/home/ec2-user/environment/botfarming/Development/optimization_factors/' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(optimizing) + '.pklz', optimization_factors)
+            ut.pickle_write('/home/ec2-user/environment/botfarming/Development/optimization_factors/1_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(optimizing) + '.pklz', optimization_factors)
             print('###################################################################')
             print('###################################################################')
             print('###################################################################')

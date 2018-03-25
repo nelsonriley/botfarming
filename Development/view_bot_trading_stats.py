@@ -48,21 +48,24 @@ for file in onlyfiles:
         
 for bot_trade in bot_trades:
     
-    start_counting = True
-    if start_counting == True:# and bot_trade[4] < .7: # and bot_trade[5] == 17: # and bot_trade[5] != 11 and bot_trade[5] != 9:
-        print('bit coin invested', bot_trade[4], 'look_back', bot_trade[5], 'look_back_gains', bot_trade[7], 'look_back_wins', bot_trade[8], 'look_back_losses', bot_trade[9], 'price_to_buy_factor', bot_trade[10])
+    if True and bot_trade[12] > 1521946968 and bot_trade[5] == 1 and bot_trade[10] < .978: # and bot_trade[5] != 11 and bot_trade[5] != 9:
+        #print('bit coin invested', bot_trade[4], 'look_back', bot_trade[5], 'look_back_gains', bot_trade[7], 'look_back_wins', bot_trade[8], 'look_back_losses', bot_trade[9], 'price_to_buy_factor', bot_trade[10])
         
-        #print('time start', bot_trade[0], 'symbol', bot_trade[1], 'asolute profit', bot_trade[2], 'percentage profit', bot_trade[3], 'bit coin invested', bot_trade[4], 'look_back', bot_trade[5], 'a_b', bot_trade[6], 'look_back_gains', bot_trade[7], 'look_back_wins', bot_trade[8], 'look_back_losses', bot_trade[9], 'price_to_buy_factor', bot_trade[10], 'price_to_sell_factor', bot_trade[11], 'original_buy_time', bot_trade[12], 'sell time', bot_trade[13])
+        print('time start', bot_trade[0], 'symbol', bot_trade[1], 'asolute profit', bot_trade[2], 'percentage profit', bot_trade[3], 'bit coin invested', bot_trade[4], 'look_back', bot_trade[5], 'a_b', bot_trade[6], 'look_back_gains', bot_trade[7], 'look_back_wins', bot_trade[8], 'look_back_losses', bot_trade[9], 'price_to_buy_factor', bot_trade[10], 'price_to_sell_factor', bot_trade[11], 'original_buy_time', bot_trade[12], 'sell time', bot_trade[13])
         total_profit += bot_trade[2]
         total_trades += 1
     
-        if bot_trade[6] == 0:
-            total_profit_a += bot_trade[2]
-            total_trades_a += 1
+        total_profit_a += bot_trade[2]
+        total_trades_a += 1
     
-        if bot_trade[6] == 1:
-            total_profit_b += bot_trade[2]
-            total_trades_b += 1
+    # if start_counting == True and bot_trade[5] == 17 and bot_trade[10] < .986: # and bot_trade[5] == 17: # and bot_trade[5] != 11 and bot_trade[5] != 9:
+    #     print('bit coin invested', bot_trade[4], 'look_back', bot_trade[5], 'look_back_gains', bot_trade[7], 'look_back_wins', bot_trade[8], 'look_back_losses', bot_trade[9], 'price_to_buy_factor', bot_trade[10])
+    
+    #     total_profit += bot_trade[2]
+    #     total_trades += 1
+    
+    #     total_profit_b += bot_trade[2]
+    #     total_trades_b += 1
     
     
     
@@ -86,15 +89,20 @@ for bot_trade in bot_trades:
     # profit_with_limit_3 += bot_trade['profit_percent']*min(.45,bot_trade['invested_btc'])
     # profit_with_limit_4 += bot_trade['profit_percent']*min(.5,bot_trade['invested_btc'])
 
+print()
+print('total profit', total_profit)
+print('total trades', total_trades)
 
-print(total_profit)
-print(total_trades)
+print()
+print('total profit a', total_profit_a)
+print('total_trades a', total_trades_a)
 
-print(total_profit_a)
-print(total_trades_a)
+# print()
+# print('total profit b', total_profit_b)
+# print('total_trades b', total_trades_b)
 
-print(total_profit_b)
-print(total_trades_b)
+# print(total_profit_b)
+# print(total_trades_b)
 
 # global total_trades_overall
 # total_trades_overall = 0

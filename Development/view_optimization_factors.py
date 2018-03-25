@@ -43,7 +43,8 @@ min_gain = .001
 minutes = 1
 look_back_array = [1,3,5,7,9,11,13,15,17]
 optimization_length = 360
-
+version = '1_'
+#version = ''
 
 
 
@@ -71,8 +72,11 @@ for s in symbols_trimmed:
     print(symbol['symbol'], symbol['24hourVolume'])
     total_symbols += 1
     
+    # if symbol['symbol'] == 'BCPTBTC':
+    #      break
+    
     for look_back in look_back_array:
-        look_back_optimized = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/' + length  + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
+        look_back_optimized = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/' + version + length  + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
         if look_back_optimized != False and look_back_optimized['wins'] + look_back_optimized['losses'] > 0 and look_back_optimized['gain']/(look_back_optimized['wins'] + look_back_optimized['losses']) > min_gain:
             print(symbol['symbol'], 'look_back', look_back_optimized['look_back'],'gain', look_back_optimized['gain'], 'ave_gain', look_back_optimized['gain']/(look_back_optimized['wins'] + look_back_optimized['losses']), 'wins',  look_back_optimized['wins'], 'losses', look_back_optimized['losses'])
             print(symbol['symbol'], 'optimal_buy_factor', look_back_optimized['optimal_buy_factor'], 'optimal_sell_factor', look_back_optimized['optimal_sell_factor'], 'optimal_band_factor', look_back_optimized['optimal_band_factor'], 'optimal_increase_factor', look_back_optimized['optimal_increase_factor'], 'optimal_minutes_until_sale', look_back_optimized['optimal_minutes_until_sale'])

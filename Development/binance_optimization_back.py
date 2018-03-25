@@ -32,8 +32,8 @@ first_iteration = True
 
 length = '1m'
 minutes = 1
-max_price_to_buy_factor = .985
-buy_sell_starting_gap = .01
+
+
 
 
 while True:
@@ -95,7 +95,7 @@ while True:
     optimal_buy_factor = 0
     optimal_sell_factor = 0
     
-    optimizing_array= [1,3,5,7,9,11,13,15]
+    optimizing_array= [1,3,5,7,9,11,13,15,17,21,25,31,37,43,51,59,67,77,87,97,109,121,133,145]
     
     
     symbols_started = 0
@@ -122,7 +122,7 @@ while True:
         
         epoch_now = int(time.time())
         #Let's get 2600 minutes ago
-        epoch_24hrs_ago = epoch_now - 48*60*minutes*60
+        epoch_24hrs_ago = epoch_now - 3600*minutes*60
         readable_time_now = datetime.datetime.fromtimestamp(epoch_now-7*60*60).strftime('%Y-%m-%d %H:%M')
         readable_time_24hrs_ago = datetime.datetime.fromtimestamp(epoch_24hrs_ago-7*60*60).strftime('%Y-%m-%d %H:%M')
         readable_time_now_folder = datetime.datetime.fromtimestamp(epoch_now-7*60*60).strftime('%Y%m%d_%H:%M')
@@ -135,9 +135,6 @@ while True:
         ut.save_data(save_params, datapoints_trailing, min_volume, minutes, symbols_trimmed_one)
     
         for look_back in optimizing_array:
-            
-            price_to_buy_factor_array[look_back] = max_price_to_buy_factor - .04
-            price_to_sell_factor_array[look_back] = max_price_to_buy_factor + .005
             price_increase_factor_array[look_back] = 1.01
             lower_band_buy_factor_array[look_back] = 100
             minutes_until_sale_array[look_back] = 12
@@ -148,34 +145,49 @@ while True:
             best_gain = -999999
             best_wins = 0
             best_losses = 0
-            optimal_buy_factor = price_to_buy_factor_array[optimizing]
-            optimal_sell_factor = price_to_sell_factor_array[optimizing]
+        
             optimal_band_factor = lower_band_buy_factor_array[optimizing]
             optimal_increase_factor = price_increase_factor_array[optimizing]
             optimal_minutes_until_sale = minutes_until_sale_array[optimizing]
+            
+            if optimizing <= 15:
+                look_back_history = 6*60
+                buy_sell_starting_gap = .01
+                max_price_to_buy_factor = .985
+            else:
+                look_back_history = 24*look_back
+                buy_sell_starting_gap = .000666*look_back
+                max_price_to_buy_factor = 1 - .001*optimizing
+            
         
             #for iteration in range(0,2):
-            for iteration in range(0,6):
+            for iteration in range(-1,6):
                 
-                if iteration > 0 and best_gain == -999999:
+                if iteration > -1 and best_gain == -999999:
                     continue
                 
                 print('##################################### New Iteration', iteration, '###########', symbol['symbol'], 'total symbols', total_btc_coins, 'symbols started: ', symbols_started)
                 print('optimizing:', optimizing ,'optimal_buy_factor, optimal_sell_factor, optimal_band_factor,optimal_increase_factor', optimal_buy_factor, optimal_sell_factor, optimal_band_factor, optimal_increase_factor)
                 print('##################################### New Iteration', iteration, '###########')
                 
-        
-                price_to_buy_factor_array[optimizing] = optimal_buy_factor
-                price_to_sell_factor_array[optimizing] = optimal_sell_factor
+                if iteration > -1:
+                    price_to_buy_factor_array[optimizing] = optimal_buy_factor
+                    price_to_sell_factor_array[optimizing] = optimal_sell_factor
                 lower_band_buy_factor_array[optimizing] = optimal_band_factor
                 price_increase_factor_array[optimizing] = optimal_increase_factor
                 minutes_until_sale_array[optimizing] = optimal_minutes_until_sale
         
+        
+                if iteration == -1:
+                    a_range = 61
+                    b_range = 1
+                    change_size = .01
+                    starting_buy_factor =  max_price_to_buy_factor - .01*60
                 if iteration == 0:
                     a_range = 41
                     b_range = 1
                     change_size = .002
-                    starting_buy_factor =  optimal_buy_factor - 20*change_size
+                    starting_buy_factor =  optimal_buy_factor
                 elif iteration == 2:
                     a_range = 11
                     b_range = 1
@@ -207,7 +219,9 @@ while True:
         
                 for a in range(0, a_range):
                     
-                    if iteration == 0:
+                    
+                    
+                    if iteration == -1 or iteration == 0:
                         price_to_buy_factor_array[optimizing] = starting_buy_factor + change_size*a
                         price_to_sell_factor_array[optimizing] = price_to_buy_factor_array[optimizing] + buy_sell_starting_gap
                     
@@ -228,6 +242,9 @@ while True:
                             continue
                         
                         if price_to_sell_factor_array[optimizing] < price_to_buy_factor_array[optimizing] + .005:
+                            continue
+                        
+                        if price_to_buy_factor_array[optimizing] < 0:
                             continue
         
                         trades_count = 0
@@ -282,6 +299,10 @@ while True:
     
                             # compare
                             if index > datapoints_trailing:
+                                
+                                #so only the correct amount of history is used
+                                if index < 3600 - look_back_history:
+                                        continue
     
                                 # if symbol['symbol'] == 'ETHBTC':
                                 #     print('---------------------->', ut.get_readable_time(candle[0]/1000))
@@ -294,7 +315,7 @@ while True:
     
                                 current_look_back = 0
                                 for look_back in look_back_schedule:
-    
+
                                     total_of_prices = 0
                                     total_counts_of_prices = 0
                                     
@@ -309,13 +330,24 @@ while True:
                                     if look_back == 1:
                                         total_of_prices = 6*float(data[index-1][4])+2*float(data[index-2][4])+float(data[index-3][4])
                                         total_counts_of_prices = 9
-                                    else:
+                                    elif look_back <= 15:
                                         for x in range(1,look_back+1):
                                             total_of_prices += float(data[index-x][4])*x**2
                                             total_counts_of_prices += x**2
                                         
                                         for x in range(1,look_back):
                                             total_of_prices += float(data[index-2*look_back+x][4])*x**2
+                                            total_counts_of_prices += x**2
+                                    else:
+                                        total_of_prices += float(data[index-look_back][4])*look_back**2
+                                        total_counts_of_prices += look_back**2
+                                        
+                                        for x in range(1,7):
+                                            total_of_prices += float(data[index-x*look_back/7][4])*x**2
+                                            total_counts_of_prices += x**2
+                                        
+                                        for x in range(1,7):
+                                            total_of_prices += float(data[index-2*look_back+x*look_back/7][4])*x**2
                                             total_counts_of_prices += x**2
                                         
                                         
@@ -485,9 +517,10 @@ while True:
             optimization_factors['gain'] = best_gain
             optimization_factors['wins'] = best_wins
             optimization_factors['losses'] = best_losses
-            ut.pickle_write('/home/ec2-user/environment/botfarming/Development/optimization_factors/1_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(optimizing) + '.pklz', optimization_factors)
+            ut.pickle_write('/home/ec2-user/environment/botfarming/Development/optimization_factors/2_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(optimizing) + '.pklz', optimization_factors)
             print('###################################################################')
             print('###################################################################')
             print('###################################################################')
             print('###################################################################')
             print('###################################################################')
+    

@@ -12,9 +12,14 @@ import gzip
 import utility as ut
 import json
 import math
+from os import listdir
+from os.path import isfile, join
 
-path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/1m_0_binance_all_trades_history.pklz'
-bot_trades = ut.pickle_read(path)
+
+
+
+
+    
 # if bot_trades == False:
 #ut.pickle_write(path, [])
 #bot_trades = ut.pickle_read(path)
@@ -32,20 +37,22 @@ profit_with_limit_4 = 0
 # start_epoch = 1517353200
 
 start_counting = False
+
+bot_trades = []
+    
+path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/'
+onlyfiles = [f for f in listdir(path) if isfile(join(path, f))]
+for file in onlyfiles:
+    if file.startswith("1m_0"):
+        bot_trades.append(ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/' + file))
+        
 for bot_trade in bot_trades:
     
-    # if '2018-02-15 21:11:04' in bot_trade[0]:
-    #     start_counting = True
-    # if start_counting == True:
-    #     print(bot_trade[0], bot_trade[1], bot_trade[2], bot_trade[3], bot_trade[4], bot_trade[5])
-    #     total_profit += bot_trade[2]
-    #     total_trades += 1
-    
-    
     start_counting = True
-    if start_counting == True and bot_trade[5] == 7:  #and bot_trade[10] < .987: # and bot_trade[5] != 11 and bot_trade[5] != 9:
-        print('')
-        print('time start', bot_trade[0], 'symbol', bot_trade[1], 'asolute profit', bot_trade[2], 'percentage profit', bot_trade[3], 'bit coin invested', bot_trade[4], 'look_back', bot_trade[5], 'a_b', bot_trade[6], 'look_back_gains', bot_trade[7], 'look_back_wins', bot_trade[8], 'look_back_losses', bot_trade[9], 'price_to_buy_factor', bot_trade[10], 'price_to_sell_factor', bot_trade[11], 'original_buy_time', bot_trade[12], 'sell time', bot_trade[13])
+    if start_counting == True:# and bot_trade[4] < .7: # and bot_trade[5] == 17: # and bot_trade[5] != 11 and bot_trade[5] != 9:
+        print('bit coin invested', bot_trade[4], 'look_back', bot_trade[5], 'look_back_gains', bot_trade[7], 'look_back_wins', bot_trade[8], 'look_back_losses', bot_trade[9], 'price_to_buy_factor', bot_trade[10])
+        
+        #print('time start', bot_trade[0], 'symbol', bot_trade[1], 'asolute profit', bot_trade[2], 'percentage profit', bot_trade[3], 'bit coin invested', bot_trade[4], 'look_back', bot_trade[5], 'a_b', bot_trade[6], 'look_back_gains', bot_trade[7], 'look_back_wins', bot_trade[8], 'look_back_losses', bot_trade[9], 'price_to_buy_factor', bot_trade[10], 'price_to_sell_factor', bot_trade[11], 'original_buy_time', bot_trade[12], 'sell time', bot_trade[13])
         total_profit += bot_trade[2]
         total_trades += 1
     

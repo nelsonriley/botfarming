@@ -15,7 +15,7 @@ import math
 from binance.client import Client
 
 
-order_book_history = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/order_book_history/BNBBTC_1521686067')
+order_book_history = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/1m_0_1521906576_binance_all_trades_history.pklz')
 
 pprint(order_book_history)
 

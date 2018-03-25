@@ -510,7 +510,7 @@ def buy_coin(symbol, length, file_number, client):
         
         
 
-        datapoints_trailing = 11
+        datapoints_trailing = look_back_schedule[-1] + 20
 
         look_back_gains = {}
         look_back_gains_ave = {}

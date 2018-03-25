@@ -39,14 +39,17 @@ while True:
         length = '1d'
         minutes = 24*60
         max_price_to_buy_factor = .75
+        buy_sell_starting_gap = .4
     if loops % 3 == 1:
         length = '12h'
         minutes = 12*60
         max_price_to_buy_factor = .8
+        buy_sell_starting_gap = .35
     elif loops % 3 == 2:
         length = '6h'
         minutes = 6*60
         max_price_to_buy_factor = .82
+        buy_sell_starting_gap = .3
     
 
     print('starting..')
@@ -58,7 +61,7 @@ while True:
     min_volume = 0
     
     # if first_iteration == True:
-    #day = '20171102_18:22_to_20180302_18:22'
+    #day = '20171124_17:29_to_20180324_17:29'
     #     first_iteration = False
     # else:
     ###get previous 24 hours data
@@ -145,7 +148,7 @@ while True:
     
         for look_back in optimizing_array:
             
-            price_to_buy_factor_array[look_back] = max_price_to_buy_factor - .2
+            price_to_buy_factor_array[look_back] = max_price_to_buy_factor - .4
             price_to_sell_factor_array[look_back] = .96
             price_increase_factor_array[look_back] = 1.02
             lower_band_buy_factor_array[look_back] = 100
@@ -183,7 +186,7 @@ while True:
                     a_range = 41
                     b_range = 1
                     change_size = .01
-                    starting_buy_factor =  optimal_buy_factor - 20*change_size
+                    starting_buy_factor =  optimal_buy_factor
                 elif iteration == 2:
                     a_range = 11
                     b_range = 1
@@ -191,7 +194,7 @@ while True:
                     starting_buy_factor =  optimal_buy_factor - 5*change_size
                 elif iteration == 1:
                     a_range = 1
-                    b_range = 9
+                    b_range = 41
                     change_size = .01
                     starting_sell_factor =  optimal_sell_factor - 4*change_size
                 elif iteration == 3:
@@ -220,7 +223,11 @@ while True:
         
                 for a in range(0, a_range):
                     
-                    if iteration == 0 or iteration == 2 or iteration == 4 or iteration == 5:
+                    if iteration == 0:
+                        price_to_buy_factor_array[optimizing] = starting_buy_factor + change_size*a
+                        price_to_sell_factor_array[optimizing] = price_to_buy_factor_array[optimizing] + buy_sell_starting_gap
+                        
+                    if iteration == 2 or iteration == 4 or iteration == 5:
                         price_to_buy_factor_array[optimizing] = starting_buy_factor + change_size*a
                     
                     for b in range(0, b_range):
@@ -237,6 +244,15 @@ while True:
                         
                         if price_to_buy_factor_array[optimizing] >= max_price_to_buy_factor:
                             continue
+                        
+                        if price_to_sell_factor_array[optimizing] < price_to_buy_factor_array[optimizing] + .15:
+                            continue
+                        
+                        if price_to_sell_factor_array[optimizing] > .99 and iteration == 0:
+                            price_to_sell_factor_array[optimizing] = .99
+                        elif price_to_sell_factor_array[optimizing] > .99:
+                            continue
+                        
         
                         trades_count = 0
         

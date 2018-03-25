@@ -205,7 +205,11 @@ while True:
         
                 for a in range(0, a_range):
                     
-                    if iteration == 0 or iteration == 2 or iteration == 4 or iteration == 5:
+                    if iteration == 0:
+                        price_to_buy_factor_array[optimizing] = starting_buy_factor + change_size*a
+                        price_to_sell_factor_array[optimizing] = price_to_buy_factor_array[optimizing] + .01
+                    
+                    if iteration == 2 or iteration == 4 or iteration == 5:
                         price_to_buy_factor_array[optimizing] = starting_buy_factor + change_size*a
                     
                     for b in range(0, b_range):

@@ -23,20 +23,20 @@ from binance.client import Client
 # length = '6h'
 # min_gain = .15
 # minutes = 6*60
-#look_back_array = [1,2,3,4,5,7,9,11]
-#optimization_length = 120
+# look_back_array = [1,2,3,4,5,7,9,11]
+# optimization_length = 120
 
 # length = '12h'
 # min_gain = .19
 # minutes = 12*60
-#look_back_array = [1,2,3,4,5,7,9,11]
-#optimization_length = 120
+# look_back_array = [1,2,3,4,5,7,9,11]
+# optimization_length = 120
 
 # length = '1d'
 # min_gain = .2
 # minutes = 24*60
-#look_back_array = [1,2,3,4,5,7,9,11]
-#optimization_length = 120
+# look_back_array = [1,2,3,4,5,7,9,11]
+# optimization_length = 120
 
 length = '1m'
 min_gain = .001
@@ -63,6 +63,7 @@ for s in symbols:
 total_gain = 0
 total_symbols = 0
 total_trades = 0
+total_buy_sell_difference = 0
 
 for s in symbols_trimmed:
     symbol = symbols_trimmed[s]
@@ -74,13 +75,16 @@ for s in symbols_trimmed:
         look_back_optimized = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/' + length  + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
         if look_back_optimized != False and look_back_optimized['wins'] + look_back_optimized['losses'] > 0 and look_back_optimized['gain']/(look_back_optimized['wins'] + look_back_optimized['losses']) > min_gain:
             print(symbol['symbol'], 'look_back', look_back_optimized['look_back'],'gain', look_back_optimized['gain'], 'ave_gain', look_back_optimized['gain']/(look_back_optimized['wins'] + look_back_optimized['losses']), 'wins',  look_back_optimized['wins'], 'losses', look_back_optimized['losses'])
-            print(symbol['symbol'], look_back_optimized['optimal_buy_factor'], look_back_optimized['optimal_sell_factor'], look_back_optimized['optimal_band_factor'], look_back_optimized['optimal_increase_factor'], look_back_optimized['optimal_minutes_until_sale'])
+            print(symbol['symbol'], 'optimal_buy_factor', look_back_optimized['optimal_buy_factor'], 'optimal_sell_factor', look_back_optimized['optimal_sell_factor'], 'optimal_band_factor', look_back_optimized['optimal_band_factor'], 'optimal_increase_factor', look_back_optimized['optimal_increase_factor'], 'optimal_minutes_until_sale', look_back_optimized['optimal_minutes_until_sale'])
             if look_back_optimized['gain'] > 0:
                 total_gain += look_back_optimized['gain']
                 total_trades += look_back_optimized['wins'] + look_back_optimized['losses']
+                total_buy_sell_difference += (look_back_optimized['optimal_sell_factor'] - look_back_optimized['optimal_buy_factor'])*(look_back_optimized['wins'] + look_back_optimized['losses'])
             
     
 print('total_gain', total_gain)
+print('average_gain', total_gain/total_trades)
+print('average_buy_sell_difference', total_buy_sell_difference/total_trades) 
 print('total_symbols', total_symbols)
 print('total_trades', total_trades)
 print('trades per minute', float(total_trades)/(minutes*optimization_length))

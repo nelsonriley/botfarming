@@ -17,7 +17,7 @@ import binance_optimization_utility as bou
 length = '1m'
 minutes = 1
 max_price_to_buy_factor = .97
-buy_sell_starting_gap = .04
+buy_sell_starting_gap = .006
 minutes_until_sale = 12
 minutes_until_sale_3 = 14
 default_change_size_1 = .002

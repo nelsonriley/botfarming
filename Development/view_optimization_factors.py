@@ -38,13 +38,13 @@ from binance.client import Client
 # look_back_array = [1,2,3,4,5,7,9,11]
 # optimization_length = 120
 
-# length = '1m'
-# min_gain = .001
-# minutes = 1
-# look_back_array = [1,3,5,7,9,11,13,15]
-# optimization_length = 360
-# version = '1_'
-# #version = ''
+length = '1m'
+min_gain = .001
+minutes = 1
+look_back_array = [1,3,5,7,9,11,13,15]
+optimization_length = 360
+version = '1_'
+
 
 # length = '5m'
 # min_gain = .001
@@ -67,12 +67,40 @@ from binance.client import Client
 # optimization_length = 360
 # version = '1_'
 
-length = '1d'
-min_gain = .001
-minutes = 24*60
-look_back_array = [1,3,5,7,9,11,13,15]
-optimization_length = 360
-version = '1_'
+# length = '1d'
+# min_gain = .001
+# minutes = 24*60
+# look_back_array = [1,3,5,7,9,11,13,15]
+# optimization_length = 360
+# version = '1_'
+
+# length = '12h'
+# min_gain = .001
+# minutes = 12*60
+# look_back_array = [1,3,5,7,9,11,13,15]
+# optimization_length = 360
+# version = '1_'
+
+# length = '6h'
+# min_gain = .001
+# minutes = 6*60
+# look_back_array = [1,3,5,7,9,11,13,15]
+# optimization_length = 360
+# version = '1_'
+
+# length = '2h'
+# min_gain = .001
+# minutes = 2*60
+# look_back_array = [1,3,5,7,9,11,13,15]
+# optimization_length = 360
+# version = '1_'
+
+# length = '1h'
+# min_gain = .001
+# minutes = 1*60
+# look_back_array = [1,3,5,7,9,11,13,15]
+# optimization_length = 360
+# version = '1_'
 
 
 

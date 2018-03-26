@@ -32,7 +32,7 @@ first_iteration = True
 
 length = '2h'
 minutes = 2*60
-max_price_to_buy_factor = .935
+max_price_to_buy_factor = .875
 buy_sell_starting_gap = .035
 
 

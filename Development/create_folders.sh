@@ -1,0 +1,8 @@
+mkdir variables
+mkdir binance_all_trades_history
+mkdir binance_training_data
+mkdir optimization_factors
+mkdir trade_history
+mkdir order_book_history
+mkdir recent_order_books
+mkdir program_state

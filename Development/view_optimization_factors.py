@@ -125,7 +125,7 @@ total_buy_sell_difference = 0
 for s in symbols_trimmed:
     symbol = symbols_trimmed[s]
     print('')
-    print(symbol['symbol'], symbol['24hourVolume'])
+    print('start symbol', symbol['symbol'], symbol['24hourVolume'])
     total_symbols += 1
     
     # if symbol['symbol'] == 'BCPTBTC':

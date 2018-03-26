@@ -135,7 +135,7 @@ def run_optimizer(length, minutes, max_price_to_buy_factor, buy_sell_starting_ga
                 for iteration in range(-1,6):
                     
                     
-                    if iteration > -1 and best_gain == -999999:
+                    if iteration > -1 and lowest_buy_factor == 1:
                         continue
                     
                     print('##################################### New Iteration', iteration, '###########', symbol['symbol'], 'total symbols', total_btc_coins, 'symbols started: ', symbols_started)

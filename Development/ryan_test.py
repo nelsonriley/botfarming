@@ -35,8 +35,8 @@ from binance.client import Client
 
 
 
-ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/30m_stop_trading', True)
-stop_trading = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/30m_stop_trading')
+ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/1m_stop_trading', True)
+stop_trading = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/1m_stop_trading')
 
 if stop_trading == True:
     print('should stop trading')

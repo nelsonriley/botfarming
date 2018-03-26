@@ -29,52 +29,52 @@ start_time = int(time.time())
 ################################################################################ PLAY WITH CODE
 
 
-
+print 'hello world'
 
 ################################################################################ GET RESULTS for 24hr_1min_drop
-file_path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history_24hr_1min_drop_ENHANCED.pklz'
-trades = ut.pickle_read(file_path)
-print('trades', len(trades))
-profit_usd = 0
-trades_positive = 0
-trades_positive_sum = 0
-trades_negative = 0
-trades_negative_sum = 0
-trades_passing_all_tests = 0
-trades_reporting = 0
-for i, t in enumerate(trades):
-    # 20180220 = 62, 275
-    # 20180221 = 310 to 361 morning session ($54 profit, $70 in account, 30% volume)
-        # 361 to 393, 0.4 session, made $13 negative $19 & positive $35
-    # 20180222 393 to 781 = 388
-    if i >= 781:
-        # if 'symbol' in t:
-        #     print('s', t['symbol'])
-        trades_reporting += 1
-        profit_usd += t['live']['profit_usd']
-        if t['live']['profit_usd'] >= 0:
-            trades_positive += 1
-            trades_positive_sum += t['live']['profit_usd']
-        else:
-            trades_negative += 1
-            trades_negative_sum += t['live']['profit_usd']
-        if t['tests']['all_tests_pass'] == True:
-            trades_passing_all_tests += 1
+# file_path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history_24hr_1min_drop_ENHANCED.pklz'
+# trades = ut.pickle_read(file_path)
+# print('trades', len(trades))
+# profit_usd = 0
+# trades_positive = 0
+# trades_positive_sum = 0
+# trades_negative = 0
+# trades_negative_sum = 0
+# trades_passing_all_tests = 0
+# trades_reporting = 0
+# for i, t in enumerate(trades):
+#     # 20180220 = 62, 275
+#     # 20180221 = 310 to 361 morning session ($54 profit, $70 in account, 30% volume)
+#         # 361 to 393, 0.4 session, made $13 negative $19 & positive $35
+#     # 20180222 393 to 781 = 388
+#     if i >= 781:
+#         # if 'symbol' in t:
+#         #     print('s', t['symbol'])
+#         trades_reporting += 1
+#         profit_usd += t['live']['profit_usd']
+#         if t['live']['profit_usd'] >= 0:
+#             trades_positive += 1
+#             trades_positive_sum += t['live']['profit_usd']
+#         else:
+#             trades_negative += 1
+#             trades_negative_sum += t['live']['profit_usd']
+#         if t['tests']['all_tests_pass'] == True:
+#             trades_passing_all_tests += 1
 
-print('trades_reporting', trades_reporting)
-print('profit_usd', profit_usd)
-# periods_in_24 = (24/8)
-# print('profit_usd_24', profit_usd * periods_in_24 )
-# print('profit_usd_365', profit_usd * periods_in_24 * 365 )
+# print('trades_reporting', trades_reporting)
+# print('profit_usd', profit_usd)
+# # periods_in_24 = (24/8)
+# # print('profit_usd_24', profit_usd * periods_in_24 )
+# # print('profit_usd_365', profit_usd * periods_in_24 * 365 )
 
-# print('profit_usd_full_24', profit_usd * 10 * periods_in_24)
-# print('profit_usd_full_365', profit_usd * 10 * periods_in_24 * 365)
+# # print('profit_usd_full_24', profit_usd * 10 * periods_in_24)
+# # print('profit_usd_full_365', profit_usd * 10 * periods_in_24 * 365)
 
-print('trades_positive', trades_positive)
-print('trades_negative', trades_negative)
-print('trades_positive_sum', trades_positive_sum)
-print('trades_negative_sum', trades_negative_sum)
-print('trades_passing_all_tests', trades_passing_all_tests)
+# print('trades_positive', trades_positive)
+# print('trades_negative', trades_negative)
+# print('trades_positive_sum', trades_positive_sum)
+# print('trades_negative_sum', trades_negative_sum)
+# print('trades_passing_all_tests', trades_passing_all_tests)
 
 
 

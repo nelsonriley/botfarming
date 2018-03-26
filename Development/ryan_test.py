@@ -15,9 +15,9 @@ import math
 from binance.client import Client
 
 
-order_book_history = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/1m_0_1521906576_binance_all_trades_history.pklz')
+# order_book_history = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/1m_0_1521906576_binance_all_trades_history.pklz')
 
-pprint(order_book_history)
+# pprint(order_book_history)
 
 # save_data_until = int(time.time()) + 30*60
 # print ut.get_readable_time(save_data_until)
@@ -35,11 +35,11 @@ pprint(order_book_history)
 
 
 
-# ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/1m_stop_trading', True)
-# stop_trading = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/1m_stop_trading')
+ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/30m_stop_trading', True)
+stop_trading = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/30m_stop_trading')
 
-# if stop_trading == True:
-#     print('should stop trading')
+if stop_trading == True:
+    print('should stop trading')
 
 # look_back_gains = {}
 # look_back_gains[1] = .2

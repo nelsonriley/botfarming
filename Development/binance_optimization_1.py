@@ -32,7 +32,7 @@ first_iteration = True
 
 length = '1m'
 minutes = 1
-max_price_to_buy_factor = .985
+max_price_to_buy_factor = .974
 buy_sell_starting_gap = .01
 
 
@@ -163,9 +163,9 @@ while True:
                 if iteration > -1 and best_gain == -999999:
                     continue
                 
-                # print('##################################### New Iteration', iteration, '###########', symbol['symbol'], 'total symbols', total_btc_coins, 'symbols started: ', symbols_started)
-                # print('optimizing:', optimizing ,'optimal_buy_factor, optimal_sell_factor, optimal_band_factor,optimal_increase_factor', optimal_buy_factor, optimal_sell_factor, optimal_band_factor, optimal_increase_factor)
-                # print('##################################### New Iteration', iteration, '###########')
+                print('##################################### New Iteration', iteration, '###########', symbol['symbol'], 'total symbols', total_btc_coins, 'symbols started: ', symbols_started)
+                print('optimizing:', optimizing ,'optimal_buy_factor, optimal_sell_factor, optimal_band_factor,optimal_increase_factor', optimal_buy_factor, optimal_sell_factor, optimal_band_factor, optimal_increase_factor)
+                print('##################################### New Iteration', iteration, '###########')
                 
         
                 price_to_buy_factor_array[optimizing] = optimal_buy_factor
@@ -316,19 +316,20 @@ while True:
                                     #     total_of_prices = float(data[index-look_back + 2][4]) + 2*float(data[index-look_back + 1][4]) + 12*float(data[index-look_back][4]) + 2*float(data[index-look_back-1][4]) + float(data[index-look_back-2][4])
                                     #     total_counts_of_prices = 18
                                     
-                                    
-                                    if look_back == 1:
-                                        total_of_prices = 6*float(data[index-1][4])+2*float(data[index-2][4])+float(data[index-3][4])
-                                        total_counts_of_prices = 9
-                                    else:
-                                        for x in range(1,look_back+1):
-                                            total_of_prices += float(data[index-x][4])*x**2
-                                            total_counts_of_prices += x**2
-                                        
-                                        for x in range(1,look_back):
-                                            total_of_prices += float(data[index-2*look_back+x][4])*x**2
-                                            total_counts_of_prices += x**2
-                                        
+                                    try:
+                                        if look_back == 1:
+                                            total_of_prices = 6*float(data[index-1][4])+2*float(data[index-2][4])+float(data[index-3][4])
+                                            total_counts_of_prices = 9
+                                        else:
+                                            for x in range(1,look_back+1):
+                                                total_of_prices += float(data[index-x][4])*x**2
+                                                total_counts_of_prices += x**2
+                                            
+                                            for x in range(1,look_back):
+                                                total_of_prices += float(data[index-2*look_back+x][4])*x**2
+                                                total_counts_of_prices += x**2
+                                    except Exception as e:
+                                        break
                                         
                                     compare_price = float(total_of_prices)/float(total_counts_of_prices)
                                     
@@ -450,7 +451,7 @@ while True:
         
                         trades_count += wins + losses
         
-                        if current_gain > best_gain and trades_count > 0:
+                        if current_gain > best_gain and trades_count > 0 and trades_count < 3:
                             best_gain = current_gain
                             best_wins = wins
                             best_losses = losses
@@ -463,19 +464,19 @@ while True:
         
         
                         
-                        # print('----------------------------------------------')
-                        # print('trades_count', trades_count)
-                        # print("gain", current_gain)
-                        # print('lower_band_buy_factor', lower_band_buy_factor_array[optimizing])
-                        # print('price_to_buy_factor, price to sell factors', price_to_buy_factor_array[optimizing], price_to_sell_factor_array[optimizing] ,price_increase_factor_array[optimizing])
-                        # print('minutes_until_sale', minutes_until_sale_array[optimizing])
-                        # print('wins:',wins)
-                        # print(numpy.mean(percentage_made_win))
-                        # print('losses:',losses)
-                        # print(numpy.mean(percentage_made_loss))
-                        # if losses != 0:
-                        #     print('wins/losses', wins/losses)
-                        # print()
+                        print('----------------------------------------------')
+                        print('trades_count', trades_count)
+                        print("gain", current_gain)
+                        print('lower_band_buy_factor', lower_band_buy_factor_array[optimizing])
+                        print('price_to_buy_factor, price to sell factors', price_to_buy_factor_array[optimizing], price_to_sell_factor_array[optimizing] ,price_increase_factor_array[optimizing])
+                        print('minutes_until_sale', minutes_until_sale_array[optimizing])
+                        print('wins:',wins)
+                        print(numpy.mean(percentage_made_win))
+                        print('losses:',losses)
+                        print(numpy.mean(percentage_made_loss))
+                        if losses != 0:
+                            print('wins/losses', wins/losses)
+                        print()
     
     
             

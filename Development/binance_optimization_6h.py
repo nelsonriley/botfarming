@@ -40,7 +40,6 @@ while True:
 
     print('starting..')
     
-    
     ################################################################################ RUN OPTIMIZER
     
     trailing_and_current_candles_array = {}
@@ -316,19 +315,20 @@ while True:
                                     #     total_of_prices = float(data[index-look_back + 2][4]) + 2*float(data[index-look_back + 1][4]) + 12*float(data[index-look_back][4]) + 2*float(data[index-look_back-1][4]) + float(data[index-look_back-2][4])
                                     #     total_counts_of_prices = 18
                                     
-                                    
-                                    if look_back == 1:
-                                        total_of_prices = 6*float(data[index-1][4])+2*float(data[index-2][4])+float(data[index-3][4])
-                                        total_counts_of_prices = 9
-                                    else:
-                                        for x in range(1,look_back+1):
-                                            total_of_prices += float(data[index-x][4])*x**2
-                                            total_counts_of_prices += x**2
-                                        
-                                        for x in range(1,look_back):
-                                            total_of_prices += float(data[index-2*look_back+x][4])*x**2
-                                            total_counts_of_prices += x**2
-                                        
+                                    try:
+                                        if look_back == 1:
+                                            total_of_prices = 6*float(data[index-1][4])+2*float(data[index-2][4])+float(data[index-3][4])
+                                            total_counts_of_prices = 9
+                                        else:
+                                            for x in range(1,look_back+1):
+                                                total_of_prices += float(data[index-x][4])*x**2
+                                                total_counts_of_prices += x**2
+                                            
+                                            for x in range(1,look_back):
+                                                total_of_prices += float(data[index-2*look_back+x][4])*x**2
+                                                total_counts_of_prices += x**2
+                                    except Exception as e:
+                                        break    
                                         
                                     compare_price = float(total_of_prices)/float(total_counts_of_prices)
                                     
@@ -450,7 +450,7 @@ while True:
         
                         trades_count += wins + losses
         
-                        if current_gain > best_gain and trades_count > 0:
+                        if current_gain > best_gain and trades_count > 0 and trades_count < 3:
                             best_gain = current_gain
                             best_wins = wins
                             best_losses = losses

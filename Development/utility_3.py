@@ -669,7 +669,7 @@ def buy_coin(symbol, length, file_number, client):
                 time.sleep(56)
             elif length == '12h':
                 time.sleep(76)
-            elif length == '24h':
+            elif length == '1d':
                 time.sleep(96)
             
                 

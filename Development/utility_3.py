@@ -452,8 +452,8 @@ def buy_coin(symbol, length, file_number, client):
         
         stop_trading = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/' + length + '_stop_trading')
         if stop_trading == True:
-            if symbol['symbol'] == 'ETHBTC':
-                print('not trading...')
+            # if symbol['symbol'] == 'ETHBTC':
+            #     print('not trading...')
             time.sleep(60)
             return
         

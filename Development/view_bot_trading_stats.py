@@ -48,7 +48,7 @@ for file in onlyfiles:
         
 for bot_trade in bot_trades:
     
-    if bot_trade[12] > 1522049850 and bot_trade[10] < .915: # and bot_trade[5] != 11 and bot_trade[5] != 9:
+    if bot_trade[12] > 1522049850 and bot_trade[10] < .92: # and bot_trade[5] != 11 and bot_trade[5] != 9:
         print('')
         print('asolute profit', bot_trade[2], 'bit coin invested', bot_trade[4], 'look_back', bot_trade[5], 'look_back_gains', bot_trade[7], 'look_back_wins', bot_trade[8], 'look_back_losses', bot_trade[9], 'price_to_buy_factor', bot_trade[10])
         

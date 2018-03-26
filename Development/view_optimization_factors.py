@@ -38,13 +38,34 @@ from binance.client import Client
 # look_back_array = [1,2,3,4,5,7,9,11]
 # optimization_length = 120
 
-length = '1m'
+# length = '1m'
+# min_gain = .001
+# minutes = 1
+# look_back_array = [1,3,5,7,9,11,13,15]
+# optimization_length = 360
+# version = '1_'
+# #version = ''
+
+# length = '5m'
+# min_gain = .001
+# minutes = 5
+# look_back_array = [1,3,5,7,9,11,13,15]
+# optimization_length = 360
+# version = '1_'
+
+# length = '15m'
+# min_gain = .001
+# minutes = 15
+# look_back_array = [1,3,5,7,9,11,13,15]
+# optimization_length = 360
+# version = '1_'
+
+length = '30m'
 min_gain = .001
-minutes = 1
-look_back_array = [1,3,5,7,9,11,13,15,17]
+minutes = 30
+look_back_array = [1,3,5,7,9,11,13,15]
 optimization_length = 360
 version = '1_'
-#version = ''
 
 
 
@@ -86,6 +107,7 @@ for s in symbols_trimmed:
                 total_buy_sell_difference += (look_back_optimized['optimal_sell_factor'] - look_back_optimized['optimal_buy_factor'])*(look_back_optimized['wins'] + look_back_optimized['losses'])
             
     
+print('')
 print('total_gain', total_gain)
 print('average_gain', total_gain/total_trades)
 print('average_buy_sell_difference', total_buy_sell_difference/total_trades) 
@@ -93,3 +115,4 @@ print('total_symbols', total_symbols)
 print('total_trades', total_trades)
 print('trades per minute', float(total_trades)/(minutes*optimization_length))
 print('trades per day', float(total_trades)/(float(minutes)*optimization_length/(24*60)))
+print('total_gain', total_gain)

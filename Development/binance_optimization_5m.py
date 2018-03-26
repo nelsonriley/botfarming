@@ -30,10 +30,10 @@ first_iteration = True
 # length = '12h'
 # minutes = 12*60
 
-length = '1m'
-minutes = 1
-max_price_to_buy_factor = .985
-buy_sell_starting_gap = .01
+length = '5m'
+minutes = 5
+max_price_to_buy_factor = .975
+buy_sell_starting_gap = .015
 
 
 while True:
@@ -136,7 +136,7 @@ while True:
     
         for look_back in optimizing_array:
             
-            price_to_buy_factor_array[look_back] = max_price_to_buy_factor - .04
+            price_to_buy_factor_array[look_back] = max_price_to_buy_factor - .16
             price_to_sell_factor_array[look_back] = max_price_to_buy_factor + .005
             price_increase_factor_array[look_back] = 1.01
             lower_band_buy_factor_array[look_back] = 100
@@ -173,39 +173,39 @@ while True:
                 lower_band_buy_factor_array[optimizing] = optimal_band_factor
                 price_increase_factor_array[optimizing] = optimal_increase_factor
                 minutes_until_sale_array[optimizing] = optimal_minutes_until_sale
-                
+        
                 if iteration == -1:
                     a_range = 1
                     b_range = 1
                 if iteration == 0:
                     a_range = 41
                     b_range = 1
-                    change_size = .002
+                    change_size = .004
                     starting_buy_factor =  lowest_buy_factor
                 elif iteration == 2:
                     a_range = 11
                     b_range = 1
-                    change_size = .002
+                    change_size = .004
                     starting_buy_factor =  optimal_buy_factor - 5*change_size
                 elif iteration == 1:
                     a_range = 1
                     b_range = 41
-                    change_size = .002
+                    change_size = .004
                     starting_sell_factor =  optimal_sell_factor - 40*change_size
                 elif iteration == 3:
                     a_range = 1
                     b_range = 5
-                    change_size = .001
+                    change_size = .002
                     starting_sell_factor =  optimal_sell_factor - 2*change_size
                 elif iteration == 4:
                     a_range = 11
                     b_range = 1
-                    change_size = .001
+                    change_size = .002
                     starting_buy_factor =  optimal_buy_factor - 5*change_size
                 elif iteration == 5:
                     a_range = 5
                     b_range = 3
-                    change_size = .001
+                    change_size = .002
                     starting_buy_factor =  optimal_buy_factor - 2*change_size
                     starting_sell_factor =  optimal_sell_factor - 1*change_size
                     
@@ -506,3 +506,7 @@ while True:
             print('###################################################################')
             print('###################################################################')
             print('###################################################################')
+    
+    
+    time.sleep(60)        
+            

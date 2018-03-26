@@ -30,10 +30,10 @@ first_iteration = True
 # length = '12h'
 # minutes = 12*60
 
-length = '30m'
-minutes = 30
-max_price_to_buy_factor = .955
-buy_sell_starting_gap = .025
+length = '1h'
+minutes = 60
+max_price_to_buy_factor = .945
+buy_sell_starting_gap = .03
 
 
 while True:
@@ -136,7 +136,7 @@ while True:
     
         for look_back in optimizing_array:
             
-            price_to_buy_factor_array[look_back] = max_price_to_buy_factor - .28
+            price_to_buy_factor_array[look_back] = max_price_to_buy_factor - .36
             price_to_sell_factor_array[look_back] = max_price_to_buy_factor + .005
             price_increase_factor_array[look_back] = 1.01
             lower_band_buy_factor_array[look_back] = 100
@@ -163,9 +163,9 @@ while True:
                 if iteration > -1 and best_gain == -999999:
                     continue
                 
-                # print('##################################### New Iteration', iteration, '###########', symbol['symbol'], 'total symbols', total_btc_coins, 'symbols started: ', symbols_started)
-                # print('optimizing:', optimizing ,'optimal_buy_factor, optimal_sell_factor, optimal_band_factor,optimal_increase_factor', optimal_buy_factor, optimal_sell_factor, optimal_band_factor, optimal_increase_factor)
-                # print('##################################### New Iteration', iteration, '###########')
+                print('##################################### New Iteration', iteration, '###########', symbol['symbol'], 'total symbols', total_btc_coins, 'symbols started: ', symbols_started)
+                print('optimizing:', optimizing ,'optimal_buy_factor, optimal_sell_factor, optimal_band_factor,optimal_increase_factor', optimal_buy_factor, optimal_sell_factor, optimal_band_factor, optimal_increase_factor)
+                print('##################################### New Iteration', iteration, '###########')
                 
         
                 price_to_buy_factor_array[optimizing] = optimal_buy_factor
@@ -180,32 +180,32 @@ while True:
                 if iteration == 0:
                     a_range = 41
                     b_range = 1
-                    change_size = .007
+                    change_size = .009
                     starting_buy_factor =  lowest_buy_factor
                 elif iteration == 2:
                     a_range = 11
                     b_range = 1
-                    change_size = .007
+                    change_size = .009
                     starting_buy_factor =  optimal_buy_factor - 5*change_size
                 elif iteration == 1:
                     a_range = 1
                     b_range = 41
-                    change_size = .007
+                    change_size = .009
                     starting_sell_factor =  optimal_sell_factor - 40*change_size
                 elif iteration == 3:
                     a_range = 1
                     b_range = 5
-                    change_size = .0035
+                    change_size = .0045
                     starting_sell_factor =  optimal_sell_factor - 2*change_size
                 elif iteration == 4:
                     a_range = 11
                     b_range = 1
-                    change_size = .0035
+                    change_size = .0045
                     starting_buy_factor =  optimal_buy_factor - 5*change_size
                 elif iteration == 5:
                     a_range = 5
                     b_range = 3
-                    change_size = .0035
+                    change_size = .0045
                     starting_buy_factor =  optimal_buy_factor - 2*change_size
                     starting_sell_factor =  optimal_sell_factor - 1*change_size
                     
@@ -508,5 +508,5 @@ while True:
             print('###################################################################')
     
     
-    time.sleep(3*60*60)        
+    time.sleep(4*60*60)        
             

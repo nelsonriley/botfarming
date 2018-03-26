@@ -155,13 +155,8 @@ def create_buy_order(current_state, price_to_buy):
     maximum_order_to_buy = float_to_str(round(current_state['largest_buy_segment'], current_state['quantity_decimals']))
     maximum_possible_buy = float_to_str(round(current_state['original_amount_to_buy'] - current_state['executedQty'], current_state['quantity_decimals']))
     
+    quantity_to_buy = min(float(maximum_order_to_buy), float(maximum_possible_buy))
     
-    
-    if current_state['length'] == '1m' or current_state['length'] == '5m'or current_state['length'] == '15m'or current_state['length'] == '30m':
-        quantity_to_buy = min(float(maximum_order_to_buy), float(maximum_possible_buy))
-    else:
-        quantity_to_buy = maximum_possible_buy
-
     # DEBUGGER
     # print('qty', quantity_to_buy, 'price', price_to_buy)
 
@@ -460,13 +455,7 @@ def buy_coin(symbol, length, file_number, client):
             time.sleep(60)
             return
         
-        if length == '1d':
-            minutes = 24*60
-        elif length == '12h':
-            minutes = 12*60
-        elif length == '6h':
-            minutes = 6*60
-        elif length == '1m':
+        if length == '1m':
             minutes = 1
         elif length == '5m':
             minutes = 5
@@ -474,30 +463,19 @@ def buy_coin(symbol, length, file_number, client):
             minutes = 15
         elif length == '30m':
             minutes = 30
+        elif length == '1h':
+            minutes = 60
+        elif length == '2h':
+            minutes = 2*60
+        elif length == '6h':
+            minutes = 6*60
+        elif length == '12h':
+            minutes = 12*60
+        elif length == '1d':
+            minutes = 24*60
 
         largest_bitcoin_order = .1
-        if length == '1d':
-            part_of_bitcoin_to_use = 2.4
-            gain_min = .24
-            buy_price_increase_factor = 1.002
-            look_back_schedule = [1,2,3,4,5,7,9,11]
-            minutes_until_sale = 3*minutes
-            minutes_until_sale_final = 5*minutes
-        if length == '12h':
-            part_of_bitcoin_to_use = 2.2
-            gain_min = .19
-            buy_price_increase_factor = 1.002
-            look_back_schedule = [1,2,3,4,5,7,9,11]
-            minutes_until_sale = 3*minutes
-            minutes_until_sale_final = 5*minutes
-        elif length == '6h':
-            part_of_bitcoin_to_use = 2
-            gain_min = .15
-            buy_price_increase_factor = 1.002
-            look_back_schedule = [1,2,3,4,5,7,9,11]
-            minutes_until_sale = 3*minutes
-            minutes_until_sale_final = 5*minutes
-        elif length == '1m':
+        if length == '1m':
             largest_bitcoin_order = .1
             part_of_bitcoin_to_use = .6
             gain_min = .001
@@ -507,28 +485,68 @@ def buy_coin(symbol, length, file_number, client):
             minutes_until_sale_final = 12
         elif length == '5m':
             largest_bitcoin_order = .2
-            part_of_bitcoin_to_use = .4
+            part_of_bitcoin_to_use = .8
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
-            minutes_until_sale = 10*minutes
-            minutes_until_sale_final = 12*minutes
+            minutes_until_sale = 12*minutes
+            minutes_until_sale_final = 14*minutes
         elif length == '15m':
             largest_bitcoin_order = .2
-            part_of_bitcoin_to_use = .35
+            part_of_bitcoin_to_use = 1
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
-            minutes_until_sale = 10*minutes
-            minutes_until_sale_final = 12*minutes
+            minutes_until_sale = 12*minutes
+            minutes_until_sale_final = 14*minutes
         elif length == '30m':
             largest_bitcoin_order = .2
-            part_of_bitcoin_to_use = .3
+            part_of_bitcoin_to_use = 1.2
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
-            minutes_until_sale = 10*minutes
-            minutes_until_sale_final = 12*minutes
+            minutes_until_sale = 12*minutes
+            minutes_until_sale_final = 14*minutes
+        elif length == '1h':
+            largest_bitcoin_order = .2
+            part_of_bitcoin_to_use = .58
+            gain_min = .001
+            buy_price_increase_factor = 1.002
+            look_back_schedule = [1,3,5,7,9,11,13,15]
+            minutes_until_sale = 12*minutes
+            minutes_until_sale_final = 14*minutes
+        elif length == '2h':
+            largest_bitcoin_order = .2
+            part_of_bitcoin_to_use = .56
+            gain_min = .001
+            buy_price_increase_factor = 1.002
+            look_back_schedule = [1,3,5,7,9,11,13,15]
+            minutes_until_sale = 8*minutes
+            minutes_until_sale_final = 10*minutes
+        elif length == '6h':
+            largest_bitcoin_order = .2
+            part_of_bitcoin_to_use = .54
+            gain_min = .001
+            buy_price_increase_factor = 1.002
+            look_back_schedule = [1,3,5,7,9,11,13,15]
+            minutes_until_sale = 4*minutes
+            minutes_until_sale_final = 6*minutes
+        elif length == '12h':
+            largest_bitcoin_order = .2
+            part_of_bitcoin_to_use = .52
+            gain_min = .001
+            buy_price_increase_factor = 1.002
+            look_back_schedule = [1,3,5,7,9,11,13,15]
+            minutes_until_sale = 3*minutes
+            minutes_until_sale_final = 5*minutes
+        elif length == '1d':
+            largest_bitcoin_order = .2
+            part_of_bitcoin_to_use = .5
+            gain_min = .001
+            buy_price_increase_factor = 1.002
+            look_back_schedule = [1,3,5,7,9,11,13,15]
+            minutes_until_sale = 2*minutes
+            minutes_until_sale_final = 4*minutes
             
         price_to_start_buy_factor = 1.003
         sell_price_drop_factor = .997
@@ -641,8 +659,17 @@ def buy_coin(symbol, length, file_number, client):
                 time.sleep(12)
             elif length == '30m':
                 time.sleep(18)
-            else:
-                time.sleep(22)
+            elif length == '1h':
+                time.sleep(26)
+            elif length == '2h':
+                time.sleep(36)
+            elif length == '6h':
+                time.sleep(56)
+            elif length == '12h':
+                time.sleep(76)
+            elif length == '24h':
+                time.sleep(96)
+            
                 
             current_price = float(order_book['bids'][0][0])
 
@@ -761,8 +788,17 @@ def buy_coin(symbol, length, file_number, client):
                             time_to_give_up = int(time.time()) + 360
                         elif length == '30m':
                             time_to_give_up = int(time.time()) + 480
-                        else:
-                            time_to_give_up = int(time.time()) + 60*minutes/15
+                        elif length == '1h':
+                            time_to_give_up = int(time.time()) + 720
+                        elif length == '2h':
+                            time_to_give_up = int(time.time()) + 1080
+                        elif length == '6h':
+                            time_to_give_up = int(time.time()) + 30*60
+                        elif length == '12h':
+                            time_to_give_up = int(time.time()) + 45*60
+                        elif length == '1d':
+                            time_to_give_up = int(time.time()) + 60*60
+                        
                         price_to_buy_max = price_to_buy*buy_price_increase_factor
                         amount_to_stop_buying = part_of_bitcoin_to_use/price_to_buy_max
                         print('max price for', symbol['symbol'], price_to_buy_max)

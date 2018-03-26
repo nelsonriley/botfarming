@@ -60,9 +60,16 @@ from binance.client import Client
 # optimization_length = 360
 # version = '1_'
 
-length = '30m'
+# length = '30m'
+# min_gain = .001
+# minutes = 30
+# look_back_array = [1,3,5,7,9,11,13,15]
+# optimization_length = 360
+# version = '1_'
+
+length = '1d'
 min_gain = .001
-minutes = 30
+minutes = 24*60
 look_back_array = [1,3,5,7,9,11,13,15]
 optimization_length = 360
 version = '1_'

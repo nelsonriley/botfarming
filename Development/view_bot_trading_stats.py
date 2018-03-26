@@ -43,12 +43,12 @@ bot_trades = []
 path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/'
 onlyfiles = [f for f in listdir(path) if isfile(join(path, f))]
 for file in onlyfiles:
-    if file.startswith("1m_0"):
+    if file.startswith("30m_0"):
         bot_trades.append(ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/' + file))
         
 for bot_trade in bot_trades:
     
-    if True and bot_trade[12] > 1521946968 and bot_trade[5] == 17: # and bot_trade[5] != 11 and bot_trade[5] != 9:
+    if True: # and bot_trade[5] != 11 and bot_trade[5] != 9:
         #print('bit coin invested', bot_trade[4], 'look_back', bot_trade[5], 'look_back_gains', bot_trade[7], 'look_back_wins', bot_trade[8], 'look_back_losses', bot_trade[9], 'price_to_buy_factor', bot_trade[10])
         
         print('time start', bot_trade[0], 'symbol', bot_trade[1], 'asolute profit', bot_trade[2], 'percentage profit', bot_trade[3], 'bit coin invested', bot_trade[4], 'look_back', bot_trade[5], 'a_b', bot_trade[6], 'look_back_gains', bot_trade[7], 'look_back_wins', bot_trade[8], 'look_back_losses', bot_trade[9], 'price_to_buy_factor', bot_trade[10], 'price_to_sell_factor', bot_trade[11], 'original_buy_time', bot_trade[12], 'sell time', bot_trade[13])

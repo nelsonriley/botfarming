@@ -20,21 +20,21 @@ def run_optimizer(length, minutes, max_price_to_buy_factor, buy_sell_starting_ga
     if length == '1m':
         max_price_to_buy_factor = .98
     if length == '5m':
-        max_price_to_buy_factor = .96
+        max_price_to_buy_factor = .97
     if length == '15m':
-        max_price_to_buy_factor = .945
+        max_price_to_buy_factor = .96
     if length == '30m':
-        max_price_to_buy_factor = .93
+        max_price_to_buy_factor = .95
     if length == '1h':
-        max_price_to_buy_factor = .9
+        max_price_to_buy_factor = .94
     if length == '2h':
-        max_price_to_buy_factor = .87
+        max_price_to_buy_factor = .93
     if length == '6h':
-        max_price_to_buy_factor = .83
+        max_price_to_buy_factor = .92
     if length == '12h':
-        max_price_to_buy_factor = .8
+        max_price_to_buy_factor = .91
     if length == '1d':
-        max_price_to_buy_factor = .75
+        max_price_to_buy_factor = .9
     
     
     while True:

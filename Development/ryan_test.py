@@ -35,7 +35,17 @@ from binance.client import Client
 
 
 
+
 ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/1m_stop_trading', True)
+ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/5m_stop_trading', True)
+ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/15m_stop_trading', True)
+ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/30m_stop_trading', True)
+ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/1h_stop_trading', True)
+ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/2h_stop_trading', True)
+ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/6h_stop_trading', True)
+ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/12h_stop_trading', True)
+ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/1d_stop_trading', True)
+
 stop_trading = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/1m_stop_trading')
 
 if stop_trading == True:

@@ -199,7 +199,7 @@ def calculate_profit_and_free_coin(current_state):
     invested_btc = current_state['original_quantity']*current_state['original_price']
     print('PROFIT', current_state['symbol'] ,'profit was, absoulte profit, percent profit, amount invested', float_to_str(profit_from_trade, 8), float_to_str(percent_profit_from_trade, 5), float_to_str(invested_btc,8), get_time())
 
-    recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['a_b'], current_state['look_back_gains'], current_state['look_back_wins'], current_state['look_back_losses'], current_state['price_to_buy_factor'], current_state['price_to_sell_factor'], current_state['original_buy_time'], get_time()]
+    recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['a_b'], current_state['price_to_buy_factor'], current_state['price_to_sell_factor'], current_state['original_buy_time'], get_time()]
     
     pickle_write('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/'+ current_state['length'] + '_' + current_state['file_number'] + '_' + str(current_state['original_buy_time']) + '_binance_all_trades_history.pklz', recorded_trade)
 
@@ -560,14 +560,7 @@ def buy_coin(symbol, length, file_number, client):
         price_increase_factor_array = {}
         
         
-
         datapoints_trailing = look_back_schedule[-1] + 20
-
-        look_back_gains = {}
-        look_back_gains_ave = {}
-        look_back_wins = {}
-        look_back_losses = {}
-        max_look_back_gain = 0
         
         a_b = random.randint(0,1)
         
@@ -581,24 +574,12 @@ def buy_coin(symbol, length, file_number, client):
             if look_back_optimized != False:
                 price_to_buy_factor_array[look_back] = look_back_optimized['optimal_buy_factor']
                 price_to_sell_factor_array[look_back] = look_back_optimized['optimal_sell_factor']
-                lower_band_buy_factor_array[look_back] = look_back_optimized['optimal_band_factor']
+                lower_band_buy_factor_array[look_back] = 100
                 price_increase_factor_array[look_back] = 1.01
-                look_back_gains[look_back] = look_back_optimized['gain']
-                look_back_wins[look_back] = look_back_optimized['wins']
-                look_back_losses[look_back] = look_back_optimized['losses']
-                if look_back_optimized['wins'] + look_back_optimized['losses'] > 0:
-                    look_back_gains_ave[look_back] = look_back_optimized['gain']/(look_back_optimized['wins'] + look_back_optimized['losses'])
-                if look_back_gains[look_back] > max_look_back_gain:
-                    max_look_back_gain = look_back_gains[look_back]
             else:
                 #print('No trading parameters for', symbol['symbol'], 'look_back', look_back)
                 time.sleep(60*1)
                 return
-            
-        if max_look_back_gain <= 0:
-            #print('This symbol has bad or no results and we should not trade on it ', symbol['symbol'], 'max_look_back_gain', max_look_back_gain)
-            time.sleep(1*60)
-            return
 
         while time.localtime().tm_sec < 3:
             time.sleep(.1)
@@ -614,18 +595,6 @@ def buy_coin(symbol, length, file_number, client):
         if isinstance(data, basestring):
             print('API request failed, exiting', symbol['symbol'])
             return
-        
-        # if length == '1m' and (symbol['symbol'] == 'XEMBTC' or symbol['symbol'] == 'SNTBTC' or symbol['symbol'] == 'ETHBTC'):
-        #     print(symbol['symbol'],'price', data[-1][4], 'price two ago', data[-2][4], 'candle end time', data[-1][0], get_readable_time(data[-1][0]), 'candle end time 2 ago', data[-2][0],  get_readable_time(data[-2][0]), 'requested end time', end_time, get_readable_time(end_time), 'need time within', get_readable_time(end_time - 60000))
-        #     time.sleep(5)
-        #     return
-        
-        if length == '1m':
-            for check_back in range(1, 7):
-                if data[-1*check_back][0] < end_time-2*65000*check_back:
-                    print('messed up candle end time', get_readable_time(data[-1*check_back][0]), 'need time within', get_readable_time(end_time - 2*60000*check_back), 'requested end time', get_readable_time(end_time), symbol['symbol'],'price', data[-1][4], 'price two ago', data[-2][4],'check_back', check_back, )
-                    time.sleep(10)
-                    return
                 
 
         trailing_volumes = []
@@ -675,206 +644,172 @@ def buy_coin(symbol, length, file_number, client):
                 
             current_price = float(order_book['bids'][0][0])
 
-            # if (symbol['symbol'] == 'ETHBTC'):
-            #     print('about to check lookback', symbol['symbol'], 'current_price',  current_price, get_time())
-    
-            look_back_gains_ave_sorted = sorted(look_back_gains_ave, key=look_back_gains_ave.get, reverse=True)
+           
 
-            for look_back in look_back_gains_ave_sorted:
+            for look_back in look_back_schedule:
                 
-                # if symbol['symbol'] == 'ICXBTC':
-                #     print(get_readable_time(data[index-look_back][0]))
-                    
-                
-                if look_back_wins[look_back] + look_back_losses[look_back] < 1 or look_back_gains[look_back]/(look_back_wins[look_back] + look_back_losses[look_back]) < gain_min:
-                    continue
-
+            
                 price_to_start_buy = float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy_factor
 
                 if current_price <= price_to_start_buy:
 
-                    should_buy = False
 
-                    if lower_band_buy_factor_array[look_back] < 100:
-                        candles_for_look_back = fn.get_n_minute_candles(look_back, data[index-22*look_back-1:index])
-                        candles_for_look_back, smart_trailing_candles = fn.add_bollinger_bands_to_candles(candles_for_look_back)
-                        lower_band_for_index = candles_for_look_back[-1][14]
-                        band_ok_value = lower_band_for_index*lower_band_buy_factor_array[look_back]
-                        band_ok = current_price < band_ok_value
+                    lower_band_buy_factor = lower_band_buy_factor_array[look_back]
+                    price_to_buy_factor = price_to_buy_factor_array[look_back]
+                    price_to_sell_factor = price_to_sell_factor_array[look_back]
+                    price_increase_factor = price_increase_factor_array[look_back]
 
-                    else:
-                        band_ok = True
 
-                    if band_ok:
-                        should_buy = True
-
-                    if should_buy:
+                    price_to_buy = float(data[index-look_back][4])*price_to_buy_factor
                         
-                        # print ('should buy', symbol['symbol'])
-                        # sys.exit()
-
-                        lower_band_buy_factor = lower_band_buy_factor_array[look_back]
-                        price_to_buy_factor = price_to_buy_factor_array[look_back]
-                        price_to_sell_factor = price_to_sell_factor_array[look_back]
-                        price_increase_factor = price_increase_factor_array[look_back]
+                    price_to_sell = float(data[index-look_back][4])*price_to_sell_factor
 
 
-                        if lower_band_buy_factor < 100:
-                            price_to_buy = min(lower_band_for_index*lower_band_buy_factor, float(data[index-look_back][4])*price_to_buy_factor)
-                        else:
-                            price_to_buy = float(data[index-look_back][4])*price_to_buy_factor
-                            
-                        price_to_sell = float(data[index-look_back][4])*price_to_sell_factor
+                    print('-------------------buy!', symbol['symbol'], 'current price', current_price, 'current price time', get_readable_time(order_book['time']), 'look_back', look_back, 'look back original price', data[index-look_back][4], 'look back original time', get_readable_time(data[index-look_back][0]),   'price_to_buy', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back], 'price_to_sell', price_to_sell,  'price_to_sell_factor',price_to_sell_factor_array[look_back] , 'price_increase_factor',price_increase_factor_array[look_back] , minutes_until_sale, get_time())
+                    
+                    
+                    if length == '1m':
+                        save_data_until = int(time.time()) + 60*60
+                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/should_save_' + symbol['symbol'], save_data_until)
+                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol['symbol'], False)
+                        pickle_write('/home/ec2-user/environment/botfarming/Development/order_book_history/' + symbol['symbol'] + '_' + str(save_data_until), [symbol['symbol'], 'current price', current_price, 'current price time', get_readable_time(order_book['time']), 'look_back', look_back, 'look back original price', data[index-look_back][4], 'look back original time', get_readable_time(data[index-look_back][0]),   'price_to_buy', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back], 'price_to_sell', price_to_sell,  'price_to_sell_factor',price_to_sell_factor_array[look_back] , 'price_increase_factor',price_increase_factor_array[look_back] , minutes_until_sale, get_time()])
 
+                    amount_to_buy = part_of_bitcoin_to_use/price_to_buy
+                    largest_buy_segment = largest_bitcoin_order/price_to_buy
 
-                        print('-------------------buy!', symbol['symbol'], 'current price', current_price, 'current price time', get_readable_time(order_book['time']), 'look_back', look_back, 'look back original price', data[index-look_back][4], 'look back original time', get_readable_time(data[index-look_back][0]),   'price_to_buy', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back], 'price_to_sell', price_to_sell,  'price_to_sell_factor',price_to_sell_factor_array[look_back] , 'price_increase_factor',price_increase_factor_array[look_back] , minutes_until_sale, 'look_back_gain', look_back_gains[look_back], 'look_back_wins', look_back_wins[look_back], 'look_back_losses', look_back_losses[look_back], get_time())
-                        
-                        
-                        if length == '1m':
-                            save_data_until = int(time.time()) + 60*60
-                            pickle_write('/home/ec2-user/environment/botfarming/Development/variables/should_save_' + symbol['symbol'], save_data_until)
-                            pickle_write('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol['symbol'], False)
-                            pickle_write('/home/ec2-user/environment/botfarming/Development/order_book_history/' + symbol['symbol'] + '_' + str(save_data_until), [symbol['symbol'], 'current price', current_price, 'current price time', get_readable_time(order_book['time']), 'look_back', look_back, 'look back original price', data[index-look_back][4], 'look back original time', get_readable_time(data[index-look_back][0]),   'price_to_buy', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back], 'price_to_sell', price_to_sell,  'price_to_sell_factor',price_to_sell_factor_array[look_back] , 'price_increase_factor',price_increase_factor_array[look_back] , minutes_until_sale, 'look_back_gain', look_back_gains[look_back], 'look_back_wins', look_back_wins[look_back], 'look_back_losses', look_back_losses[look_back], get_time()])
+                    price_decimals = get_min_decimals(symbol['filters'][0]['minPrice'])
 
-                        amount_to_buy = part_of_bitcoin_to_use/price_to_buy
-                        largest_buy_segment = largest_bitcoin_order/price_to_buy
+                    quantity_decimals = get_min_decimals(symbol['filters'][1]['minQty'])
+                    # quantity_decimals = get_min_decimals_new(symbol['filters'][2]['minNotional'])
 
-                        price_decimals = get_min_decimals(symbol['filters'][0]['minPrice'])
+                    current_state = {}
+                    current_state['state'] = 'buying'
+                    current_state['look_back'] = look_back
+                    current_state['a_b'] = a_b
+                    current_state['price_to_buy_factor'] = price_to_buy_factor
+                    current_state['price_to_sell_factor'] = price_to_sell_factor
+                    current_state['sell_price_drop_factor'] = sell_price_drop_factor
+                    current_state['original_amount_to_buy'] = amount_to_buy
+                    current_state['largest_bitcoin_order'] = largest_bitcoin_order
+                    current_state['part_of_bitcoin_to_use'] = part_of_bitcoin_to_use
+                    current_state['largest_buy_segment'] = largest_buy_segment
+                    current_state['original_buy_time'] = int(time.time())
+                    current_state['original_buy_time_readable'] = get_time()
+                    current_state['symbol'] = symbol['symbol']
+                    current_state['orderId'] = False
+                    current_state['executedQty'] = 0
+                    current_state['total_revenue'] = 0
+                    current_state['minutes_until_sale'] = minutes_until_sale
+                    current_state['minutes_until_sale_final'] = minutes_until_sale_final
+                    current_state['price_to_buy'] = price_to_buy
+                    current_state['price_to_sell'] = price_to_sell
+                    current_state['compare_price'] = price_to_buy
+                    current_state['price_increase_factor'] = price_increase_factor
+                    current_state['minimum_price_seen'] = price_to_buy
+                    current_state['length'] = length
+                    current_state['file_number'] = str(file_number)
+                    current_state['client'] = client
+                    current_state['error_cancel_order'] = False
+                    current_state['price_decimals'] = price_decimals
+                    current_state['quantity_decimals'] = quantity_decimals
+                    current_state['min_price'] = float(symbol['filters'][0]['minPrice'])
+                    current_state['min_quantity'] = min(float(symbol['filters'][1]['minQty']), float(symbol['filters'][2]['minNotional']))
 
-                        quantity_decimals = get_min_decimals(symbol['filters'][1]['minQty'])
-                        # quantity_decimals = get_min_decimals_new(symbol['filters'][2]['minNotional'])
+                    write_current_state(current_state, current_state)
 
-                        current_state = {}
-                        current_state['state'] = 'buying'
-                        current_state['look_back'] = look_back
-                        current_state['a_b'] = a_b
-                        current_state['look_back_gains'] = look_back_gains[look_back]
-                        current_state['look_back_wins'] = look_back_wins[look_back]
-                        current_state['look_back_losses'] = look_back_losses[look_back]
-                        current_state['price_to_buy_factor'] = price_to_buy_factor
-                        current_state['price_to_sell_factor'] = price_to_sell_factor
-                        current_state['sell_price_drop_factor'] = sell_price_drop_factor
-                        current_state['original_amount_to_buy'] = amount_to_buy
-                        current_state['largest_bitcoin_order'] = largest_bitcoin_order
-                        current_state['part_of_bitcoin_to_use'] = part_of_bitcoin_to_use
-                        current_state['largest_buy_segment'] = largest_buy_segment
-                        current_state['original_buy_time'] = int(time.time())
-                        current_state['original_buy_time_readable'] = get_time()
-                        current_state['symbol'] = symbol['symbol']
-                        current_state['orderId'] = False
-                        current_state['executedQty'] = 0
-                        current_state['total_revenue'] = 0
-                        current_state['minutes_until_sale'] = minutes_until_sale
-                        current_state['minutes_until_sale_final'] = minutes_until_sale_final
-                        current_state['price_to_buy'] = price_to_buy
-                        current_state['price_to_sell'] = price_to_sell
-                        current_state['compare_price'] = price_to_buy
-                        current_state['price_increase_factor'] = price_increase_factor
-                        current_state['minimum_price_seen'] = price_to_buy
-                        current_state['length'] = length
-                        current_state['file_number'] = str(file_number)
-                        current_state['client'] = client
-                        current_state['error_cancel_order'] = False
-                        current_state['price_decimals'] = price_decimals
-                        current_state['quantity_decimals'] = quantity_decimals
-                        current_state['min_price'] = float(symbol['filters'][0]['minPrice'])
-                        current_state['min_quantity'] = min(float(symbol['filters'][1]['minQty']), float(symbol['filters'][2]['minNotional']))
+                    if length == '1m':
+                        time_to_give_up = int(time.time()) + 120
+                    elif length == '5m':
+                        time_to_give_up = int(time.time()) + 240
+                    elif length == '15m':
+                        time_to_give_up = int(time.time()) + 360
+                    elif length == '30m':
+                        time_to_give_up = int(time.time()) + 480
+                    elif length == '1h':
+                        time_to_give_up = int(time.time()) + 720
+                    elif length == '2h':
+                        time_to_give_up = int(time.time()) + 1080
+                    elif length == '6h':
+                        time_to_give_up = int(time.time()) + 30*60
+                    elif length == '12h':
+                        time_to_give_up = int(time.time()) + 45*60
+                    elif length == '1d':
+                        time_to_give_up = int(time.time()) + 60*60
+                    
+                    price_to_buy_max = price_to_buy*buy_price_increase_factor
+                    amount_to_stop_buying = part_of_bitcoin_to_use/price_to_buy_max
+                    print('max price for', symbol['symbol'], price_to_buy_max)
+                    while True:
+                        if current_state['orderId'] != False:
+                            buy_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
+                            if buy_order_info['status'] == 'FILLED':
+                                current_state['executedQty'] = current_state['executedQty'] + float(buy_order_info['executedQty'])
+                                current_state['original_price'] = float(buy_order_info['price'])
+                                current_state['state'] = 'buying'
+                                current_state['orderId'] = False
+                                write_current_state(current_state, current_state)
+                                if current_state['executedQty'] >= amount_to_stop_buying:
+                                    break
 
-                        write_current_state(current_state, current_state)
+                        if int(time.time()) >= time_to_give_up:
+                            if current_state['orderId'] != False:
+                                current_state = cancel_buy_order(current_state)
+                            break
 
-                        if length == '1m':
-                            time_to_give_up = int(time.time()) + 120
-                        elif length == '5m':
-                            time_to_give_up = int(time.time()) + 240
-                        elif length == '15m':
-                            time_to_give_up = int(time.time()) + 360
-                        elif length == '30m':
-                            time_to_give_up = int(time.time()) + 480
-                        elif length == '1h':
-                            time_to_give_up = int(time.time()) + 720
-                        elif length == '2h':
-                            time_to_give_up = int(time.time()) + 1080
-                        elif length == '6h':
-                            time_to_give_up = int(time.time()) + 30*60
-                        elif length == '12h':
-                            time_to_give_up = int(time.time()) + 45*60
-                        elif length == '1d':
-                            time_to_give_up = int(time.time()) + 60*60
-                        
-                        price_to_buy_max = price_to_buy*buy_price_increase_factor
-                        amount_to_stop_buying = part_of_bitcoin_to_use/price_to_buy_max
-                        print('max price for', symbol['symbol'], price_to_buy_max)
-                        while True:
+                        first_in_line_price, first_bid, second_in_line_price, second_bid, second_price_to_check = get_first_in_line_price_buying(current_state)
+                        if float(first_in_line_price) <= price_to_buy_max:
                             if current_state['orderId'] != False:
                                 buy_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
-                                if buy_order_info['status'] == 'FILLED':
-                                    current_state['executedQty'] = current_state['executedQty'] + float(buy_order_info['executedQty'])
-                                    current_state['original_price'] = float(buy_order_info['price'])
-                                    current_state['state'] = 'buying'
-                                    current_state['orderId'] = False
-                                    write_current_state(current_state, current_state)
+                                if first_bid != float(buy_order_info['price']):
+                                    #print(current_state['symbol'], 'cancel buy order, price is in range, but we are not the first bid, so cancel and make us first bid. first_in_line_price', first_in_line_price, 'price_to_buy_max', price_to_buy_max, 'first_bid', first_bid)
+                                    current_state = cancel_buy_order(current_state)
                                     if current_state['executedQty'] >= amount_to_stop_buying:
                                         break
-
-                            if int(time.time()) >= time_to_give_up:
-                                if current_state['orderId'] != False:
-                                    current_state = cancel_buy_order(current_state)
-                                break
-
-                            first_in_line_price, first_bid, second_in_line_price, second_bid, second_price_to_check = get_first_in_line_price_buying(current_state)
-                            if float(first_in_line_price) <= price_to_buy_max:
-                                if current_state['orderId'] != False:
-                                    buy_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
-                                    if first_bid != float(buy_order_info['price']):
-                                        #print(current_state['symbol'], 'cancel buy order, price is in range, but we are not the first bid, so cancel and make us first bid. first_in_line_price', first_in_line_price, 'price_to_buy_max', price_to_buy_max, 'first_bid', first_bid)
+                                    current_state = create_buy_order(current_state, first_in_line_price)
+                                else:
+                                    if second_price_to_check > second_bid:
+                                        #print(current_state['symbol'], 'cancel buy order, price is in range, we are the first but, but the second bid is pretty far back, so cancel and move our bid back. first_in_line_price', first_in_line_price, 'price_to_buy_max', price_to_buy_max, 'first_bid', first_bid, 'second_bid', second_bid, 'second_price_to_check', second_price_to_check)
                                         current_state = cancel_buy_order(current_state)
                                         if current_state['executedQty'] >= amount_to_stop_buying:
                                             break
-                                        current_state = create_buy_order(current_state, first_in_line_price)
-                                    else:
-                                        if second_price_to_check > second_bid:
-                                            #print(current_state['symbol'], 'cancel buy order, price is in range, we are the first but, but the second bid is pretty far back, so cancel and move our bid back. first_in_line_price', first_in_line_price, 'price_to_buy_max', price_to_buy_max, 'first_bid', first_bid, 'second_bid', second_bid, 'second_price_to_check', second_price_to_check)
-                                            current_state = cancel_buy_order(current_state)
-                                            if current_state['executedQty'] >= amount_to_stop_buying:
-                                                break
-                                            current_state = create_buy_order(current_state, second_in_line_price)
+                                        current_state = create_buy_order(current_state, second_in_line_price)
 
-                                else:
-                                    #print(current_state['symbol'], 'price is in range and no order, so creating one.. first_in_line_price ',  first_in_line_price, 'price_to_buy_max', price_to_buy_max)
-                                    current_state = create_buy_order(current_state, first_in_line_price)
                             else:
-                                if current_state['orderId'] != False:
-                                    #print(current_state['symbol'], 'cancel buy order because price that would make us first is greater than the max price we would pay, first_in_line_price', first_in_line_price, 'price_to_buy_max', price_to_buy_max)
-                                    current_state = cancel_buy_order(current_state)
-                                    if current_state['executedQty'] >= amount_to_stop_buying:
-                                        break
-
+                                #print(current_state['symbol'], 'price is in range and no order, so creating one.. first_in_line_price ',  first_in_line_price, 'price_to_buy_max', price_to_buy_max)
+                                current_state = create_buy_order(current_state, first_in_line_price)
+                        else:
                             if current_state['orderId'] != False:
-                                time.sleep(5)
-                            else:
-                                time.sleep(.03)
+                                #print(current_state['symbol'], 'cancel buy order because price that would make us first is greater than the max price we would pay, first_in_line_price', first_in_line_price, 'price_to_buy_max', price_to_buy_max)
+                                current_state = cancel_buy_order(current_state)
+                                if current_state['executedQty'] >= amount_to_stop_buying:
+                                    break
+
+                        if current_state['orderId'] != False:
+                            time.sleep(5)
+                        else:
+                            time.sleep(.03)
 
 
-                        if current_state['executedQty'] < current_state['min_quantity']:
-                            print('[last line reached] no one bought cancel order - freeing coin', current_state['symbol'], get_time())
-                            write_current_state(current_state, False)
-                            return True
+                    if current_state['executedQty'] < current_state['min_quantity']:
+                        print('[last line reached] no one bought cancel order - freeing coin', current_state['symbol'], get_time())
+                        write_current_state(current_state, False)
+                        return True
 
-                        current_state['finish_buy_time'] = int(time.time())
-                        current_state['finish_buy_time_readable'] = get_time()
-                        current_state['original_quantity'] = current_state['executedQty']
-                        current_state['state'] = 'selling'
-                        write_current_state(current_state, current_state)
-                        
-                        coin_sold = sell_coin_with_order_book_use_min(current_state)
+                    current_state['finish_buy_time'] = int(time.time())
+                    current_state['finish_buy_time_readable'] = get_time()
+                    current_state['original_quantity'] = current_state['executedQty']
+                    current_state['state'] = 'selling'
+                    write_current_state(current_state, current_state)
+                    
+                    coin_sold = sell_coin_with_order_book_use_min(current_state)
 
-                        if coin_sold:
-                            print('finished order - freeing coin', current_state['symbol'])
-                            print('#########################')
+                    if coin_sold:
+                        print('finished order - freeing coin', current_state['symbol'])
+                        print('#########################')
 
-                            return True
+                        return True
 
-                        return False
+                    return False
 
 
     except Exception as e:

@@ -32,18 +32,19 @@ from binance.client import Client
 # look_back_array = [1,2,3,4,5,7,9,11]
 # optimization_length = 120
 
-# length = '1d'
-# min_gain = .2
-# minutes = 24*60
-# look_back_array = [1,2,3,4,5,7,9,11]
-# optimization_length = 120
-
-length = '1m'
-min_gain = .001
-minutes = 1
-look_back_array = [1,3,5,7,9,11,13,15]
-optimization_length = 360
+length = '1d'
+min_gain = .2
+minutes = 24*60
+look_back_array = [1,2,3,4,5,7,9,11]
+optimization_length = 120
 version = '1_'
+
+# length = '1m'
+# min_gain = .001
+# minutes = 1
+# look_back_array = [1,3,5,7,9,11,13,15]
+# optimization_length = 360
+# version = '1_'
 
 
 # length = '5m'
@@ -133,21 +134,6 @@ for s in symbols_trimmed:
     
     for look_back in look_back_array:
         look_back_optimized = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/' + version + length  + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
-        if look_back_optimized != False and look_back_optimized['wins'] + look_back_optimized['losses'] > 0 and look_back_optimized['gain']/(look_back_optimized['wins'] + look_back_optimized['losses']) > min_gain:
-            print(symbol['symbol'], 'look_back', look_back_optimized['look_back'],'gain', look_back_optimized['gain'], 'ave_gain', look_back_optimized['gain']/(look_back_optimized['wins'] + look_back_optimized['losses']), 'wins',  look_back_optimized['wins'], 'losses', look_back_optimized['losses'])
-            print(symbol['symbol'], 'optimal_buy_factor', look_back_optimized['optimal_buy_factor'], 'optimal_sell_factor', look_back_optimized['optimal_sell_factor'], 'optimal_band_factor', look_back_optimized['optimal_band_factor'], 'optimal_increase_factor', look_back_optimized['optimal_increase_factor'], 'optimal_minutes_until_sale', look_back_optimized['optimal_minutes_until_sale'])
-            if look_back_optimized['gain'] > 0:
-                total_gain += look_back_optimized['gain']
-                total_trades += look_back_optimized['wins'] + look_back_optimized['losses']
-                total_buy_sell_difference += (look_back_optimized['optimal_sell_factor'] - look_back_optimized['optimal_buy_factor'])*(look_back_optimized['wins'] + look_back_optimized['losses'])
-            
+        if look_back_optimized != False:
+            print('look_back', look_back_optimized['look_back'], 'optimal_buy_factor', look_back_optimized['optimal_buy_factor'],'optimal_sell_factor', look_back_optimized['optimal_sell_factor'])
     
-print('')
-print('total_gain', total_gain)
-print('average_gain', total_gain/total_trades)
-print('average_buy_sell_difference', total_buy_sell_difference/total_trades) 
-print('total_symbols', total_symbols)
-print('total_trades', total_trades)
-print('trades per minute', float(total_trades)/(minutes*optimization_length))
-print('trades per day', float(total_trades)/(float(minutes)*optimization_length/(24*60)))
-print('total_gain', total_gain)

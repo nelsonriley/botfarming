@@ -12,9 +12,31 @@ import gzip
 import datetime
 import utility_3 as ut
 import functions_financial as fn
+import os
+
 
 def run_optimizer(length, minutes, max_price_to_buy_factor, buy_sell_starting_gap, minutes_until_sale, minutes_until_sale_3, default_change_size_1, default_change_size_2):
 
+    if length == '1m':
+        max_price_to_buy_factor = .98
+    if length == '5m':
+        max_price_to_buy_factor = .96
+    if length == '15m':
+        max_price_to_buy_factor = .945
+    if length == '30m':
+        max_price_to_buy_factor = .93
+    if length == '1h':
+        max_price_to_buy_factor = .9
+    if length == '2h':
+        max_price_to_buy_factor = .87
+    if length == '6h':
+        max_price_to_buy_factor = .83
+    if length == '12h':
+        max_price_to_buy_factor = .8
+    if length == '1d':
+        max_price_to_buy_factor = .75
+    
+    
     while True:
     
         print('starting..')
@@ -78,7 +100,7 @@ def run_optimizer(length, minutes, max_price_to_buy_factor, buy_sell_starting_ga
             
                 print('##################################### New LOOK_BACK', optimizing, '###########', symbol['symbol'], 'total symbols', total_btc_coins, 'symbols started: ', symbols_started)
                     
-                data = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_training_data/'+ day + '/'+ symbol['symbol'] +'_data_'+str(minutes)+'m.pklz')
+                data = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_training_data/'+ symbol['symbol'] +'_data_'+str(minutes)+'m.pklz')
                 if data == False:
                     print('no data for symbol', symbol['symbol'])
                     continue
@@ -141,6 +163,9 @@ def run_optimizer(length, minutes, max_price_to_buy_factor, buy_sell_starting_ga
                     print('###################################################################')
                     print('###################################################################')
                     print('###################################################################')
+    
+    
+            os.remove('/home/ec2-user/environment/botfarming/Development/binance_training_data/'+ symbol['symbol'] +'_data_'+str(minutes)+'m.pklz')
     
         if length == '1d':
             time.sleep(4*60*60)

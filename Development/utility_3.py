@@ -898,7 +898,7 @@ def save_data(save_params, datapoints_trailing, min_volume, minutes, symbols_to_
         start_time = arrow.get(settings[1]).replace(tzinfo='America/Denver')
         end_time = arrow.get(settings[2]).replace(tzinfo='America/Denver')
 
-        path = '/home/ec2-user/environment/botfarming/Development/binance_training_data/'+day_folder
+        path = '/home/ec2-user/environment/botfarming/Development/binance_training_data/'
         if not os.path.exists(path):
             os.makedirs(path)
 
@@ -981,7 +981,7 @@ def save_data(save_params, datapoints_trailing, min_volume, minutes, symbols_to_
                 #     print('last candle')
                 #     pprint(data[-1])
                 #     print('--------------------ETHBTC')
-                candle_path = '/home/ec2-user/environment/botfarming/Development/binance_training_data/'+ day_folder + '/'+ symbol +'_data_'+str(minutes)+'m.pklz'
+                candle_path = '/home/ec2-user/environment/botfarming/Development/binance_training_data/'+ symbol +'_data_'+str(minutes)+'m.pklz'
                 pickle_write(candle_path, data)
 
     return True

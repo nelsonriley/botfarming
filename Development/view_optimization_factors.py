@@ -32,19 +32,19 @@ from binance.client import Client
 # look_back_array = [1,2,3,4,5,7,9,11]
 # optimization_length = 120
 
-length = '1d'
-min_gain = .2
-minutes = 24*60
-look_back_array = [1,2,3,4,5,7,9,11]
-optimization_length = 120
-version = '1_'
-
-# length = '1m'
-# min_gain = .001
-# minutes = 1
-# look_back_array = [1,3,5,7,9,11,13,15]
-# optimization_length = 360
+# length = '1d'
+# min_gain = .2
+# minutes = 24*60
+# look_back_array = [1,2,3,4,5,7,9,11]
+# optimization_length = 120
 # version = '1_'
+
+length = '1m'
+min_gain = .001
+minutes = 1
+look_back_array = [1,3,5,7,9,11,13,15]
+optimization_length = 360
+version = '1_'
 
 
 # length = '5m'

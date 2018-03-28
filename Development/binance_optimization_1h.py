@@ -15,12 +15,7 @@ import functions_financial as fn
 import binance_optimization_utility as bou
 
 length = '1h'
-minutes = 1*60
-max_price_to_buy_factor = .88
-buy_sell_starting_gap = .03
+minutes = 60
 minutes_until_sale = 12
-minutes_until_sale_3 = 14
-default_change_size_1 = .009
-default_change_size_2 = .0045
 
-bou.run_optimizer(length, minutes, max_price_to_buy_factor, buy_sell_starting_gap, minutes_until_sale, minutes_until_sale_3, default_change_size_1, default_change_size_2)
+bou.run_optimizer(length, minutes, minutes_until_sale)

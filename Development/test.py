@@ -1,6 +1,5 @@
 #!/usr/bin/python2.7
 import sys
-print('python', sys.version)
 import pickle
 import gzip
 import time
@@ -19,8 +18,9 @@ import threading
 import httplib
 from Queue import Queue
 import requests
-import functions_financial as fn
 import math
+import binance_optimization_utility as bou
+import functions_financial as fn
 
 # start
 print('start @',  time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
@@ -29,7 +29,16 @@ start_time = int(time.time())
 ################################################################################ PLAY WITH CODE
 
 
-print 'hello world'
+
+    
+
+
+
+
+
+# file_path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history_24hr_1min_drop_ENHANCED.pklz'
+# trades = ut.pickle_read(file_path)
+
 
 ################################################################################ GET RESULTS for 24hr_1min_drop
 # file_path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history_24hr_1min_drop_ENHANCED.pklz'

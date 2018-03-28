@@ -478,6 +478,7 @@ def buy_coin(symbol, length, file_number, client):
 
         largest_bitcoin_order = .1
         if length == '1m':
+            max_price_to_buy_factor = .98
             largest_bitcoin_order = .1
             part_of_bitcoin_to_use = .4
             gain_min = .001
@@ -486,6 +487,7 @@ def buy_coin(symbol, length, file_number, client):
             minutes_until_sale = 10
             minutes_until_sale_final = 12
         elif length == '5m':
+            max_price_to_buy_factor = .97
             largest_bitcoin_order = .2
             part_of_bitcoin_to_use = .45
             gain_min = .001
@@ -494,6 +496,7 @@ def buy_coin(symbol, length, file_number, client):
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
         elif length == '15m':
+            max_price_to_buy_factor = .96
             largest_bitcoin_order = .2
             part_of_bitcoin_to_use = .5
             gain_min = .001
@@ -502,6 +505,7 @@ def buy_coin(symbol, length, file_number, client):
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
         elif length == '30m':
+            max_price_to_buy_factor = .95
             largest_bitcoin_order = .2
             part_of_bitcoin_to_use = .55
             gain_min = .001
@@ -510,6 +514,7 @@ def buy_coin(symbol, length, file_number, client):
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
         elif length == '1h':
+            max_price_to_buy_factor = .94
             largest_bitcoin_order = .2
             part_of_bitcoin_to_use = .6
             gain_min = .001
@@ -518,6 +523,7 @@ def buy_coin(symbol, length, file_number, client):
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
         elif length == '2h':
+            max_price_to_buy_factor = .93
             largest_bitcoin_order = .2
             part_of_bitcoin_to_use = .65
             gain_min = .001
@@ -526,6 +532,7 @@ def buy_coin(symbol, length, file_number, client):
             minutes_until_sale = 8*minutes
             minutes_until_sale_final = 10*minutes
         elif length == '6h':
+            max_price_to_buy_factor = .92
             largest_bitcoin_order = .2
             part_of_bitcoin_to_use = .7
             gain_min = .001
@@ -534,6 +541,7 @@ def buy_coin(symbol, length, file_number, client):
             minutes_until_sale = 4*minutes
             minutes_until_sale_final = 6*minutes
         elif length == '12h':
+            max_price_to_buy_factor = .91
             largest_bitcoin_order = .2
             part_of_bitcoin_to_use = .75
             gain_min = .001
@@ -542,6 +550,7 @@ def buy_coin(symbol, length, file_number, client):
             minutes_until_sale = 3*minutes
             minutes_until_sale_final = 5*minutes
         elif length == '1d':
+            max_price_to_buy_factor = .9
             largest_bitcoin_order = .2
             part_of_bitcoin_to_use = .8
             gain_min = .001
@@ -568,12 +577,16 @@ def buy_coin(symbol, length, file_number, client):
 
         for look_back in look_back_schedule:
             
-            look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/1_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
             
-                
+            if a_b == 1:
+                look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/1_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
+            else:
+                look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/2_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
+    
+            
             if look_back_optimized != False:
                 price_to_buy_factor_array[look_back] = look_back_optimized['optimal_buy_factor']
-                price_to_sell_factor_array[look_back] = look_back_optimized['optimal_sell_factor']
+                price_to_sell_factor_array[look_back] = min(look_back_optimized['optimal_sell_factor'], .99)
                 lower_band_buy_factor_array[look_back] = 100
                 price_increase_factor_array[look_back] = 1.01
             else:
@@ -643,11 +656,12 @@ def buy_coin(symbol, length, file_number, client):
             
                 
             current_price = float(order_book['bids'][0][0])
-
            
 
             for look_back in look_back_schedule:
                 
+                if price_to_buy_factor_array[look_back] > max_price_to_buy_factor:
+                    continue
             
                 price_to_start_buy = float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy_factor
 
@@ -905,7 +919,7 @@ def save_data(save_params, datapoints_trailing, min_volume, minutes, symbols_to_
         start_end_style = True
         if start_end_style:
             
-            print('STARTING CANDLES DOWNLOAD', settings, get_time())
+            # print('STARTING CANDLES DOWNLOAD', settings, get_time())
 
             start = start_time.timestamp * 1000
             # print('start', start, arrow.get(int(start/1000)).to('America/Denver'))
@@ -970,7 +984,7 @@ def save_data(save_params, datapoints_trailing, min_volume, minutes, symbols_to_
                     last_loop = True
 
             # save continuous data for each coin to disk
-            print('SAVING CANDLE DATA', settings, 'for', len(coins), 'symbols', get_time())
+            # print('SAVING CANDLE DATA', settings, 'for', len(coins), 'symbols', get_time())
             for symbol in coins:
                 data = coins[symbol]
                 # if symbol == 'ETHBTC':

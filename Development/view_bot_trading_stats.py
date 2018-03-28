@@ -48,7 +48,7 @@ for file in onlyfiles:
         
 for bot_trade in bot_trades:
     
-    if len(bot_trade) == 11 and bot_trade[5] != 1: # and bot_trade[5] != 11 and bot_trade[5] != 9:
+    if True: # and bot_trade[5] != 11 and bot_trade[5] != 9:
         print('')
         
         print('time start', bot_trade[0], 'symbol', bot_trade[1], 'asolute profit', bot_trade[2], 'percentage profit', bot_trade[3], 'bit coin invested', bot_trade[4], 'look_back', bot_trade[5], 'a_b', bot_trade[6], 'price_to_buy_factor', bot_trade[7], 'price_to_sell_factor', bot_trade[8], 'original_buy_time', bot_trade[9], 'sell time', bot_trade[10])

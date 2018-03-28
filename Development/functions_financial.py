@@ -2,6 +2,7 @@ import datetime
 import numpy
 import pandas as pd
 import utility as ut
+import math
 
 
 def get_n_minute_candles(n_minutes, one_min_data):
@@ -313,6 +314,44 @@ def make_smart_candles(candles):
                 'consecutive_higher_open_close_centers': consecutive_higher_open_close_centers
                 })
     return candles, smart_candle_array
+
+
+def std_dev(lst, population=True, do_print=False):
+    """Calculates the standard deviation for a list of numbers."""
+    num_items = len(lst)
+    mean = sum(lst) / num_items
+    differences = [x - mean for x in lst]
+    sq_differences = [d ** 2 for d in differences]
+    ssd = sum(sq_differences)
+ 
+    # Note: it would be better to return a value and then print it outside
+    # the function, but this is just a quick way to print out the values along
+    # the way.
+    if population is True:
+        # print('This is POPULATION standard deviation.')
+        variance = ssd / num_items
+    else:
+        # print('This is SAMPLE standard deviation.')
+        variance = ssd / (num_items - 1)
+    sd = math.sqrt(variance)
+    # You could `return sd` here.
+ 
+    if do_print:
+        print('The mean of {} is {}.'.format(lst, mean))
+        print('The differences are {}.'.format(differences))
+        print('The sum of squared differences is {}.'.format(ssd))
+        print('The variance is {}.'.format(variance))
+        print('The standard deviation is {}.'.format(sd))
+        print('--------------------------')
+        
+    return {
+        'std_dev': sd,
+        'mean': mean,
+        'max': max(lst),
+        'min': min(lst),
+        'count': num_items
+    }
+    
 
 
 def print_ascii():

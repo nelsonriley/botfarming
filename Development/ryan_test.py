@@ -32,24 +32,26 @@ from binance.client import Client
 
 # if should_save != False and should_save > int(time.time()):
 #     print('hi')
+stop_trading_time = int(time.time()) + 60*60*12
+
+ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_ETHBTC', stop_trading_time)
+    
 
 
+# ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/1m_stop_trading', True)
+# ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/5m_stop_trading', True)
+# ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/15m_stop_trading', True)
+# ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/30m_stop_trading', True)
+# ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/1h_stop_trading', True)
+# ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/2h_stop_trading', True)
+# ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/6h_stop_trading', True)
+# ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/12h_stop_trading', True)
+# ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/1d_stop_trading', True)
 
+# stop_trading = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/1m_stop_trading')
 
-ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/1m_stop_trading', True)
-ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/5m_stop_trading', True)
-ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/15m_stop_trading', True)
-ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/30m_stop_trading', True)
-ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/1h_stop_trading', True)
-ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/2h_stop_trading', True)
-ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/6h_stop_trading', True)
-ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/12h_stop_trading', True)
-ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/1d_stop_trading', True)
-
-stop_trading = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/1m_stop_trading')
-
-if stop_trading == True:
-    print('should stop trading')
+# if stop_trading == True:
+#     print('should stop trading')
 
 # look_back_gains = {}
 # look_back_gains[1] = .2

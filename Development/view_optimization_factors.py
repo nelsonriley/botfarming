@@ -39,12 +39,12 @@ from binance.client import Client
 # optimization_length = 120
 # version = '1_'
 
-length = '1m'
-min_gain = .001
-minutes = 1
-look_back_array = [1,3,5,7,9,11,13,15]
-optimization_length = 360
-version = '1_'
+# length = '1m'
+# min_gain = .001
+# minutes = 1
+# look_back_array = [1,3,5,7,9,11,13,15]
+# optimization_length = 360
+# version = '2_'
 
 
 # length = '5m'
@@ -52,7 +52,7 @@ version = '1_'
 # minutes = 5
 # look_back_array = [1,3,5,7,9,11,13,15]
 # optimization_length = 360
-# version = '1_'
+# version = '2_'
 
 # length = '15m'
 # min_gain = .001
@@ -61,12 +61,12 @@ version = '1_'
 # optimization_length = 360
 # version = '1_'
 
-# length = '30m'
-# min_gain = .001
-# minutes = 30
-# look_back_array = [1,3,5,7,9,11,13,15]
-# optimization_length = 360
-# version = '1_'
+length = '30m'
+min_gain = .001
+minutes = 30
+look_back_array = [1,3,5,7,9,11,13,15]
+optimization_length = 360
+version = '2_'
 
 # length = '1d'
 # min_gain = .001
@@ -135,5 +135,5 @@ for s in symbols_trimmed:
     for look_back in look_back_array:
         look_back_optimized = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/' + version + length  + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
         if look_back_optimized != False:
-            print('look_back', look_back_optimized['look_back'], 'optimal_buy_factor', look_back_optimized['optimal_buy_factor'],'optimal_sell_factor', look_back_optimized['optimal_sell_factor'])
+            print('look_back', look_back_optimized['look_back'], 'lowest_buy_factor', look_back_optimized['lowest_buy_factor'],'highest_sale_factor', look_back_optimized['highest_sale_factor'])
     

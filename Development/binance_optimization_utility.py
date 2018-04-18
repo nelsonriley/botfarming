@@ -13,88 +13,93 @@ import functions_financial as fn
 import os
 
 
-def run_optimizer(length, minutes, minutes_until_sale):
+def run_optimizer(lengths):
 
-    if length == '1m':
-        data_length_multiplier = 360 # 6 hours      # 3x as long, but 12 sections
-    if length == '5m':
-        data_length_multiplier = 60*24*2/5 # 2 days
-    if length == '15m':
-        data_length_multiplier = 60*24*7/15 # 1 wk
-    if length == '30m':
-        data_length_multiplier = 60*24*14/30 # 2 wks
-    if length == '1h':
-        data_length_multiplier = 60*24*14/60 # 2 wks
-    if length == '2h':
-        data_length_multiplier = 60*24*30/120 # 1 month
-    if length == '6h':
-        data_length_multiplier = 60*24*45/360 # 1.5 months
-    if length == '12h':
-        data_length_multiplier = 60*24*90/720 # 3 months
-    if length == '1d':
-        data_length_multiplier = 60*24*120/1440 # 4 months
-    
     while True:
+        
+        for length in lengths:
+            
+            if length == '1m':
+                data_length_multiplier = 360 # 6 hours      # 3x as long, but 12 sections
+                minutes = 1
+                minutes_until_sale = 12
+            if length == '5m':
+                data_length_multiplier = 60*24*2/5 # 2 days
+                minutes = 5
+                minutes_until_sale = 12
+            if length == '15m':
+                data_length_multiplier = 60*24*7/15 # 1 wk
+                minutes = 15
+                minutes_until_sale = 12
+            if length == '30m':
+                data_length_multiplier = 60*24*14/30 # 2 wks
+                minutes = 30
+                minutes_until_sale = 12
+            if length == '1h':
+                data_length_multiplier = 60*24*14/60 # 2 wks
+                minutes = 60
+                minutes_until_sale = 12
+            if length == '2h':
+                data_length_multiplier = 60*24*30/120 # 1 month
+                minutes = 60 * 2
+                minutes_until_sale = 8
+            if length == '6h':
+                data_length_multiplier = 60*24*45/360 # 1.5 months
+                minutes = 60 * 6
+                minutes_until_sale = 4
+            if length == '12h':
+                data_length_multiplier = 60*24*90/720 # 3 months
+                minutes = 60 * 12
+                minutes_until_sale = 3
+            if length == '1d':
+                data_length_multiplier = 60*24*120/1440 # 4 months
+                minutes = 60 * 24
+                minutes_until_sale = 2
     
-        print('starting..')
-        
-        ################################################################################ RUN OPTIMIZER
-        
-        symbols = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz')
-        
-        symbols_trimmed = {}
-        total_btc_coins = 0
-        for s in symbols:
-            symbol = symbols[s]
-            if float(symbol['24hourVolume']) > 300:
-                total_btc_coins += 1
-                symbols_trimmed[s] = symbol
-        print('total symbols', total_btc_coins)
-        
-        symbols_started = 0
-        for s in symbols_trimmed:
-            symbols_started += 1
-            print('symbols_started', symbols_started)
+            print('starting..')
             
-            #get data in right format for save function (could fix this)
-            symbol = symbols_trimmed[s]
-            symbols_trimmed_one = {}
-            for s_one in symbols:
-                symbol_one = symbols[s_one]
-                if symbol_one['symbol'] == symbol['symbol']:
-                    symbols_trimmed_one[s] = symbol_one
+            ################################################################################ RUN OPTIMIZER
             
-            # 777
-            optimizing_array= [1,3,5,7,9,11,13,15]
-            end_time = int(time.time())
-            results = get_optimization_factors(optimizing_array, data_length_multiplier, end_time, symbol, symbols_trimmed_one, length, minutes, minutes_until_sale)
+            symbols = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz')
             
-            for i, result in enumerate(results):
-                optimization_factors_path = '/home/ec2-user/environment/botfarming/Development/optimization_factors/1_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(result['look_back']) + '.pklz'
-              
-                if result['lowest_buy_factor'] != 1:
+            symbols_trimmed = {}
+            total_btc_coins = 0
+            for s in symbols:
+                symbol = symbols[s]
+                if float(symbol['24hourVolume']) > 300:
+                    total_btc_coins += 1
+                    symbols_trimmed[s] = symbol
+            print('total symbols', total_btc_coins)
+            
+            symbols_started = 0
+            for s in symbols_trimmed:
+                symbols_started += 1
+                print('symbols_started', symbols_started)
+                
+                #get data in right format for save function (could fix this)
+                symbol = symbols_trimmed[s]
+                symbols_trimmed_one = {}
+                for s_one in symbols:
+                    symbol_one = symbols[s_one]
+                    if symbol_one['symbol'] == symbol['symbol']:
+                        symbols_trimmed_one[s] = symbol_one
+                
+                # 777
+                optimizing_array= [1,3,5,7,9,11,13,15]
+                end_time = int(time.time())
+                results = get_optimization_factors(optimizing_array, data_length_multiplier, end_time, symbol, symbols_trimmed_one, length, minutes, minutes_until_sale)
+                
+                for i, result in enumerate(results):
+                    optimization_factors_path = '/home/ec2-user/environment/botfarming/Development/optimization_factors/1_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(result['look_back']) + '.pklz'
+                    
                     ut.pickle_write(optimization_factors_path, result)
                     print('###################################################################')
                     print('###################################################################')
                     print('######### LOOK_BACK', result['look_back'], '###########', symbol['symbol'])
                     print('lowest_buy_factor', result['lowest_buy_factor'])
                     print('highest_sale_factor', result['highest_sale_factor'])
-                else:
-                    ut.pickle_write(optimization_factors_path, False)
-
-        # end optimization cycle, sleep
-        if length == '1d':
-            time.sleep(4*60*60)
-        if length == '12h':
-            time.sleep(3*60*60)
-        if length == '6h':
-            time.sleep(2*60*60)
-        if length == '2h':
-            time.sleep(1*60*60)
-        if length == '1h':
-            time.sleep(30*60)
-        if length == '30m':
-            time.sleep(20*60)
+                   
+    
                 
 
 # 777
@@ -112,7 +117,7 @@ def get_optimization_factors(optimizing_array, data_length_multiplier, end_time,
     readable_time_end_of_period_folder = datetime.datetime.fromtimestamp(end_of_period-7*60*60).strftime('%Y%m%d_%H:%M')
     readable_time_start_of_period_folder = datetime.datetime.fromtimestamp(one_period_ago-7*60*60).strftime('%Y%m%d_%H:%M')
     period = readable_time_start_of_period_folder + '_to_' + readable_time_end_of_period_folder
-    print('##########  fetching sample period data', period, 'for', symbol['symbol'], length)
+    #print('##########  fetching sample period data', period, 'for', symbol['symbol'], length)
     save_params = [
         [period, readable_time_start_of_period, readable_time_end_of_period]
     ]
@@ -171,8 +176,8 @@ def get_optimization_factors(optimizing_array, data_length_multiplier, end_time,
 
         result = {}
         result['look_back'] = optimizing
-        result['optimal_buy_factor'] = lowest_buy_factor
-        result['optimal_sell_factor'] = highest_sale_factor
+        result['lowest_buy_factor'] = lowest_buy_factor
+        result['highest_sale_factor'] = highest_sale_factor
         results.append(result)
 
     if os.path.isfile(symbol_data_path):
@@ -271,10 +276,13 @@ def run_optimizer_multi(lengths):
                     highest_sale_factors = []
                     results = results_by_look_back[lb]
                     for r in results:
-                        lowest_buy_factors.append(r['optimal_buy_factor'])
-                        highest_sale_factors.append(r['optimal_sell_factor'])
+                        lowest_buy_factors.append(r['lowest_buy_factor'])
+                        highest_sale_factors.append(r['highest_sale_factor'])
                     lowest_buy_factor_stats = fn.std_dev(lowest_buy_factors)
                     highest_sale_factor_stats = fn.std_dev(highest_sale_factors)
+                    
+                    if lowest_buy_factor_stats == False or highest_sale_factor_stats == False:
+                        continue
                     # print('#####################################################')
                     # print('LOWEST BUY FACTORS ######## LOOK_BACK', lb, s, step_back_periods, '*', hours_per_period, 'hrs')
                     # pprint(lowest_buy_factor_stats)
@@ -290,8 +298,11 @@ def run_optimizer_multi(lengths):
                     result['highest_sale_factor_std_dev'] = highest_sale_factor_stats['std_dev']
                     result['highest_sale_factor_min'] = highest_sale_factor_stats['min']
                     result['look_back'] = int(lb)
-                    result['optimal_buy_factor'] = lowest_buy_factor_stats['mean']
-                    result['optimal_sell_factor'] = highest_sale_factor_stats['mean']
+                    result['lowest_buy_factor'] = lowest_buy_factor_stats['mean']
+                    result['highest_sale_factor'] = highest_sale_factor_stats['mean']
             
                     optimization_factors_path = '/home/ec2-user/environment/botfarming/Development/optimization_factors/2_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(result['look_back']) + '.pklz'
                     ut.pickle_write(optimization_factors_path, result)
+                    
+                    optimization_factors_path_2 = '/home/ec2-user/environment/botfarming/Development/optimization_factors/1_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(result['look_back']) + '.pklz'
+                    ut.pickle_write(optimization_factors_path_2, result)

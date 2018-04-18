@@ -103,6 +103,19 @@ def float_to_str(f, precision=20):
     d1 = ctx.create_decimal(repr(f))
     return format(d1, 'f')
 
+def round_down(num,digits):
+    if float(digits) == 0:
+        print('here..', num, math.floor(num))
+        return math.floor(num)
+    factor = 10.0 ** digits
+    return math.floor(num * factor) / factor
+    
+def convert_date_to_epoch(date_time):
+    #print(date_time)
+    pattern = '%Y-%m-%d %H:%M:%S'
+    epoch = int(time.mktime(time.strptime(date_time, pattern)))
+    #print(epoch)
+    return epoch
 
 ###########################################################################################
 
@@ -205,6 +218,11 @@ def calculate_profit_and_free_coin(current_state):
 
     # update program state
     write_current_state(current_state, False)
+    
+    if percent_profit_from_trade < current_state['stop_trading_value']:
+        stop_trading_time = int(time.time()) + 60*60*current_state['stop_trading_time']
+        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_' + current_state['symbol'], stop_trading_time)
+    
     print('################## wrote profit and freed coin....', current_state['symbol'])
 
     # ignore trades we have big losses on for 12 hours
@@ -457,6 +475,18 @@ def buy_coin(symbol, length, file_number, client):
             time.sleep(60)
             return
         
+        time_to_start_trading = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_' + symbol['symbol'])
+        
+        if time_to_start_trading != False and int(time.time()) < time_to_start_trading:
+            # if symbol['symbol'] == 'ETHBTC':
+            #      print('not trading...')
+            time.sleep(60)
+            return
+        
+        if symbol['symbol'] == 'CTRBTC':
+            time.sleep(6000000)
+            return
+        
         if length == '1m':
             minutes = 1
         elif length == '5m':
@@ -486,6 +516,8 @@ def buy_coin(symbol, length, file_number, client):
             look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 10
             minutes_until_sale_final = 12
+            stop_trading_value = -.082
+            stop_trading_time = 16
         elif length == '5m':
             max_price_to_buy_factor = .97
             largest_bitcoin_order = .2
@@ -495,6 +527,8 @@ def buy_coin(symbol, length, file_number, client):
             look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
+            stop_trading_value = -.082
+            stop_trading_time = 16
         elif length == '15m':
             max_price_to_buy_factor = .96
             largest_bitcoin_order = .2
@@ -504,6 +538,8 @@ def buy_coin(symbol, length, file_number, client):
             look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
+            stop_trading_value = -.068
+            stop_trading_time = 16
         elif length == '30m':
             max_price_to_buy_factor = .95
             largest_bitcoin_order = .2
@@ -513,6 +549,8 @@ def buy_coin(symbol, length, file_number, client):
             look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
+            stop_trading_value = -.068
+            stop_trading_time = 16
         elif length == '1h':
             max_price_to_buy_factor = .94
             largest_bitcoin_order = .2
@@ -522,6 +560,8 @@ def buy_coin(symbol, length, file_number, client):
             look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
+            stop_trading_value = -.068
+            stop_trading_time = 16
         elif length == '2h':
             max_price_to_buy_factor = .93
             largest_bitcoin_order = .2
@@ -531,6 +571,8 @@ def buy_coin(symbol, length, file_number, client):
             look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 8*minutes
             minutes_until_sale_final = 10*minutes
+            stop_trading_value = -.064
+            stop_trading_time = 14
         elif length == '6h':
             max_price_to_buy_factor = .92
             largest_bitcoin_order = .2
@@ -540,6 +582,8 @@ def buy_coin(symbol, length, file_number, client):
             look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 4*minutes
             minutes_until_sale_final = 6*minutes
+            stop_trading_value = -.064
+            stop_trading_time = 14
         elif length == '12h':
             max_price_to_buy_factor = .91
             largest_bitcoin_order = .2
@@ -549,6 +593,8 @@ def buy_coin(symbol, length, file_number, client):
             look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 3*minutes
             minutes_until_sale_final = 5*minutes
+            stop_trading_value = -.068
+            stop_trading_time = 23
         elif length == '1d':
             max_price_to_buy_factor = .9
             largest_bitcoin_order = .2
@@ -558,6 +604,8 @@ def buy_coin(symbol, length, file_number, client):
             look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 2*minutes
             minutes_until_sale_final = 4*minutes
+            stop_trading_value = -.09
+            stop_trading_time = 7
             
         price_to_start_buy_factor = 1.003
         sell_price_drop_factor = .997
@@ -585,8 +633,8 @@ def buy_coin(symbol, length, file_number, client):
     
             
             if look_back_optimized != False:
-                price_to_buy_factor_array[look_back] = look_back_optimized['optimal_buy_factor']
-                price_to_sell_factor_array[look_back] = min(look_back_optimized['optimal_sell_factor'], .99)
+                price_to_buy_factor_array[look_back] = look_back_optimized['lowest_buy_factor']
+                price_to_sell_factor_array[look_back] = min(look_back_optimized['highest_sale_factor'], .99)
                 lower_band_buy_factor_array[look_back] = 100
                 price_increase_factor_array[look_back] = 1.01
             else:
@@ -727,7 +775,9 @@ def buy_coin(symbol, length, file_number, client):
                     current_state['price_decimals'] = price_decimals
                     current_state['quantity_decimals'] = quantity_decimals
                     current_state['min_price'] = float(symbol['filters'][0]['minPrice'])
-                    current_state['min_quantity'] = min(float(symbol['filters'][1]['minQty']), float(symbol['filters'][2]['minNotional']))
+                    current_state['min_quantity'] = max(float(symbol['filters'][1]['minQty']), float(symbol['filters'][2]['minNotional']))
+                    current_state['stop_trading_value'] = stop_trading_value
+                    current_state['stop_trading_time'] = stop_trading_time
 
                     write_current_state(current_state, current_state)
 
@@ -1009,7 +1059,7 @@ def process_socket_pushes_order_book(msg):
         msg['data']['time'] = int(time.time())
         pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/'+symbol+'.pklz', msg['data'])
 
-        if (symbol == 'ETHBTC'):# and (time.localtime().tm_sec == 1 or time.localtime().tm_sec == 2):
+        if (symbol == 'ETHBTC') and (time.localtime().tm_sec == 1 or time.localtime().tm_sec == 2):
             print('process_socket_pushes_order_book()', symbol, msg['data']['bids'][0][0], 'time given', get_readable_time(msg['data']['time']), 'current time', get_time())
 
         if time.localtime().tm_sec < 30:

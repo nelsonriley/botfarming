@@ -1,7 +1,7 @@
 import datetime
 import numpy
 import pandas as pd
-import utility as ut
+import utility_3 as ut
 import math
 
 
@@ -319,6 +319,8 @@ def make_smart_candles(candles):
 def std_dev(lst, population=True, do_print=False):
     """Calculates the standard deviation for a list of numbers."""
     num_items = len(lst)
+    if num_items == 0:
+        return False;
     mean = sum(lst) / num_items
     differences = [x - mean for x in lst]
     sq_differences = [d ** 2 for d in differences]

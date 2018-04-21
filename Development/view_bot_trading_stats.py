@@ -49,15 +49,14 @@ trades_made_within_a_period_of_time_profit = 0
 
 last_neg_buy_time = {}
 trades_reduced = []
-do_not_buy_time_start = {}
-do_not_buy_time_end = {}
+
 
 real_total_profit = 0
 
 first_loop = True
 
-
-bot_trades = []
+path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/'
+onlyfiles = [f for f in listdir(path) if isfile(join(path, f))]
 
 look_backs = ['1m', '5m', '15m', '30m', '1h', '2h', '6h', '12h', '1d']
 
@@ -65,12 +64,47 @@ for look_back in look_backs:
     
     print('look_back', look_back)
     
-    max_profit = -999999
-    best_not_trade_value = -1
-    best_hours_to_not_trade = -1
+    bot_trades = []
     
-    path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/'
-    onlyfiles = [f for f in listdir(path) if isfile(join(path, f))]
+    for file in onlyfiles:
+        if file.startswith(look_back + "_0"):
+            #print('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/' + file)
+            trade = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/' + file)
+            if len(trade) == 11:
+                trade.append(look_back)
+                trade[0] = ut.convert_date_to_epoch(trade[0])
+                trade[10] = ut.convert_date_to_epoch(trade[10])
+                bot_trades.append(trade)
+                
+    total_profit = 0
+    total_trades = 0
+    
+    for i, bot_trade in enumerate(bot_trades):
+    
+        if bot_trade[0] > 1522540800 and bot_trade[1] != 'CTRBTC':
+            total_profit += bot_trade[2] # 'absolute profit', bot_trade[2], 'percentage profit', bot_trade[3]
+            total_trades += 1
+    
+
+    print('total_profit', total_profit)
+    print('total_trades', total_trades)
+    
+print('')
+
+
+
+#for look_back in look_backs:
+    
+#print('look_back', look_back)
+
+bot_trades = []
+
+max_profit = -999999
+best_not_trade_value = -1
+best_hours_to_not_trade = -1
+
+
+for look_back in look_backs:
     for file in onlyfiles:
         if file.startswith(look_back + "_0"):
             #print('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/' + file)
@@ -81,53 +115,88 @@ for look_back in look_backs:
                 trade[10] = ut.convert_date_to_epoch(trade[10])
                 bot_trades.append(trade)
 
-    bot_trades = sorted(bot_trades, key=itemgetter(9))
+bot_trades = sorted(bot_trades, key=itemgetter(9))
 
-    for a in range(0, 24):
-        hours_to_not_trade = a
-        for b in range(0,100): 
-            not_trade_value = -.002*b
+all_trades_counted = []
+
+for a in range(0, 48):
+    hours_to_not_trade = a*.5
+    for b in range(0,100): 
+        not_trade_value = -.005*b
+        
+        do_not_buy_time_start = {}
+        do_not_buy_time_end = {}
+        
+        total_profit = 0
+        total_trades = 0
+        
+        all_trades_counted_temp = []
+        
+        #print 'START'
+        
+        for i, bot_trade in enumerate(bot_trades):
+            #s = bot_trade[1]
+            #start_time = ut.get_time_formats(bot_trade[9])
             
-            total_profit = 0
-            total_trades = 0
+            if bot_trade[0] > 1522540800: # and bot_trade[1] != 'CTRBTC': # and start_time['epoch'] < 1523299178:
             
-            #print 'START'
             
-            for i, bot_trade in enumerate(bot_trades):
-                #s = bot_trade[1]
-                #start_time = ut.get_time_formats(bot_trade[9])
+                if first_loop == True:
+                    pprint(bot_trade)
+                    first_loop = False
+                # Calc total profit
                 
-                if bot_trade[0] > 1522540800: # and bot_trade[1] != 'CTRBTC': # and start_time['epoch'] < 1523299178:
-                
-                
-                    if first_loop == True:
-                        pprint(bot_trade)
-                        first_loop = False
-                    # Calc total profit
+                if bot_trade[1] not in do_not_buy_time_end or float(bot_trade[9]) > float(do_not_buy_time_end[bot_trade[1]]) or float(bot_trade[9]) < float(do_not_buy_time_start[bot_trade[1]]):
+                    total_profit += bot_trade[2] # 'absolute profit', bot_trade[2], 'percentage profit', bot_trade[3]
+                    total_trades += 1
+                    all_trades_counted_temp.append(bot_trade)
                     
-                    if bot_trade[1] not in do_not_buy_time_end or float(bot_trade[9]) > float(do_not_buy_time_end[bot_trade[1]]) or float(bot_trade[9]) < float(do_not_buy_time_start[bot_trade[1]]):
-                        total_profit += bot_trade[2] # 'absolute profit', bot_trade[2], 'percentage profit', bot_trade[3]
-                        total_trades += 1
+                    if bot_trade[1] in do_not_buy_time_end and float(bot_trade[9]) > float(do_not_buy_time_end[bot_trade[1]]):
+                        do_not_buy_time_start[bot_trade[1]] = 0
+                    
+                    if bot_trade[3] < not_trade_value and bot_trade > -.5:
+                        do_not_buy_time_end[bot_trade[1]] = bot_trade[10] + hours_to_not_trade*60*60
+                        do_not_buy_time_start[bot_trade[1]] = bot_trade[10]
                         
-                        if bot_trade[3] < not_trade_value and bot_trade > -.5:
-                            do_not_buy_time_end[bot_trade[1]] = bot_trade[10] + hours_to_not_trade*60*60
-                            do_not_buy_time_start[bot_trade[1]] = bot_trade[10]
-                            
-                         
-                        
-            if total_profit > max_profit:
-                max_profit = total_profit
-                best_hours_to_not_trade = hours_to_not_trade
-                best_not_trade_value = not_trade_value
-                print('new best total profit', total_profit, 'hours_not_to_trade', hours_to_not_trade, 'not_trade_value', not_trade_value, 'total_trades', total_trades)
+                     
+        if a == 0 and b == 0:
+            print('original profit at base', total_profit, 'hours_not_to_trade', hours_to_not_trade, 'not_trade_value', not_trade_value, 'total_trades', total_trades)
+        
+        if hours_to_not_trade > 8 and hours_to_not_trade < 10 and not_trade_value < -.08 and not_trade_value > -.1:
+            print('for special total profit', total_profit, 'hours_not_to_trade', hours_to_not_trade, 'not_trade_value', not_trade_value, 'total_trades', total_trades)
+        
+            
+        if total_profit > max_profit:
+            max_profit = total_profit
+            best_hours_to_not_trade = hours_to_not_trade
+            best_not_trade_value = not_trade_value
+            all_trades_counted = all_trades_counted_temp
+            print('new best total profit', total_profit, 'hours_not_to_trade', hours_to_not_trade, 'not_trade_value', not_trade_value, 'total_trades', total_trades)
+        
+
+
+real_total_profit += max_profit
+print('max profit', max_profit, 'hours_not_to_trade', best_hours_to_not_trade, 'not_trade_value', best_not_trade_value)
+print('') 
+
+look_backs = ['1m', '5m', '15m', '30m', '1h', '2h', '6h', '12h', '1d']
+
+
+for look_back in look_backs:
+    print(look_back)
+    total_profit = 0
+    total_trades = 0
+    for trade in all_trades_counted:
+        if look_back == trade[11]:
+            total_profit += trade[2]
+            total_trades += 1
             
     
+    print('total_profit', total_profit)
+    print('total_trades', total_trades)
+            
     
-    real_total_profit += max_profit
-    print('max profit', max_profit, 'hours_not_to_trade', best_hours_to_not_trade, 'not_trade_value', best_not_trade_value)
-    print('') 
-    
-print('real_total_profit', real_total_profit)
+#print('real_total_profit', real_total_profit)
               
         # Consider blacklisting a symbol for some period of time after negative trade
         # trade_is_negative = bot_trade[2] < 0
@@ -229,10 +298,6 @@ print('real_total_profit', real_total_profit)
 # print('trades_reduced', len(trades_reduced))
 # trades_reduced_profit = sum(l[2] for l in trades_reduced)
 # print('trades_reduced_profit', trades_reduced_profit)
-
-print()
-print('total profit', total_profit)
-print('total trades', total_trades)
 
 # print()
 # print('total profit segment', total_profit_segment)

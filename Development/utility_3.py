@@ -516,8 +516,6 @@ def buy_coin(symbol, length, file_number, client):
             look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 10
             minutes_until_sale_final = 12
-            stop_trading_value = -.082
-            stop_trading_time = 16
         elif length == '5m':
             max_price_to_buy_factor = .97
             largest_bitcoin_order = .2
@@ -527,8 +525,6 @@ def buy_coin(symbol, length, file_number, client):
             look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
-            stop_trading_value = -.082
-            stop_trading_time = 16
         elif length == '15m':
             max_price_to_buy_factor = .96
             largest_bitcoin_order = .2
@@ -538,8 +534,6 @@ def buy_coin(symbol, length, file_number, client):
             look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
-            stop_trading_value = -.068
-            stop_trading_time = 16
         elif length == '30m':
             max_price_to_buy_factor = .95
             largest_bitcoin_order = .2
@@ -549,8 +543,6 @@ def buy_coin(symbol, length, file_number, client):
             look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
-            stop_trading_value = -.068
-            stop_trading_time = 16
         elif length == '1h':
             max_price_to_buy_factor = .94
             largest_bitcoin_order = .2
@@ -560,8 +552,6 @@ def buy_coin(symbol, length, file_number, client):
             look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
-            stop_trading_value = -.068
-            stop_trading_time = 16
         elif length == '2h':
             max_price_to_buy_factor = .93
             largest_bitcoin_order = .2
@@ -571,8 +561,6 @@ def buy_coin(symbol, length, file_number, client):
             look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 8*minutes
             minutes_until_sale_final = 10*minutes
-            stop_trading_value = -.064
-            stop_trading_time = 14
         elif length == '6h':
             max_price_to_buy_factor = .92
             largest_bitcoin_order = .2
@@ -582,8 +570,6 @@ def buy_coin(symbol, length, file_number, client):
             look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 4*minutes
             minutes_until_sale_final = 6*minutes
-            stop_trading_value = -.064
-            stop_trading_time = 14
         elif length == '12h':
             max_price_to_buy_factor = .91
             largest_bitcoin_order = .2
@@ -593,8 +579,6 @@ def buy_coin(symbol, length, file_number, client):
             look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 3*minutes
             minutes_until_sale_final = 5*minutes
-            stop_trading_value = -.068
-            stop_trading_time = 23
         elif length == '1d':
             max_price_to_buy_factor = .9
             largest_bitcoin_order = .2
@@ -604,9 +588,9 @@ def buy_coin(symbol, length, file_number, client):
             look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 2*minutes
             minutes_until_sale_final = 4*minutes
-            stop_trading_value = -.09
-            stop_trading_time = 7
-            
+           
+        stop_trading_value = -.09
+        stop_trading_time = 9 
         price_to_start_buy_factor = 1.003
         sell_price_drop_factor = .997
         

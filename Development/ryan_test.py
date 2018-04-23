@@ -15,6 +15,20 @@ import math
 from binance.client import Client
 
 
+small_float = 35.1234/100000000
+print(small_float)
+print(ut.round_down(small_float,8))
+
+print(ut.float_to_str(ut.round_down(small_float,8)))
+
+print(ut.float_to_str(small_float,ut.get_length_of_float(small_float)))
+
+small_float_2 = 14.2
+
+print(ut.get_length_of_float(small_float_2))
+
+print(ut.float_to_str(small_float_2,ut.get_length_of_float(small_float_2)))
+
 # order_book_history = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/1m_0_1521906576_binance_all_trades_history.pklz')
 
 # pprint(order_book_history)
@@ -32,9 +46,9 @@ from binance.client import Client
 
 # if should_save != False and should_save > int(time.time()):
 #     print('hi')
-stop_trading_time = int(time.time()) + 60*60*12
+# stop_trading_time = int(time.time()) + 60*60*12
 
-ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_ETHBTC', stop_trading_time)
+# ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_ETHBTC', stop_trading_time)
     
 
 

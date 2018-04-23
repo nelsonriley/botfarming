@@ -97,6 +97,7 @@ def get_min_decimals_new(min_notional):
     return price_decimals
 
 def float_to_str(f, precision=20):
+    
     import decimal
     ctx = decimal.Context()
     ctx.prec = precision
@@ -116,6 +117,13 @@ def convert_date_to_epoch(date_time):
     epoch = int(time.mktime(time.strptime(date_time, pattern)))
     #print(epoch)
     return epoch
+    
+def get_length_of_float(f):
+    string_of_float = str(f)
+    if string_of_float.find('e') > -1:
+        return len(string_of_float)-5
+    else:
+        return len(string_of_float)
 
 ###########################################################################################
 
@@ -165,8 +173,8 @@ def cancel_sale_order(current_state):
 
 def create_buy_order(current_state, price_to_buy):
 
-    maximum_order_to_buy = float_to_str(round(current_state['largest_buy_segment'], current_state['quantity_decimals']))
-    maximum_possible_buy = float_to_str(round(current_state['original_amount_to_buy'] - current_state['executedQty'], current_state['quantity_decimals']))
+    maximum_order_to_buy = float_to_str(round_down(current_state['largest_buy_segment'], current_state['quantity_decimals']))
+    maximum_possible_buy = float_to_str(round_down(current_state['original_amount_to_buy'] - current_state['executedQty'], current_state['quantity_decimals']))
     
     quantity_to_buy = min(float(maximum_order_to_buy), float(maximum_possible_buy))
     
@@ -189,7 +197,7 @@ def create_sale_order(current_state, price_to_sell, market=False):
         # EXCEPTION IN (/home/nelsonriley/Development/utility.py, LINE 294 "sold_coin, current_state = sell_with_order_book(current_state, current_state['price_to_sell_3'], current_state['minutes_until_sale_3'])"): 'largest_bitcoin_order'
         current_state['largest_bitcoin_order'] = .1
 
-    max_quantity = float_to_str(round(current_state['largest_bitcoin_order']/float(price_to_sell),current_state['quantity_decimals']))
+    max_quantity = float_to_str(round_down(current_state['largest_bitcoin_order']/float(price_to_sell),current_state['quantity_decimals']))
     order_size = min(float(max_quantity), float(current_state['executedQty']))
 
     if market:
@@ -487,6 +495,8 @@ def buy_coin(symbol, length, file_number, client):
             time.sleep(6000000)
             return
         
+        a_b = random.randint(0,1)
+        
         if length == '1m':
             minutes = 1
         elif length == '5m':
@@ -510,7 +520,10 @@ def buy_coin(symbol, length, file_number, client):
         if length == '1m':
             max_price_to_buy_factor = .98
             largest_bitcoin_order = .1
-            part_of_bitcoin_to_use = .4*3
+            if a_b == 1:
+                part_of_bitcoin_to_use = .4
+            else:
+                part_of_bitcoin_to_use = .4*3
             gain_min = .001
             buy_price_increase_factor = 1.001
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -519,7 +532,10 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '5m':
             max_price_to_buy_factor = .97
             largest_bitcoin_order = .2
-            part_of_bitcoin_to_use = .45*3
+            if a_b == 1:
+                part_of_bitcoin_to_use = .45
+            else:
+                part_of_bitcoin_to_use = .45*3
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -528,7 +544,10 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '15m':
             max_price_to_buy_factor = .96
             largest_bitcoin_order = .2
-            part_of_bitcoin_to_use = .5*3
+            if a_b == 1:
+                part_of_bitcoin_to_use = .5
+            else:
+                part_of_bitcoin_to_use = .5*3
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -537,7 +556,10 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '30m':
             max_price_to_buy_factor = .95
             largest_bitcoin_order = .2
-            part_of_bitcoin_to_use = .55*3
+            if a_b == 1:
+                part_of_bitcoin_to_use = .55
+            else:
+                part_of_bitcoin_to_use = .55*3
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -546,7 +568,10 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '1h':
             max_price_to_buy_factor = .94
             largest_bitcoin_order = .2
-            part_of_bitcoin_to_use = .6*3
+            if a_b == 1:
+                part_of_bitcoin_to_use = .6
+            else:
+                part_of_bitcoin_to_use = .6*3
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -555,7 +580,10 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '2h':
             max_price_to_buy_factor = .93
             largest_bitcoin_order = .2
-            part_of_bitcoin_to_use = .65*3
+            if a_b == 1:
+                part_of_bitcoin_to_use = .65
+            else:
+                part_of_bitcoin_to_use = .65*3
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -564,7 +592,10 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '6h':
             max_price_to_buy_factor = .92
             largest_bitcoin_order = .2
-            part_of_bitcoin_to_use = .7*3
+            if a_b == 1:
+                part_of_bitcoin_to_use = .7
+            else:
+                part_of_bitcoin_to_use = .7*3
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -573,7 +604,10 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '12h':
             max_price_to_buy_factor = .91
             largest_bitcoin_order = .2
-            part_of_bitcoin_to_use = .75*3
+            if a_b == 1:
+                part_of_bitcoin_to_use = .75
+            else:
+                part_of_bitcoin_to_use = .75*3
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -582,7 +616,10 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '1d':
             max_price_to_buy_factor = .9
             largest_bitcoin_order = .2
-            part_of_bitcoin_to_use = .8*3
+            if a_b == 1:
+                part_of_bitcoin_to_use = .8
+            else:
+                part_of_bitcoin_to_use = .8*3
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -602,8 +639,6 @@ def buy_coin(symbol, length, file_number, client):
         
         
         datapoints_trailing = look_back_schedule[-1] + 20
-        
-        a_b = random.randint(0,1)
         
         should_trade = False
 
@@ -1035,34 +1070,36 @@ def save_data(save_params, datapoints_trailing, min_volume, minutes, symbols_to_
     return True
 
 def process_socket_pushes_order_book(msg):
-    if not 'stream' in msg:
-        return
-    elif 'depth' in msg['stream']:
-            
-        symbol = msg['stream'].split('@')[0].upper()
-        msg['data']['time'] = int(time.time())
-        pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/'+symbol+'.pklz', msg['data'])
-
-        if (symbol == 'ETHBTC') and (time.localtime().tm_sec == 1 or time.localtime().tm_sec == 2):
-            print('process_socket_pushes_order_book()', symbol, msg['data']['bids'][0][0], 'time given', get_readable_time(msg['data']['time']), 'current time', get_time())
-
-        if time.localtime().tm_sec < 30:
-            should_save = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/should_save_' + symbol)
-            if should_save != False and should_save > int(time.time()):
-                already_saved = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol)
-                if already_saved == False:
-                    try:
-                        order_book_history = pickle_read('/home/ec2-user/environment/botfarming/Development/order_book_history/' + symbol + '_' + str(should_save))
-                        order_book_history.append(msg['data'])
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/order_book_history/' + symbol + '_' + str(should_save), order_book_history)
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol, True)
-                    except Exception as e:
-                        return
-        elif time.localtime().tm_sec > 30:
-            should_save = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/should_save_' + symbol)
-            if should_save != False and should_save > int(time.time()):
-                pickle_write('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol, False)
-            
+    try:
+        if not 'stream' in msg:
+            return
+        elif 'depth' in msg['stream']:
+                
+            symbol = msg['stream'].split('@')[0].upper()
+            msg['data']['time'] = int(time.time())
+            pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/'+symbol+'.pklz', msg['data'])
+    
+            if (symbol == 'ETHBTC') and (time.localtime().tm_sec == 1 or time.localtime().tm_sec == 2):
+                print('process_socket_pushes_order_book()', symbol, msg['data']['bids'][0][0], 'time given', get_readable_time(msg['data']['time']), 'current time', get_time())
+    
+            if time.localtime().tm_sec < 30:
+                should_save = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/should_save_' + symbol)
+                if should_save != False and should_save > int(time.time()):
+                    already_saved = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol)
+                    if already_saved == False:
+                        try:
+                            order_book_history = pickle_read('/home/ec2-user/environment/botfarming/Development/order_book_history/' + symbol + '_' + str(should_save))
+                            order_book_history.append(msg['data'])
+                            pickle_write('/home/ec2-user/environment/botfarming/Development/order_book_history/' + symbol + '_' + str(should_save), order_book_history)
+                            pickle_write('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol, True)
+                        except Exception as e:
+                            print(e)
+            elif time.localtime().tm_sec > 30:
+                should_save = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/should_save_' + symbol)
+                if should_save != False and should_save > int(time.time()):
+                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol, False)
+    except Exception as e:
+        print(e)        
 
     
 def update_order_book(min_volume, max_volume):

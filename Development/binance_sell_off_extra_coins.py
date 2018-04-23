@@ -70,7 +70,9 @@ while True:
                             if float(quantity_decimals) == 0:
                                 quantity_for_sale = str(math.floor(float(balance['free'])))
                             else:
-                                quantity_for_sale = ut.float_to_str(ut.round_down(float(balance['free']),quantity_decimals),quantity_decimals)
+                                rounded_down_quantity = ut.round_down(float(balance['free']),quantity_decimals)
+                                print('rounded_down_quantity', rounded_down_quantity)
+                                quantity_for_sale = ut.float_to_str(rounded_down_quantity,ut.get_length_of_float(rounded_down_quantity))
                             print('quantity_for_sale', quantity_for_sale)
                             sale_order = client.order_market_sell(symbol=symbol['symbol'], quantity=quantity_for_sale)
                             pprint(sale_order)

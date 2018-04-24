@@ -72,22 +72,42 @@ for look_back in look_backs:
             trade = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/' + file)
             if len(trade) == 11:
                 trade.append(look_back)
+                trade.append(trade[0])
                 trade[0] = ut.convert_date_to_epoch(trade[0])
                 trade[10] = ut.convert_date_to_epoch(trade[10])
                 bot_trades.append(trade)
                 
     total_profit = 0
     total_trades = 0
+    total_profit_a = 0
+    total_trades_a = 0
+    total_profit_b = 0
+    total_trades_b = 0
     
     for i, bot_trade in enumerate(bot_trades):
     
-        if bot_trade[0] > 1522540800 and bot_trade[1] != 'CTRBTC':
+        if bot_trade[0] > 1524500940:
+            
+            #pprint(bot_trade)
+            
             total_profit += bot_trade[2] # 'absolute profit', bot_trade[2], 'percentage profit', bot_trade[3]
             total_trades += 1
     
+            if bot_trade[6] == 1:
+                total_profit_a += bot_trade[2]
+                total_trades_a += 1
+            else:
+                total_profit_b += bot_trade[2]
+                total_trades_b += 1
+        
+        
 
     print('total_profit', total_profit)
     print('total_trades', total_trades)
+    print('total_profit_a', total_profit_a)
+    print('total_trades_a', total_trades_a)
+    print('total_profit_b', total_profit_b)
+    print('total_trades_b', total_trades_b)
     
 print('')
 

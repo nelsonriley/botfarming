@@ -106,7 +106,7 @@ def float_to_str(f, precision=20):
 
 def round_down(num,digits):
     if float(digits) == 0:
-        print('here..', num, math.floor(num))
+        #print('here..', num, math.floor(num))
         return math.floor(num)
     factor = 10.0 ** digits
     return math.floor(num * factor) / factor
@@ -626,8 +626,8 @@ def buy_coin(symbol, length, file_number, client):
             minutes_until_sale = 2*minutes
             minutes_until_sale_final = 4*minutes
            
-        stop_trading_value = -.09
-        stop_trading_time = 9 
+        stop_trading_value = -.02
+        stop_trading_time = 15.5 
         price_to_start_buy_factor = 1.003
         sell_price_drop_factor = .997
         

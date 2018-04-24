@@ -167,8 +167,10 @@ for a in range(0, 48):
                 # Calc total profit
                 
                 if bot_trade[1] not in do_not_buy_time_end or float(bot_trade[9]) > float(do_not_buy_time_end[bot_trade[1]]) or float(bot_trade[9]) < float(do_not_buy_time_start[bot_trade[1]]):
+                    
                     total_profit += bot_trade[2] # 'absolute profit', bot_trade[2], 'percentage profit', bot_trade[3]
                     total_trades += 1
+                    
                     all_trades_counted_temp.append(bot_trade)
                     
                     if bot_trade[1] in do_not_buy_time_end and float(bot_trade[9]) > float(do_not_buy_time_end[bot_trade[1]]):

@@ -520,6 +520,7 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '1d':
             minutes = 24*60
 
+
         largest_bitcoin_order = .1
         if length == '1m':
             max_price_to_buy_factor = .98
@@ -645,19 +646,23 @@ def buy_coin(symbol, length, file_number, client):
         datapoints_trailing = look_back_schedule[-1] + 20
         
         should_trade = False
+        
+        std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor')
 
         for look_back in look_back_schedule:
-            
             
             if a_b == 1:
                 look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/1_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
             else:
                 look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/2_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
-    
-            
+
             if look_back_optimized != False:
-                price_to_buy_factor_array[look_back] = look_back_optimized['lowest_buy_factor']
-                price_to_sell_factor_array[look_back] = min(look_back_optimized['highest_sale_factor'], .99)
+                price_to_buy_factor = look_back_optimized['lowest_buy_factor'] + std_dev_increase_factor * look_back_optimized['lowest_buy_factor_std_dev']
+                price_to_sell_factor = min(look_back_optimized['highest_sale_factor'], .99)
+                if price_to_sell_factor - price_to_buy_factor < .007:
+                    price_to_buy_factor = price_to_sell_factor - .007
+                price_to_buy_factor_array[look_back] = price_to_buy_factor
+                price_to_sell_factor_array[look_back] = price_to_sell_factor
                 lower_band_buy_factor_array[look_back] = 100
                 price_increase_factor_array[look_back] = 1.01
             else:
@@ -923,6 +928,10 @@ def buy_coin(symbol, length, file_number, client):
                         last_three_trades[longest_ago_index] = current_state['original_buy_time']
                         
                     pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_three_trades', last_three_trades)  
+
+                    # std_dev_increase_factor
+                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'
+                        , 0)
 
                     current_state['finish_buy_time'] = int(time.time())
                     current_state['finish_buy_time_readable'] = get_time()

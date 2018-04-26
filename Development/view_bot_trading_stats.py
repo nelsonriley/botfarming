@@ -139,11 +139,11 @@ all_trades_counted = []
 
 
 
-for a in range(1, 6):
+for a in range(0, 6):
         
     seconds_before_blacklisting = 30 * a
     
-    for b in range(1,3):
+    for b in range(0,3):
         
         blacklist_for_hours = b
         
@@ -186,11 +186,12 @@ for a in range(1, 6):
                     ## don't start trade + blacklist symbol for Y hours
                     
                     do_not_trade_time_general_2 = 0
-                    history_index = i-1
+
                     while True:
                         try:
-                            recent_trade = bot_trades[history_index]
-                            if bot_trade[0] - recent_trade[0] < seconds_before_blacklisting and bot_trade[1] == recent_trade[1]:
+                            recent_trade = bot_trades[i-1]
+                            if bot_trade[0] - recent_trade[0] < 600 and bot_trade[1] == recent_trade[1]:
+                                print('here')
                                 do_not_trade_times[bot_trade[1]] = bot_trade[0] + blacklist_for_hours*60*60
                             if bot_trade[0] - recent_trade[0] >= seconds_before_blacklisting:
                                 break
@@ -205,7 +206,7 @@ for a in range(1, 6):
                     ##
 
                     # Calc total profit
-                    if bot_trade[9] > do_not_trade_time_general and bot_trade[9] > do_not_trade_time_general_2 and (bot_trade[1] not in do_not_buy_time_end or float(bot_trade[9]) > float(do_not_buy_time_end[bot_trade[1]]) or float(bot_trade[9]) < float(do_not_buy_time_start[bot_trade[1]])):
+                    if bot_trade[9] > do_not_trade_time_general_2: # bot_trade[9] > do_not_trade_time_general and bot_trade[9] > do_not_trade_time_general_2 and (bot_trade[1] not in do_not_buy_time_end or float(bot_trade[9]) > float(do_not_buy_time_end[bot_trade[1]]) or float(bot_trade[9]) < float(do_not_buy_time_start[bot_trade[1]])):
                         
                         if bot_trade[3] > -.5:
                             total_profit += bot_trade[2] # 'absolute profit', bot_trade[2], 'percentage profit', bot_trade[3]
@@ -241,6 +242,8 @@ for a in range(1, 6):
                          
             if a == 0 and b == 0:
                 print('original profit at base', total_profit, 'hours_not_to_trade', hours_to_not_trade, 'not_trade_value', not_trade_value, 'total_trades', total_trades)
+            
+            print('original profit at base', total_profit, 'hours_not_to_trade', hours_to_not_trade, 'not_trade_value', not_trade_value, 'total_trades', total_trades)
             
             
             # if hours_to_not_trade > 8 and hours_to_not_trade < 10 and not_trade_value < -.08 and not_trade_value > -.1:

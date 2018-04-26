@@ -224,7 +224,7 @@ def calculate_profit_and_free_coin(current_state):
     invested_btc = current_state['original_quantity']*current_state['original_price']
     print('PROFIT', current_state['symbol'] ,'profit was, absoulte profit, percent profit, amount invested', float_to_str(profit_from_trade, 8), float_to_str(percent_profit_from_trade, 5), float_to_str(invested_btc,8), get_time())
 
-    recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['a_b'], current_state['price_to_buy_factor'], current_state['price_to_sell_factor'], current_state['original_buy_time'], get_time()]
+    recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['a_b'], current_state['price_to_buy_factor'], current_state['price_to_sell_factor'], current_state['original_buy_time'], get_time(), current_state['std_dev_increase_factor']]
     
     pickle_write('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/'+ current_state['length'] + '_' + current_state['file_number'] + '_' + str(current_state['original_buy_time']) + '_binance_all_trades_history.pklz', recorded_trade)
 
@@ -494,6 +494,20 @@ def buy_coin(symbol, length, file_number, client):
             #      print('not trading...')
             time.sleep(60)
             return
+
+        ## block symbols for 24 hrs if 2 trades trigger within 4 minutes (only 1st trade executes)
+        last_trade_start = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_' + symbol['symbol'])
+        if last_trade_start != False and int(time.time()) - last_trade_start < 4*60:
+            time_to_start_trading_2 = int(time.time()) + 24*60*60
+            pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_2_' + symbol['symbol'],
+                time_to_start_trading_2)
+        
+        time_to_start_trading_2 = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_2_' + symbol['symbol'])
+        
+        if time_to_start_trading_2 != False and int(time.time()) < time_to_start_trading_2:
+            time.sleep(60)
+            return
+        ##
         
         if symbol['symbol'] == 'CTRBTC':
             time.sleep(6000000)
@@ -644,8 +658,6 @@ def buy_coin(symbol, length, file_number, client):
         
         
         datapoints_trailing = look_back_schedule[-1] + 20
-        
-        should_trade = False
         
         std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor')
 
@@ -825,6 +837,7 @@ def buy_coin(symbol, length, file_number, client):
                     current_state['min_quantity'] = max(float(symbol['filters'][1]['minQty']), float(symbol['filters'][2]['minNotional']))
                     current_state['stop_trading_value'] = stop_trading_value
                     current_state['stop_trading_time'] = stop_trading_time
+                    current_state['std_dev_increase_factor'] = std_dev_increase_factor
 
                     write_current_state(current_state, current_state)
 
@@ -932,6 +945,10 @@ def buy_coin(symbol, length, file_number, client):
                     # std_dev_increase_factor
                     pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'
                         , 0)
+                    
+                    # last_trade_start
+                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_' + symbol['symbol'],
+                        int(time.time()))
 
                     current_state['finish_buy_time'] = int(time.time())
                     current_state['finish_buy_time_readable'] = get_time()

@@ -15,19 +15,68 @@ import math
 from binance.client import Client
 
 
-small_float = 35.1234/100000000
-print(small_float)
-print(ut.round_down(small_float,8))
+last_three_trades = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_three_trades')
+   
+pprint(last_three_trades)   
+                
+# longest_ago_index = -1
+# longest_ago_time = 99999999
+# newest_time = 0
+# newest_time_index = -1
+# for trade_index,previous_trade_time in enumerate(last_three_trades):
+#     if previous_trade_time < longest_ago_time:
+#         longest_ago_index = trade_index
+#         longest_ago_time = previous_trade_time
+#     if previous_trade_time > newest_time_index:
+#         newest_time_index = trade_index
+#         newest_time = previous_trade_time
+        
+# print('longest_ago_index', longest_ago_index, 'longest_ago_time', longest_ago_time, 'newest_time_index', newest_time_index, 'newest_time', newest_time)
 
-print(ut.float_to_str(ut.round_down(small_float,8)))
 
-print(ut.float_to_str(small_float,ut.get_length_of_float(small_float)))
+# original_buy_time = 6
 
-small_float_2 = 14.2
+# last_three_trades = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_three_trades')
 
-print(ut.get_length_of_float(small_float_2))
+# longest_ago_index = -1
+# longest_ago_time = 99999999
+# for trade_index,previous_trade_time in enumerate(last_three_trades):
+#     if previous_trade_time < longest_ago_time:
+#         longest_ago_index = trade_index
+#         longest_ago_time = previous_trade_time
+    
+# if longest_ago_time < original_buy_time:
+#     last_three_trades[longest_ago_index] = original_buy_time
 
-print(ut.float_to_str(small_float_2,ut.get_length_of_float(small_float_2)))
+
+# ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_three_trades', last_three_trades)
+
+
+# pprint(ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_three_trades'))
+
+# a = [0,1,2,3]
+
+# while True:
+#     if a[0] < 2:
+#         del a[0]
+#     else:
+#         break
+    
+# pprint(a)
+
+# small_float = 35.1234/100000000
+# print(small_float)
+# print(ut.round_down(small_float,8))
+
+# print(ut.float_to_str(ut.round_down(small_float,8)))
+
+# print(ut.float_to_str(small_float,ut.get_length_of_float(small_float)))
+
+# small_float_2 = 14.2
+
+# print(ut.get_length_of_float(small_float_2))
+
+# print(ut.float_to_str(small_float_2,ut.get_length_of_float(small_float_2)))
 
 # order_book_history = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/1m_0_1521906576_binance_all_trades_history.pklz')
 

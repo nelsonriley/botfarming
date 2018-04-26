@@ -55,7 +55,7 @@ while True:
         
         for balance in acct_info['balances']:
             pprint(balance)
-            if balance['asset'] != 'BTC' and balance['asset'] != 'BNB' and balance['asset'] != 'XVG':
+            if balance['asset'] != 'BTC' and balance['asset'] != 'BNB':
                 try:
                     symbol = symbols[balance['asset']+'BTC']
                     if balance['asset'] + 'BTC' in coins_not_to_sell:

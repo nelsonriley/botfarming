@@ -173,21 +173,25 @@ def cancel_sale_order(current_state):
 
 def create_buy_order(current_state, price_to_buy):
 
-    maximum_order_to_buy = float_to_str(round_down(current_state['largest_buy_segment'], current_state['quantity_decimals']))
-    maximum_possible_buy = float_to_str(round_down(current_state['original_amount_to_buy'] - current_state['executedQty'], current_state['quantity_decimals']))
+    try:
+        maximum_order_to_buy = float_to_str(round_down(current_state['largest_buy_segment'], current_state['quantity_decimals']))
+        maximum_possible_buy = float_to_str(round_down(current_state['original_amount_to_buy'] - current_state['executedQty'], current_state['quantity_decimals']))
+        
+        quantity_to_buy = min(float(maximum_order_to_buy), float(maximum_possible_buy))
+        
+        # DEBUGGER
+        # print('qty', quantity_to_buy, 'price', price_to_buy)
     
-    quantity_to_buy = min(float(maximum_order_to_buy), float(maximum_possible_buy))
+        buy_order = current_state['client'].order_limit_buy(symbol=current_state['symbol'], quantity=quantity_to_buy, price=price_to_buy)
     
-    # DEBUGGER
-    # print('qty', quantity_to_buy, 'price', price_to_buy)
-
-    buy_order = current_state['client'].order_limit_buy(symbol=current_state['symbol'], quantity=quantity_to_buy, price=price_to_buy)
-
-    current_state['state'] = 'buying'
-    current_state['orderId'] = buy_order['orderId']
-    write_current_state(current_state, current_state)
-
-    return current_state
+        current_state['state'] = 'buying'
+        current_state['orderId'] = buy_order['orderId']
+        write_current_state(current_state, current_state)
+    
+        return current_state
+    except Exception as e:
+        return current_state
+    
 
 def create_sale_order(current_state, price_to_sell, market=False):
     #print('in create sale order', price_to_sell)
@@ -523,7 +527,7 @@ def buy_coin(symbol, length, file_number, client):
             if a_b == 1:
                 part_of_bitcoin_to_use = .4
             else:
-                part_of_bitcoin_to_use = .4*3
+                part_of_bitcoin_to_use = .4*2
             gain_min = .001
             buy_price_increase_factor = 1.001
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -535,7 +539,7 @@ def buy_coin(symbol, length, file_number, client):
             if a_b == 1:
                 part_of_bitcoin_to_use = .45
             else:
-                part_of_bitcoin_to_use = .45*3
+                part_of_bitcoin_to_use = .45*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -547,7 +551,7 @@ def buy_coin(symbol, length, file_number, client):
             if a_b == 1:
                 part_of_bitcoin_to_use = .5
             else:
-                part_of_bitcoin_to_use = .5*3
+                part_of_bitcoin_to_use = .5*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -559,7 +563,7 @@ def buy_coin(symbol, length, file_number, client):
             if a_b == 1:
                 part_of_bitcoin_to_use = .55
             else:
-                part_of_bitcoin_to_use = .55*3
+                part_of_bitcoin_to_use = .55*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -571,7 +575,7 @@ def buy_coin(symbol, length, file_number, client):
             if a_b == 1:
                 part_of_bitcoin_to_use = .6
             else:
-                part_of_bitcoin_to_use = .6*3
+                part_of_bitcoin_to_use = .6*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -583,7 +587,7 @@ def buy_coin(symbol, length, file_number, client):
             if a_b == 1:
                 part_of_bitcoin_to_use = .65
             else:
-                part_of_bitcoin_to_use = .65*3
+                part_of_bitcoin_to_use = .65*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -595,7 +599,7 @@ def buy_coin(symbol, length, file_number, client):
             if a_b == 1:
                 part_of_bitcoin_to_use = .7
             else:
-                part_of_bitcoin_to_use = .7*3
+                part_of_bitcoin_to_use = .7*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -607,7 +611,7 @@ def buy_coin(symbol, length, file_number, client):
             if a_b == 1:
                 part_of_bitcoin_to_use = .75
             else:
-                part_of_bitcoin_to_use = .75*3
+                part_of_bitcoin_to_use = .75*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -619,7 +623,7 @@ def buy_coin(symbol, length, file_number, client):
             if a_b == 1:
                 part_of_bitcoin_to_use = .8
             else:
-                part_of_bitcoin_to_use = .8*3
+                part_of_bitcoin_to_use = .8*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -723,7 +727,7 @@ def buy_coin(symbol, length, file_number, client):
             
                 
             current_price = float(order_book['bids'][0][0])
-           
+            
 
             for look_back in look_back_schedule:
                 
@@ -732,8 +736,27 @@ def buy_coin(symbol, length, file_number, client):
             
                 price_to_start_buy = float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy_factor
 
-                if current_price <= price_to_start_buy:
 
+                if current_price <= price_to_start_buy:
+                    
+                    last_three_trades = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_three_trades')
+                
+                    longest_ago_index = -1
+                    longest_ago_time = 99999999
+                    newest_time = 0
+                    newest_time_index = -1
+                    for trade_index,previous_trade_time in enumerate(last_three_trades):
+                        if previous_trade_time < longest_ago_time:
+                            longest_ago_index = trade_index
+                            longest_ago_time = previous_trade_time
+                        if previous_trade_time > newest_time_index:
+                            newest_time_index = trade_index
+                            newest_time = previous_trade_time
+
+                    if newest_time - longest_ago_time < 25 and int(time.time()) - newest_time < 24:
+                        print('****did not trade due to too many trades')
+                        pprint(last_three_trades)
+                        continue
 
                     lower_band_buy_factor = lower_band_buy_factor_array[look_back]
                     price_to_buy_factor = price_to_buy_factor_array[look_back]
@@ -743,8 +766,8 @@ def buy_coin(symbol, length, file_number, client):
 
                     price_to_buy = float(data[index-look_back][4])*price_to_buy_factor
                         
-                    price_to_sell = float(data[index-look_back][4])*price_to_sell_factor
-
+                    price_to_sell = float(data[index-look_back][4])*(price_to_sell_factor - (price_to_sell_factor - price_to_buy_factor)*.15)
+                    
 
                     print('-------------------buy!', symbol['symbol'], 'current price', current_price, 'current price time', get_readable_time(order_book['time']), 'look_back', look_back, 'look back original price', data[index-look_back][4], 'look back original time', get_readable_time(data[index-look_back][0]),   'price_to_buy', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back], 'price_to_sell', price_to_sell,  'price_to_sell_factor',price_to_sell_factor_array[look_back] , 'price_increase_factor',price_increase_factor_array[look_back] , minutes_until_sale, get_time())
                     
@@ -849,6 +872,8 @@ def buy_coin(symbol, length, file_number, client):
                                     if current_state['executedQty'] >= amount_to_stop_buying:
                                         break
                                     current_state = create_buy_order(current_state, first_in_line_price)
+                                    if current_state['orderId'] == False:
+                                        break
                                 else:
                                     if second_price_to_check > second_bid:
                                         #print(current_state['symbol'], 'cancel buy order, price is in range, we are the first but, but the second bid is pretty far back, so cancel and move our bid back. first_in_line_price', first_in_line_price, 'price_to_buy_max', price_to_buy_max, 'first_bid', first_bid, 'second_bid', second_bid, 'second_price_to_check', second_price_to_check)
@@ -856,10 +881,14 @@ def buy_coin(symbol, length, file_number, client):
                                         if current_state['executedQty'] >= amount_to_stop_buying:
                                             break
                                         current_state = create_buy_order(current_state, second_in_line_price)
+                                        if current_state['orderId'] == False:
+                                            break
 
                             else:
                                 #print(current_state['symbol'], 'price is in range and no order, so creating one.. first_in_line_price ',  first_in_line_price, 'price_to_buy_max', price_to_buy_max)
                                 current_state = create_buy_order(current_state, first_in_line_price)
+                                if current_state['orderId'] == False:
+                                        break
                         else:
                             if current_state['orderId'] != False:
                                 #print(current_state['symbol'], 'cancel buy order because price that would make us first is greater than the max price we would pay, first_in_line_price', first_in_line_price, 'price_to_buy_max', price_to_buy_max)
@@ -874,9 +903,26 @@ def buy_coin(symbol, length, file_number, client):
 
 
                     if current_state['executedQty'] < current_state['min_quantity']:
+                        while int(time.time()) <= time_to_give_up:
+                            time.sleep(5)
                         print('[last line reached] no one bought cancel order - freeing coin', current_state['symbol'], get_time())
                         write_current_state(current_state, False)
                         return True
+                        
+                    last_three_trades = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_three_trades')
+                    
+                    
+                    longest_ago_index = -1
+                    longest_ago_time = 99999999
+                    for trade_index,previous_trade_time in enumerate(last_three_trades):
+                        if previous_trade_time < longest_ago_time:
+                            longest_ago_index = trade_index
+                            longest_ago_time = previous_trade_time
+                        
+                    if longest_ago_time < current_state['original_buy_time']:
+                        last_three_trades[longest_ago_index] = current_state['original_buy_time']
+                        
+                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_three_trades', last_three_trades)  
 
                     current_state['finish_buy_time'] = int(time.time())
                     current_state['finish_buy_time_readable'] = get_time()

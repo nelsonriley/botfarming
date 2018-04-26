@@ -18,8 +18,6 @@ from os.path import isfile, join
 
 
 
-
-
     
 # if bot_trades == False:
 #ut.pickle_write(path, [])
@@ -141,12 +139,20 @@ all_trades_counted = []
 
 
 
-for a in range(1, 10):
-    number_to_stop_trading = a
-    for b in range(0,50): 
-        minutes_to_stop_trading = 1*b
-        for c in range(0,50): 
-            look_back_minutes = 1*c
+for a in range(1, 6):
+        
+    seconds_before_blacklisting = 30 * a
+    
+    for b in range(1,3):
+        
+        blacklist_for_hours = b
+        
+        for c in range(0,1):
+            
+            
+            number_to_stop_trading = 3
+            minutes_to_stop_trading = 24
+            look_back_minutes = 25
             
             not_trade_value = -.09
             hours_to_not_trade = 9
@@ -162,6 +168,7 @@ for a in range(1, 10):
             last_few_trade_start_times = []
             
             do_not_trade_time_general = 0
+            do_not_trade_times = {}
             
             #print 'START'
             
@@ -171,21 +178,44 @@ for a in range(1, 10):
                 
                 if bot_trade[0] > 1522540800: # and bot_trade[1] != 'CTRBTC': # and start_time['epoch'] < 1523299178:
                 
-                
                     if first_loop == True:
                         pprint(bot_trade)
                         first_loop = False
-                    # Calc total profit
+                        
+                    ## if trade triggered on same symbol in X minutes or less
+                    ## don't start trade + blacklist symbol for Y hours
                     
-                    if bot_trade[9] > do_not_trade_time_general and (bot_trade[1] not in do_not_buy_time_end or float(bot_trade[9]) > float(do_not_buy_time_end[bot_trade[1]]) or float(bot_trade[9]) < float(do_not_buy_time_start[bot_trade[1]])):
+                    do_not_trade_time_general_2 = 0
+                    history_index = i-1
+                    while True:
+                        try:
+                            recent_trade = bot_trades[history_index]
+                            if bot_trade[0] - recent_trade[0] < seconds_before_blacklisting and bot_trade[1] == recent_trade[1]:
+                                do_not_trade_times[bot_trade[1]] = bot_trade[0] + blacklist_for_hours*60*60
+                            if bot_trade[0] - recent_trade[0] >= seconds_before_blacklisting:
+                                break
+                            history_index -= 1
+                        except:
+                            break
+                    try:
+                        do_not_trade_time_general_2 = do_not_trade_times[bot_trade[1]]
+                    except:
+                        pass
+                    
+                    ##
+
+                    # Calc total profit
+                    if bot_trade[9] > do_not_trade_time_general and bot_trade[9] > do_not_trade_time_general_2 and (bot_trade[1] not in do_not_buy_time_end or float(bot_trade[9]) > float(do_not_buy_time_end[bot_trade[1]]) or float(bot_trade[9]) < float(do_not_buy_time_start[bot_trade[1]])):
                         
                         if bot_trade[3] > -.5:
                             total_profit += bot_trade[2] # 'absolute profit', bot_trade[2], 'percentage profit', bot_trade[3]
                             total_trades += 1
                         
                             all_trades_counted_temp.append(bot_trade)
+
+                        ## if X trades (all symbols) started within Y minutes
+                        ## stop all trades for Z minutes
                             
-                        
                         last_few_trade_start_times.append(bot_trade[9])
                         
                         while True:
@@ -198,7 +228,7 @@ for a in range(1, 10):
                             #pprint(last_few_trade_start_times)
                             do_not_trade_time_general = bot_trade[9] + minutes_to_stop_trading*60
                         
-                            
+                        ##
                         
                         if bot_trade[1] in do_not_buy_time_end and float(bot_trade[9]) > float(do_not_buy_time_end[bot_trade[1]]):
                             do_not_buy_time_start[bot_trade[1]] = 0

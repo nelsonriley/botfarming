@@ -753,7 +753,7 @@ def buy_coin(symbol, length, file_number, client):
                             newest_time_index = trade_index
                             newest_time = previous_trade_time
 
-                    if newest_time - longest_ago_time < 25 and int(time.time()) - newest_time < 24:
+                    if newest_time - longest_ago_time < 25*60 and int(time.time()) - newest_time < 24*60:
                         print('****did not trade due to too many trades')
                         pprint(last_three_trades)
                         continue

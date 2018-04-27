@@ -16,13 +16,13 @@ while True:
 
     last_three_trades = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_three_trades')
     
-    if int(time.time()) - last_three_trades[-1] > 10*60*60:
+    if int(time.time()) - last_three_trades[-1] > 10*60:
         std_dev_increase_factor += 0.1
     else:
         std_dev_increase_factor = 0 # this is also done when trade completes, extra safe
         
-    if std_dev_increase_factor > 1:
-        std_dev_increase_factor = 1
+    if std_dev_increase_factor > 2:
+        std_dev_increase_factor = 2
         
     ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'
         , std_dev_increase_factor)

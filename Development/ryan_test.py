@@ -15,9 +15,18 @@ import math
 from binance.client import Client
 
 
-last_three_trades = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_three_trades')
+stop_trading_until = int(time.time()) + 60*60*6
+ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until', stop_trading_until)
+    
+
+
+# last_three_trades = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_three_trades')
+    
+# print(int(time.time()) - last_three_trades[-1])
+
+# last_three_trades = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_three_trades')
    
-pprint(last_three_trades)   
+# pprint(last_three_trades)   
                 
 # longest_ago_index = -1
 # longest_ago_time = 99999999

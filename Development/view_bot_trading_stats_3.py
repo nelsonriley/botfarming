@@ -139,25 +139,32 @@ all_trades_counted = []
 
 
 
-for a in range(0, 6):
-        
-    seconds_before_blacklisting = 30 * a
+
+for a in range(0, 1):
+       
+
     
-    for b in range(0,3):
+    for b in range(0,24):
+        hours_to_not_trade = b
         
-        blacklist_for_hours = b
         
         for c in range(0,1):
             
+            seconds_before_blacklisting = 190
+            blacklist_for_hours = 1.4
             number_to_stop_trading = 3
             minutes_to_stop_trading = 24
             look_back_minutes = 25
             
-            not_trade_value = -.09
-            hours_to_not_trade = 9
+            not_trade_value = -.02
+            
+            
+            
         
             do_not_buy_time_start = {}
             do_not_buy_time_end = {}
+            recent_trades = {}
+            do_not_buy_time_end_2 = {}
             
             total_profit = 0
             total_trades = 0
@@ -175,7 +182,7 @@ for a in range(0, 6):
                 #s = bot_trade[1]
                 #start_time = ut.get_time_formats(bot_trade[9])
                 
-                if bot_trade[0] > 1522540800: # and bot_trade[1] != 'CTRBTC': # and start_time['epoch'] < 1523299178:
+                if bot_trade[9] > 1522540800: # and bot_trade[1] != 'CTRBTC': # and start_time['epoch'] < 1523299178:
                 
                     if first_loop == True:
                         pprint(bot_trade)
@@ -184,34 +191,12 @@ for a in range(0, 6):
                     ## if trade triggered on same symbol in X minutes or less
                     ## don't start trade + blacklist symbol for Y hours
                     
-                    do_not_trade_time_general_2 = 0
-                    if a > 0 and b > 0:
-                        history_index = i-1
-                        print_test = False
-                        while True:
-                            try:
-                                recent_trade = bot_trades[history_index]
-                                if bot_trade[9] - recent_trade[9] < seconds_before_blacklisting and bot_trade[1] == recent_trade[1]:
-                                    do_not_trade_times[bot_trade[1]] = bot_trade[9] + blacklist_for_hours*60*60
-                                    # if bot_trade[1] == 'CTRBTC' and recent_trade[1] == 'CTRBTC':
-                                    #     print('CTR diff', bot_trade[9] - recent_trade[9] < seconds_before_blacklisting, bot_trade[9], do_not_trade_times[bot_trade[1]], bot_trade[9] > do_not_trade_times[bot_trade[1]])
-                                    #     print_test = True
-                                if bot_trade[9] - recent_trade[9] >= seconds_before_blacklisting:
-                                    break
-                                history_index -= 1
-                            except:
-                                break
-                        try:
-                            do_not_trade_time_general_2 = do_not_trade_times[bot_trade[1]]
-                        except:
-                            pass
-                        
-                        if print_test == True:
-                            print(do_not_trade_time_general_2, bot_trade[9] > do_not_trade_time_general_2)
+                    
+                    
                     ##
 
                     # Calc total profit
-                    if bot_trade[9] > do_not_trade_time_general_2: #bot_trade[9] > do_not_trade_time_general and bot_trade[9] > do_not_trade_time_general_2 and (bot_trade[1] not in do_not_buy_time_end or float(bot_trade[9]) > float(do_not_buy_time_end[bot_trade[1]]) or float(bot_trade[9]) < float(do_not_buy_time_start[bot_trade[1]])):
+                    if (bot_trade[1] not in do_not_buy_time_end_2 or float(bot_trade[9]) > float(do_not_buy_time_end_2[bot_trade[1]])) and bot_trade[9] > do_not_trade_time_general and (bot_trade[1] not in do_not_buy_time_end or float(bot_trade[9]) > float(do_not_buy_time_end[bot_trade[1]]) or float(bot_trade[9]) < float(do_not_buy_time_start[bot_trade[1]])):
                         
                         if bot_trade[3] > -.5:
                             total_profit += bot_trade[2] # 'absolute profit', bot_trade[2], 'percentage profit', bot_trade[3]
@@ -244,11 +229,19 @@ for a in range(0, 6):
                             do_not_buy_time_end[bot_trade[1]] = bot_trade[10] + hours_to_not_trade*60*60
                             do_not_buy_time_start[bot_trade[1]] = bot_trade[10]
                             
+                            
+                        if bot_trade[1] in recent_trades:
+                            if bot_trade[9] - recent_trades[bot_trade[1]] < seconds_before_blacklisting:
+                                do_not_buy_time_end_2[bot_trade[1]] = bot_trade[9] + blacklist_for_hours*60*60
+                                
+                        recent_trades[bot_trade[1]] = bot_trade[9]
+                            
                          
             if a == 0 and b == 0:
                 print('original profit at base', total_profit, 'hours_not_to_trade', hours_to_not_trade, 'not_trade_value', not_trade_value, 'total_trades', total_trades)
             
-            # print('original profit at base', total_profit, 'hours_not_to_trade', hours_to_not_trade, 'not_trade_value', not_trade_value, 'total_trades', total_trades)
+            #print('original profit at base', total_profit, 'hours_not_to_trade', hours_to_not_trade, 'not_trade_value', not_trade_value, 'total_trades', total_trades)
+            
             
             # if hours_to_not_trade > 8 and hours_to_not_trade < 10 and not_trade_value < -.08 and not_trade_value > -.1:
             #     print('for special total profit', total_profit, 'hours_not_to_trade', hours_to_not_trade, 'not_trade_value', not_trade_value, 'total_trades', total_trades)
@@ -261,6 +254,12 @@ for a in range(0, 6):
                 all_trades_counted = all_trades_counted_temp
                 print('****new best total profit', total_profit, 'hours_not_to_trade', hours_to_not_trade, 'not_trade_value', not_trade_value, 'total_trades', total_trades)
                 print('number_to_stop_trading', number_to_stop_trading, 'minutes_to_stop_trading', minutes_to_stop_trading, 'look_back_minutes', look_back_minutes)
+                print('seconds_before_blacklisting', seconds_before_blacklisting, 'blacklist_for_hours', blacklist_for_hours)
+        
+            #if total_profit > 1:
+            print('****new good total profit', total_profit, 'hours_not_to_trade', hours_to_not_trade, 'not_trade_value', not_trade_value, 'total_trades', total_trades)
+            print('number_to_stop_trading', number_to_stop_trading, 'minutes_to_stop_trading', minutes_to_stop_trading, 'look_back_minutes', look_back_minutes)
+            print('seconds_before_blacklisting', seconds_before_blacklisting, 'blacklist_for_hours', blacklist_for_hours)
         
 
 

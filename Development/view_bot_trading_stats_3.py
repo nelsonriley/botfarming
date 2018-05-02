@@ -68,7 +68,7 @@ for look_back in look_backs:
         if file.startswith(look_back + "_0"):
             #print('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/' + file)
             trade = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/' + file)
-            if len(trade) == 11:
+            if len(trade) == 12:
                 trade.append(look_back)
                 trade.append(trade[0])
                 trade[0] = ut.convert_date_to_epoch(trade[0])
@@ -83,8 +83,10 @@ for look_back in look_backs:
     total_trades_b = 0
     
     for i, bot_trade in enumerate(bot_trades):
+        
+        #print(bot_trade[9])
     
-        if bot_trade[0] > 1524500940 and bot_trade[2] > -.5:
+        if bot_trade[9] > 1524805831 and bot_trade[2] > -.5:
             
             #pprint(bot_trade)
             

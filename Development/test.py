@@ -74,7 +74,7 @@ print('profit', profit, profit * 7000)
 
 
 
-# file_path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/binance_all_trades_history_24hr_1min_drop_ENHANCED.pklz'
+# file_path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/1m_0_1525256825_binance_all_trades_history.pklz'
 # trades = ut.pickle_read(file_path)
 
 

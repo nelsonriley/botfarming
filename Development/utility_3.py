@@ -233,7 +233,7 @@ def calculate_profit_and_free_coin(current_state):
     # update program state
     write_current_state(current_state, False)
     
-    if percent_profit_from_trade < -.035:
+    if percent_profit_from_trade < -.035 and percent_profit_from_trade != -1.0:
         stop_trading_until = int(time.time()) + 60*60*6
         pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until', stop_trading_until)
     
@@ -486,6 +486,7 @@ def buy_coin(symbol, length, file_number, client):
     try:
         
         stop_trading_until = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until')
+        
         if stop_trading_until != False and int(time.time()) < stop_trading_until:
             # if symbol['symbol'] == 'ETHBTC':
             #     print('not trading...')
@@ -545,7 +546,7 @@ def buy_coin(symbol, length, file_number, client):
             max_price_to_buy_factor = .98
             largest_bitcoin_order = .1
             if a_b == 1:
-                part_of_bitcoin_to_use = .4
+                part_of_bitcoin_to_use = .4*3
             else:
                 part_of_bitcoin_to_use = .4*2
             gain_min = .001
@@ -557,7 +558,7 @@ def buy_coin(symbol, length, file_number, client):
             max_price_to_buy_factor = .97
             largest_bitcoin_order = .2
             if a_b == 1:
-                part_of_bitcoin_to_use = .45
+                part_of_bitcoin_to_use = .45*3
             else:
                 part_of_bitcoin_to_use = .45*2
             gain_min = .001
@@ -569,7 +570,7 @@ def buy_coin(symbol, length, file_number, client):
             max_price_to_buy_factor = .96
             largest_bitcoin_order = .2
             if a_b == 1:
-                part_of_bitcoin_to_use = .5
+                part_of_bitcoin_to_use = .5*3
             else:
                 part_of_bitcoin_to_use = .5*2
             gain_min = .001
@@ -581,7 +582,7 @@ def buy_coin(symbol, length, file_number, client):
             max_price_to_buy_factor = .95
             largest_bitcoin_order = .2
             if a_b == 1:
-                part_of_bitcoin_to_use = .55
+                part_of_bitcoin_to_use = .55*3
             else:
                 part_of_bitcoin_to_use = .55*2
             gain_min = .001
@@ -593,7 +594,7 @@ def buy_coin(symbol, length, file_number, client):
             max_price_to_buy_factor = .94
             largest_bitcoin_order = .2
             if a_b == 1:
-                part_of_bitcoin_to_use = .6
+                part_of_bitcoin_to_use = .6*3
             else:
                 part_of_bitcoin_to_use = .6*2
             gain_min = .001
@@ -605,7 +606,7 @@ def buy_coin(symbol, length, file_number, client):
             max_price_to_buy_factor = .93
             largest_bitcoin_order = .2
             if a_b == 1:
-                part_of_bitcoin_to_use = .65
+                part_of_bitcoin_to_use = .65*3
             else:
                 part_of_bitcoin_to_use = .65*2
             gain_min = .001
@@ -617,7 +618,7 @@ def buy_coin(symbol, length, file_number, client):
             max_price_to_buy_factor = .92
             largest_bitcoin_order = .2
             if a_b == 1:
-                part_of_bitcoin_to_use = .7
+                part_of_bitcoin_to_use = .7*3
             else:
                 part_of_bitcoin_to_use = .7*2
             gain_min = .001
@@ -629,7 +630,7 @@ def buy_coin(symbol, length, file_number, client):
             max_price_to_buy_factor = .91
             largest_bitcoin_order = .2
             if a_b == 1:
-                part_of_bitcoin_to_use = .75
+                part_of_bitcoin_to_use = .75*3
             else:
                 part_of_bitcoin_to_use = .75*2
             gain_min = .001
@@ -641,7 +642,7 @@ def buy_coin(symbol, length, file_number, client):
             max_price_to_buy_factor = .9
             largest_bitcoin_order = .2
             if a_b == 1:
-                part_of_bitcoin_to_use = .8
+                part_of_bitcoin_to_use = .8*3
             else:
                 part_of_bitcoin_to_use = .8*2
             gain_min = .001

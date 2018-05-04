@@ -662,10 +662,10 @@ def buy_coin(symbol, length, file_number, client):
 
         for look_back in look_back_schedule:
             
-            if a_b == 1:
-                look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/1_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
-            else:
-                look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/2_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
+            #if a_b == 1:
+            look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/1_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
+            # else:
+            #     look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/2_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
 
             if look_back_optimized != False:
                 price_to_buy_factor = look_back_optimized['lowest_buy_factor'] + std_dev_increase_factor * look_back_optimized['lowest_buy_factor_std_dev']
@@ -770,6 +770,37 @@ def buy_coin(symbol, length, file_number, client):
                         print('too many trades on ', symbol['symbol'], 'blocking for 24 hr')
                         time_to_start_trading_2 = int(time.time()) + 24*60*60
                         pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_2_' + symbol['symbol'], time_to_start_trading_2)
+                        
+                        if symbol['symbol'] != 'BNBBTC':
+                            
+                            all_lengths = ['1m', '5m', '15m', '30m', '1h', '2h', '6h', '12h', '1d']
+                            for each_length in all_lengths:
+                                pickle_write('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + each_length + '_0_' + symbol['symbol'] + '.pklz', False)
+                            
+                            acct_info = client.get_account()
+        
+                            for balance in acct_info['balances']:
+                                
+                                if balance['asset']+'BTC' == symbol['symbol']:
+                                    try:
+                                        if float(balance['free']) > 0:
+                                            print('sell', balance['asset'])
+                                            min_quantity = max(float(symbol['filters'][1]['minQty']), float(symbol['filters'][2]['minNotional']))
+                                            if float(balance['free']) > float(min_quantity):
+                                                quantity_decimals = get_min_decimals(symbol['filters'][1]['minQty'])
+                                                if float(quantity_decimals) == 0:
+                                                    quantity_for_sale = str(math.floor(float(balance['free'])))
+                                                else:
+                                                    rounded_down_quantity = round_down(float(balance['free']),quantity_decimals)
+                                                    print('rounded_down_quantity', rounded_down_quantity)
+                                                    quantity_for_sale = float_to_str(rounded_down_quantity,get_length_of_float(rounded_down_quantity))
+                                                print('quantity_for_sale', quantity_for_sale)
+                                                sale_order = client.order_market_sell(symbol=symbol['symbol'], quantity=quantity_for_sale)
+                                                pprint(sale_order)
+                                    except Exception as e:
+                                        print('selling off all of this coin failed, error below', symbol['symbol'])
+                                        print(e)
+                    
                         return
                     
                     if std_dev_increase_factor == 0:

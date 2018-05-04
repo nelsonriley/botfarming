@@ -65,6 +65,10 @@ final_profit_b = 0
 final_total_trades_a = 0
 final_total_trades_b = 0
 
+profit_by_std = {}
+
+max_time = 0
+
 for look_back in look_backs:
     
     print('look_back', look_back)
@@ -91,11 +95,18 @@ for look_back in look_backs:
     
     for i, bot_trade in enumerate(bot_trades):
         
-        #print(bot_trade[9])
+        if bot_trade[9] > max_time:
+            max_time = bot_trade[9]
+        
     
-        if bot_trade[9] > 1524805831 and bot_trade[2] > -.5 and bot_trade[11] == 0:
+        if bot_trade[9] > 1525360561 and bot_trade[2] > -.5:
             
             #pprint(bot_trade)
+            
+            if bot_trade[11] not in profit_by_std:
+                profit_by_std[bot_trade[11]] = bot_trade[2]
+            else:
+                profit_by_std[bot_trade[11]] += bot_trade[2]
             
             total_profit += bot_trade[2] # 'absolute profit', bot_trade[2], 'percentage profit', bot_trade[3]
             total_trades += 1
@@ -130,7 +141,11 @@ print('final_profit_a', final_profit_a)
 print('final_total_trades_a', final_total_trades_a)
 print('final_profit_b', final_profit_b)
 print('final_total_trades_b', final_total_trades_b)
+print('max_time', max_time)
+print('current_time', int(time.time()))
+print('time of last commit', int(time.time())-16*60*60)
 
+pprint(profit_by_std)
 
 sys.exit()
 

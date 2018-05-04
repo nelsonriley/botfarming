@@ -538,7 +538,7 @@ def buy_coin(symbol, length, file_number, client):
         if length == '1m':
             max_price_to_buy_factor = .98
             largest_bitcoin_order = .1
-            if a_b == 1:
+            if False and a_b == 1:
                 part_of_bitcoin_to_use = .4*3
             else:
                 part_of_bitcoin_to_use = .4*2
@@ -550,7 +550,7 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '5m':
             max_price_to_buy_factor = .97
             largest_bitcoin_order = .2
-            if a_b == 1:
+            if False and a_b == 1:
                 part_of_bitcoin_to_use = .45*3
             else:
                 part_of_bitcoin_to_use = .45*2
@@ -562,7 +562,7 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '15m':
             max_price_to_buy_factor = .96
             largest_bitcoin_order = .2
-            if a_b == 1:
+            if False and a_b == 1:
                 part_of_bitcoin_to_use = .5*3
             else:
                 part_of_bitcoin_to_use = .5*2
@@ -574,7 +574,7 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '30m':
             max_price_to_buy_factor = .95
             largest_bitcoin_order = .2
-            if a_b == 1:
+            if False and a_b == 1:
                 part_of_bitcoin_to_use = .55*3
             else:
                 part_of_bitcoin_to_use = .55*2
@@ -586,7 +586,7 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '1h':
             max_price_to_buy_factor = .94
             largest_bitcoin_order = .2
-            if a_b == 1:
+            if False and a_b == 1:
                 part_of_bitcoin_to_use = .6*3
             else:
                 part_of_bitcoin_to_use = .6*2
@@ -598,7 +598,7 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '2h':
             max_price_to_buy_factor = .93
             largest_bitcoin_order = .2
-            if a_b == 1:
+            if False and a_b == 1:
                 part_of_bitcoin_to_use = .65*3
             else:
                 part_of_bitcoin_to_use = .65*2
@@ -610,7 +610,7 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '6h':
             max_price_to_buy_factor = .92
             largest_bitcoin_order = .2
-            if a_b == 1:
+            if False and a_b == 1:
                 part_of_bitcoin_to_use = .7*3
             else:
                 part_of_bitcoin_to_use = .7*2
@@ -622,7 +622,7 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '12h':
             max_price_to_buy_factor = .91
             largest_bitcoin_order = .2
-            if a_b == 1:
+            if False and a_b == 1:
                 part_of_bitcoin_to_use = .75*3
             else:
                 part_of_bitcoin_to_use = .75*2
@@ -634,7 +634,7 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '1d':
             max_price_to_buy_factor = .9
             largest_bitcoin_order = .2
-            if a_b == 1:
+            if False and a_b == 1:
                 part_of_bitcoin_to_use = .8*3
             else:
                 part_of_bitcoin_to_use = .8*2

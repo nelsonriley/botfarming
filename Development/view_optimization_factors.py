@@ -135,6 +135,6 @@ for s in symbols_trimmed:
     for look_back in look_back_array:
         look_back_optimized = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/' + version + length  + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
         if look_back_optimized != False:
-            #print('look_back', look_back_optimized['look_back'], 'lowest_buy_factor', look_back_optimized['lowest_buy_factor'],'highest_sale_factor', look_back_optimized['highest_sale_factor'])
-            print('highest_sale_factor -  lowest_buy_factor', look_back_optimized['highest_sale_factor'] - look_back_optimized['lowest_buy_factor'])
-            print('modified_sale_factor', look_back_optimized['highest_sale_factor'] - look_back_optimized['lowest_buy_factor'] - (look_back_optimized['highest_sale_factor'] - look_back_optimized['lowest_buy_factor'])*.15)
+            print('look_back', look_back_optimized['look_back'], 'lowest_buy_factor', look_back_optimized['lowest_buy_factor'],'highest_sale_factor', look_back_optimized['highest_sale_factor'])
+            # print('highest_sale_factor -  lowest_buy_factor', look_back_optimized['highest_sale_factor'] - look_back_optimized['lowest_buy_factor'])
+            # print('modified_sale_factor', look_back_optimized['highest_sale_factor'] - look_back_optimized['lowest_buy_factor'] - (look_back_optimized['highest_sale_factor'] - look_back_optimized['lowest_buy_factor'])*.15)

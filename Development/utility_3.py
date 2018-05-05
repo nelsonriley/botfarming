@@ -485,6 +485,16 @@ def buy_coin(symbol, length, file_number, client):
 
     try:
         
+        stop_trading_until_length = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_'+length)
+        
+        if stop_trading_until_length != False and int(time.time()) < stop_trading_until_length:
+            # if symbol['symbol'] == 'ETHBTC':
+            #     print('not trading anything length', length)
+            time.sleep(10*60)
+            return
+        
+        
+        
         stop_trading_until = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until')
         
         if stop_trading_until != False and int(time.time()) < stop_trading_until:
@@ -757,6 +767,16 @@ def buy_coin(symbol, length, file_number, client):
 
 
                 if current_price <= price_to_start_buy:
+                    
+                    # TODO NELSON
+                    #if indicator_bot == 1:
+                    # load array 
+                    #remove greater than 7 minutes
+                    #add self to array
+                    #if greater than 6 trades in last 7 mintues: set std_dev_increase_factor = 0
+                    #save array
+                    #sleep 3 minutes
+                    #return
                     
                     pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
                     

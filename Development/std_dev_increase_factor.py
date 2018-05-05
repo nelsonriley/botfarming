@@ -10,7 +10,7 @@ from os.path import isfile, join
 # if not trade in last 10 min
 # increase std_dev_increase_factor by 0.1 with a max of 2
 
-#ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
+ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
 
 while time.localtime().tm_sec > 2 or time.localtime().tm_sec < 1:
     time.sleep(.5)

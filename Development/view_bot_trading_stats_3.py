@@ -104,8 +104,8 @@ for look_back in look_backs:
             
             #pprint(bot_trade)
             
-            #if bot_trade[3] < -.02:
-                #pprint(bot_trade)
+            # if bot_trade[3] < -.02:
+            #     pprint(bot_trade)
             
             if bot_trade[11] not in profit_by_std:
                 profit_by_std[bot_trade[11]] = bot_trade[2]

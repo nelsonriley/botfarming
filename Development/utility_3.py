@@ -466,7 +466,7 @@ def buy_coin_from_state(current_state):
         return False
 
 
-def buy_coin(symbol, length, file_number, client):
+def buy_coin(symbol, length, file_number, client, indicator_bot):
     
     # if symbol['symbol'] == 'KNCBTC':
     #     print('here')
@@ -478,45 +478,47 @@ def buy_coin(symbol, length, file_number, client):
     except Exception as e:
         current_state = False
 
-    if isinstance(current_state,dict):
+    if isinstance(current_state,dict) and indicator_bot == 0:
         print('loading state to sell coin..', current_state['symbol'])
         buy_coin_from_state(current_state)
         return
 
     try:
         
-        stop_trading_until_length = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_'+length)
-        
-        if stop_trading_until_length != False and int(time.time()) < stop_trading_until_length:
-            # if symbol['symbol'] == 'ETHBTC':
-            #     print('not trading anything length', length)
-            time.sleep(10*60)
-            return
-        
-        
-        
-        stop_trading_until = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until')
-        
-        if stop_trading_until != False and int(time.time()) < stop_trading_until:
-            ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
-            if symbol['symbol'] == 'ETHBTC' and length == '1d':
-                print('not trading anything...')
-            time.sleep(10*60)
-            return
-        
-        time_to_start_trading = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_' + symbol['symbol'])
-        
-        if time_to_start_trading != False and int(time.time()) < time_to_start_trading:
-            if symbol['symbol'] == 'ETHBTC':
-                 print('not trading coin...')
-            time.sleep(60)
-            return
-
-        time_to_start_trading_2 = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_2_' + symbol['symbol'])
-        
-        if time_to_start_trading_2 != False and int(time.time()) < time_to_start_trading_2:
-            time.sleep(60)
-            return
+        if indicator_bot == 0:
+            
+            stop_trading_until_length = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_'+length)
+            
+            if stop_trading_until_length != False and int(time.time()) < stop_trading_until_length:
+                # if symbol['symbol'] == 'ETHBTC':
+                #     print('not trading anything length', length)
+                time.sleep(10*60)
+                return
+            
+            
+            
+            stop_trading_until = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until')
+            
+            if stop_trading_until != False and int(time.time()) < stop_trading_until:
+                pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
+                if symbol['symbol'] == 'ETHBTC' and length == '1d':
+                    print('not trading anything...')
+                time.sleep(10*60)
+                return
+            
+            time_to_start_trading = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_' + symbol['symbol'])
+            
+            if time_to_start_trading != False and int(time.time()) < time_to_start_trading:
+                if symbol['symbol'] == 'ETHBTC':
+                     print('not trading coin...')
+                time.sleep(60)
+                return
+    
+            time_to_start_trading_2 = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_2_' + symbol['symbol'])
+            
+            if time_to_start_trading_2 != False and int(time.time()) < time_to_start_trading_2:
+                time.sleep(60)
+                return
         ##
         
         if symbol['symbol'] == 'CTRBTC':
@@ -670,9 +672,13 @@ def buy_coin(symbol, length, file_number, client):
         datapoints_trailing = look_back_schedule[-1] + 20
         
         std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor')
+        
+        if indicator_bot == 1:
+            std_dev_increase_factor = 2
 
         for look_back in look_back_schedule:
             
+            # NOTE, don't A/B test indicator_bot
             #if a_b == 1:
             look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/1_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
             # else:
@@ -769,17 +775,21 @@ def buy_coin(symbol, length, file_number, client):
 
                 if current_price <= price_to_start_buy:
                     
-                    # TODO NELSON
-                    #if indicator_bot == 1:
-                    # load array 
-                    #remove greater than 7 minutes
-                    #add self to array
-                    #if greater than 6 trades in last 7 mintues: set std_dev_increase_factor = 0
-                    #save array
-                    #sleep 3 minutes
-                    #return
-                    
-                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
+                    # reset std_dev_increase_factor based on number of recent trades by "indicator bot"
+                    # instead of resetting std_dev_increase_factor with every new trade
+                    if indicator_bot == 1:
+                        indicator_trades_path = '/home/ec2-user/environment/botfarming/Development/variables/indicator_trades'
+                        indicator_trades_old = pickle_read(indicator_trades_path)
+                        indicator_trades_new = []
+                        for trade_time in indicator_trades_old:
+                            if int(time.time()) - trade_time < 7*60:
+                                indicator_trades_new.append(trade_time)
+                        indicator_trades_new.append(int(time.time()))
+                        if len(indicator_trades_new) > 6:
+                            pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
+                        pickle_write(indicator_trades_path, indicator_trades_new)
+                        time.sleep(3*60)
+                        return
                     
                     print('----start buy', symbol['symbol'], 'std_dev_increase_factor', std_dev_increase_factor , get_time())
                     
@@ -1016,7 +1026,7 @@ def buy_coin(symbol, length, file_number, client):
         return False
 
 
-def run_bot_parallel(file_number, length, total_files, client):
+def run_bot_parallel(file_number, length, total_files, client, indicator_bot=0):
 
     print('running bot', file_number, 'of', total_files, 'ip address:')
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -1041,17 +1051,18 @@ def run_bot_parallel(file_number, length, total_files, client):
                 total_btc_coins += 1
                 symbols_trimmed[s] = symbol
             else:
-                try:
-                    f = gzip.open('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '.pklz','rb')
-                    current_state = pickle.load(f)
-                    f.close()
-                except Exception as e:
-                    current_state = False
-            
-                if isinstance(current_state,dict):
-                    print('loading state to sell coin..', current_state['symbol'])
-                    t = Thread(target=buy_coin_from_state, args=[current_state])
-                    t.start()
+                if indicator_bot == 0:
+                    try:
+                        f = gzip.open('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '.pklz','rb')
+                        current_state = pickle.load(f)
+                        f.close()
+                    except Exception as e:
+                        current_state = False
+                
+                    if isinstance(current_state,dict):
+                        print('loading state to sell coin..', current_state['symbol'])
+                        t = Thread(target=buy_coin_from_state, args=[current_state])
+                        t.start()
 
         print('total_btc_coins with volume >', min_symbol_volume, '---', total_btc_coins)
 
@@ -1067,18 +1078,18 @@ def run_bot_parallel(file_number, length, total_files, client):
         symbol = symbols_trimmed[s]
 
         if loops >= file_start and loops < file_end:
-            t = Thread(target=buy_coin_thread, args=[symbol, length, file_number, client])
+            t = Thread(target=buy_coin_thread, args=[symbol, length, file_number, client, indicator_bot])
             t.start()
 
         loops += 1
 
 
 # "worker"
-def buy_coin_thread(symbol, length, file_number, client):
+def buy_coin_thread(symbol, length, file_number, client, indicator_bot):
 
     while True:
 
-        buy_coin(symbol, length, file_number, client)
+        buy_coin(symbol, length, file_number, client, indicator_bot)
 
 
 def append_data(file_path, data):

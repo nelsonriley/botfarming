@@ -8,6 +8,7 @@ import datetime
 from pprint import pprint
 import utility as ut
 import utility_2 as ut2
+import utility_3 as ut3
 import numpy
 from binance.client import Client
 from binance.websockets import BinanceSocketManager

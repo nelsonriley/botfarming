@@ -224,10 +224,11 @@ def calculate_profit_and_free_coin(current_state):
     invested_btc = current_state['original_quantity']*current_state['original_price']
     print('PROFIT', current_state['symbol'] ,'profit was, absoulte profit, percent profit, amount invested', float_to_str(profit_from_trade, 8), float_to_str(percent_profit_from_trade, 5), float_to_str(invested_btc,8), get_time())
 
-    recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['a_b'], current_state['price_to_buy_factor'], current_state['price_to_sell_factor'], current_state['original_buy_time'], get_time()]
-    if 'std_dev_increase_factor' in current_state:
-        recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['a_b'], current_state['price_to_buy_factor'], current_state['price_to_sell_factor'], current_state['original_buy_time'], get_time(), current_state['std_dev_increase_factor']]
+    recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['a_b'], current_state['price_to_buy_factor'], current_state['price_to_sell_factor'], current_state['original_buy_time'], get_time(), current_state['std_dev_increase_factor']]
+    if 'length_indicator_trades' in current_state:
+        recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['a_b'], current_state['price_to_buy_factor'], current_state['price_to_sell_factor'], current_state['original_buy_time'], get_time(), current_state['std_dev_increase_factor'], current_state['length_indicator_trades']]
     
+        
     pickle_write('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/'+ current_state['length'] + '_' + current_state['file_number'] + '_' + str(current_state['original_buy_time']) + '_binance_all_trades_history.pklz', recorded_trade)
 
     # update program state
@@ -674,7 +675,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
         std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor')
         
         if indicator_bot == 1:
-            std_dev_increase_factor = 4
+            std_dev_increase_factor = 15
 
         for look_back in look_back_schedule:
             
@@ -787,9 +788,9 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                         indicator_trades_new.append(int(time.time()))
                         # if len(indicator_trades_new) > 6:
                         #     pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
-                        print('new trade', symbol['symbol'], 'length indicator', len(indicator_trades_new))
+                        print('new trade', symbol['symbol'], 'length indicator', len(indicator_trades_new), get_time())
                         pickle_write(indicator_trades_path, indicator_trades_new)
-                        time.sleep(3*60)
+                        time.sleep(7.5*60)
                         return
                     
                     print('----start buy', symbol['symbol'], 'std_dev_increase_factor', std_dev_increase_factor , get_time())
@@ -835,7 +836,10 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                     
                         return
                     
-                    if std_dev_increase_factor == 0:
+                    
+                    indicator_trades = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/indicator_trades')
+                    
+                    if len(indicator_trades) > 10:
                         time.sleep(120)
                         return
                     
@@ -903,6 +907,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                     current_state['stop_trading_value'] = stop_trading_value
                     current_state['stop_trading_time'] = stop_trading_time
                     current_state['std_dev_increase_factor'] = std_dev_increase_factor
+                    current_state['length_indicator_trades'] = len(indicator_trades)
 
                     write_current_state(current_state, current_state)
 

@@ -14,13 +14,18 @@ import json
 import math
 from binance.client import Client
 
-print(ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/1_6h_optimal_for_LOOMBTC_11.pklz'))
 
-length = '6h'
+indicator_trades_old = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/indicator_trades')
 
-version = '1_'
+print(len(indicator_trades_old))
 
-print(ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/' + version + length  + '_optimal_for_' + symbol['symbol'] + '_11.pklz'))
+# print(ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/1_6h_optimal_for_LOOMBTC_11.pklz'))
+
+# length = '6h'
+
+# version = '1_'
+
+# print(ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/' + version + length  + '_optimal_for_' + symbol['symbol'] + '_11.pklz'))
 # file_path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/1m_0_1525256825_binance_all_trades_history.pklz'
 # trades = ut.pickle_read(file_path)
 

@@ -5,6 +5,7 @@ import utility_3 as ut
 from binance.client import Client
 
 # INDICATOR BOT #
+ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/indicator_trades_1h', [])
 indicator_bot = 1
 file_number = 0
 total_files = 1

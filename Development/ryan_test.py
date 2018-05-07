@@ -19,9 +19,9 @@ indicator_trades_path = '/home/ec2-user/environment/botfarming/Development/varia
 
 ut.pickle_write(indicator_trades_path, [])
 
-indicator_trades_old = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/indicator_trades')
+# indicator_trades_old = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/indicator_trades_1m')
 
-print(len(indicator_trades_old))
+# print(len(indicator_trades_old))
 
 # print(ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/1_6h_optimal_for_LOOMBTC_11.pklz'))
 

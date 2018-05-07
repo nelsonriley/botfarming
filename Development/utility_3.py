@@ -675,7 +675,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
         std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor_' + length)
         
         if indicator_bot == 1:
-            std_dev_increase_factor = 15
+            std_dev_increase_factor = 1
 
         for look_back in look_back_schedule:
             
@@ -686,11 +686,13 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             #     look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/2_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
 
             if look_back_optimized != False:
+                
                 price_to_buy_factor = look_back_optimized['lowest_buy_factor'] + std_dev_increase_factor * look_back_optimized['lowest_buy_factor_std_dev']
                 price_to_sell_factor = min(look_back_optimized['highest_sale_factor'], .99)
                 
-                if price_to_sell_factor - price_to_buy_factor < .007:
-                    price_to_buy_factor = price_to_sell_factor - .007
+                if indicator_bot != 1: 
+                    if price_to_sell_factor - price_to_buy_factor < .007:
+                        price_to_buy_factor = price_to_sell_factor - .007
             
                 price_to_buy_factor_array[look_back] = price_to_buy_factor
                 price_to_sell_factor_array[look_back] = price_to_sell_factor
@@ -768,7 +770,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
 
             for look_back in look_back_schedule:
                 
-                if price_to_buy_factor_array[look_back] > max_price_to_buy_factor:
+                if indicator_bot == 0 and price_to_buy_factor_array[look_back] > max_price_to_buy_factor:
                     continue
             
                 price_to_start_buy = float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy_factor
@@ -784,23 +786,23 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                         indicator_trades_new = []
                         
                         if length == '1m':
-                            trade_keep_length = minutes*8*60
+                            trade_keep_length = minutes*2*60
                         elif length == '5m':
-                            trade_keep_length = minutes*5*60
+                            trade_keep_length = minutes*2*60
                         elif length == '15m':
-                            trade_keep_length = minutes*3*60
+                            trade_keep_length = minutes*2*60
                         elif length == '30m':
-                            trade_keep_length = minutes*3*60
+                            trade_keep_length = minutes*2*60
                         elif length == '1h':
-                            trade_keep_length = minutes*3*60
+                            trade_keep_length = minutes*2*60
                         elif length == '2h':
-                            trade_keep_length = minutes*3*60
+                            trade_keep_length = minutes*2*60
                         elif length == '6h':
                             trade_keep_length = minutes*2*60
                         elif length == '12h':
                             trade_keep_length = minutes*2*60
                         elif length == '1d':
-                            trade_keep_length = minutes*1*60
+                            trade_keep_length = minutes*2*60
                     
                         for trade_time in indicator_trades_old:
                             if int(time.time()) - trade_time < trade_keep_length:
@@ -812,7 +814,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                         print('new trade', symbol['symbol'], 'length indicator', len(indicator_trades_new), get_time())
                         pickle_write(indicator_trades_path, indicator_trades_new)
                         
-                        time.sleep(trade_keep_length/2)
+                        time.sleep(trade_keep_length)
                         return
                     
                     print('----start buy', symbol['symbol'], 'std_dev_increase_factor', std_dev_increase_factor , get_time())
@@ -860,31 +862,31 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                     
                     indicator_trades = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/indicator_trades_'+length)
                     
-                    if length == '1m' and len(indicator_trades) > 13:
+                    if length == '1m' and len(indicator_trades) > 35:
                         time.sleep(120)
                         return
-                    elif length == '5m' and len(indicator_trades) > 15:
+                    elif length == '5m' and len(indicator_trades) > 30:
                         time.sleep(120)
                         return
-                    elif length == '15m' and len(indicator_trades) > 20:
+                    elif length == '15m' and len(indicator_trades) > 25:
                         time.sleep(120)
                         return
                     elif length == '30m' and len(indicator_trades) > 25:
                         time.sleep(120)
                         return
-                    elif length == '1h' and len(indicator_trades) > 25:
+                    elif length == '1h' and len(indicator_trades) > 15:
                         time.sleep(120)
                         return
-                    elif length == '2h' and len(indicator_trades) > 30:
+                    elif length == '2h' and len(indicator_trades) > 10:
                         time.sleep(120)
                         return
-                    elif length == '6h' and len(indicator_trades) > 30:
+                    elif length == '6h' and len(indicator_trades) > 6:
                         time.sleep(120)
                         return
-                    elif length == '12h' and len(indicator_trades) > 30:
+                    elif length == '12h' and len(indicator_trades) > 5:
                         time.sleep(120)
                         return
-                    elif length == '1d' and len(indicator_trades) > 30:
+                    elif length == '1d' and len(indicator_trades) > 5:
                         time.sleep(120)
                         return
                     

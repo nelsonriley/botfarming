@@ -15,6 +15,10 @@ import math
 from binance.client import Client
 
 
+indicator_trades_path = '/home/ec2-user/environment/botfarming/Development/variables/indicator_trades_1d'
+
+ut.pickle_write(indicator_trades_path, [])
+
 indicator_trades_old = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/indicator_trades')
 
 print(len(indicator_trades_old))

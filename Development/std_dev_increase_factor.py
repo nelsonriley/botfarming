@@ -7,38 +7,44 @@ from pprint import pprint
 from os import listdir
 from os.path import isfile, join
 
-# if not trade in last 10 min
-# increase std_dev_increase_factor by 0.1 with a max of 2
 
-ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
 
-while time.localtime().tm_sec > 2 or time.localtime().tm_sec < 1:
-    time.sleep(.5)
 
 
 while True:
-
-    std_dev_increase_factor = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor')
-
-    last_trade_start_overall = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_overall')
     
-    print('last_trade_start_overall', ut.get_readable_time(last_trade_start_overall))
+    while time.localtime().tm_sec > 2 or time.localtime().tm_sec < 1:
+        time.sleep(.5)
     
-    if int(time.time()) - last_trade_start_overall > 3*60:
-        if int(time.time()) - last_trade_start_overall < 7*60:
-            std_dev_increase_factor += 0.05
-        elif int(time.time()) - last_trade_start_overall < 11*60:
-            std_dev_increase_factor += 0.1
-        else:
-            std_dev_increase_factor += 0.2
-    else:
-        std_dev_increase_factor = 0 # this is also done when trade completes, extra safe
+    lengths = ['1m', '5m', '15m', '30m', '1h', '2h', '6h', '12h', '1d']
+    
+    for length in lengths:
         
-    if std_dev_increase_factor > 4:
-        std_dev_increase_factor = 4
-        
-    ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', std_dev_increase_factor)
-    
-    print('std_dev_increase_factor', std_dev_increase_factor, ut.get_time())
+        if length == '1m':
+            max_trades_allowed = 13
+        elif length == '5m':
+            max_trades_allowed = 15
+        elif length == '15m':
+            max_trades_allowed = 20
+        elif length == '30m':
+            max_trades_allowed = 25
+        elif length == '1h':
+            max_trades_allowed = 25
+        elif length == '2h':
+            max_trades_allowed = 30
+        elif length == '6h':
+            max_trades_allowed = 30
+        elif length == '12h':
+            max_trades_allowed = 30
+        elif length == '1d':
+            max_trades_allowed = 30
 
-    time.sleep(60)
+        indicator_trades = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/indicator_trades_'+length)
+        
+        std_dev_increase_factor = max(0,round((float(max_trades_allowed)-float(len(indicator_trades)))*4/float(max_trades_allowed),1))
+            
+        ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor_'+length, std_dev_increase_factor)
+        
+        print('std_dev_increase_factor_' + length, std_dev_increase_factor, ut.get_time())
+    
+    time.sleep(30)

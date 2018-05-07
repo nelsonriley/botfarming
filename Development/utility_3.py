@@ -672,7 +672,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
         
         datapoints_trailing = look_back_schedule[-1] + 20
         
-        std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor')
+        std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor_' + length)
         
         if indicator_bot == 1:
             std_dev_increase_factor = 15
@@ -779,24 +779,45 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                     # reset std_dev_increase_factor based on number of recent trades by "indicator bot"
                     # instead of resetting std_dev_increase_factor with every new trade
                     if indicator_bot == 1:
-                        indicator_trades_path = '/home/ec2-user/environment/botfarming/Development/variables/indicator_trades'
+                        indicator_trades_path = '/home/ec2-user/environment/botfarming/Development/variables/indicator_trades_' + length
                         indicator_trades_old = pickle_read(indicator_trades_path)
                         indicator_trades_new = []
+                        
+                        if length == '1m':
+                            trade_keep_length = minutes*8*60
+                        elif length == '5m':
+                            trade_keep_length = minutes*5*60
+                        elif length == '15m':
+                            trade_keep_length = minutes*3*60
+                        elif length == '30m':
+                            trade_keep_length = minutes*3*60
+                        elif length == '1h':
+                            trade_keep_length = minutes*3*60
+                        elif length == '2h':
+                            trade_keep_length = minutes*3*60
+                        elif length == '6h':
+                            trade_keep_length = minutes*2*60
+                        elif length == '12h':
+                            trade_keep_length = minutes*2*60
+                        elif length == '1d':
+                            trade_keep_length = minutes*1*60
+                    
                         for trade_time in indicator_trades_old:
-                            if int(time.time()) - trade_time < 15*60:
+                            if int(time.time()) - trade_time < trade_keep_length:
                                 indicator_trades_new.append(trade_time)
+                              
                         indicator_trades_new.append(int(time.time()))
                         # if len(indicator_trades_new) > 6:
                         #     pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
                         print('new trade', symbol['symbol'], 'length indicator', len(indicator_trades_new), get_time())
                         pickle_write(indicator_trades_path, indicator_trades_new)
-                        time.sleep(7.5*60)
+                        
+                        time.sleep(trade_keep_length/2)
                         return
                     
                     print('----start buy', symbol['symbol'], 'std_dev_increase_factor', std_dev_increase_factor , get_time())
                     
-                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_overall', int(time.time()))
-
+                    
                     ## block symbols for 24 hrs if 2 trades trigger within 4 minutes (only 1st trade executes)
                     last_trade_start = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_' + symbol['symbol'])
                     if last_trade_start != False and int(time.time()) - last_trade_start < 190:
@@ -837,9 +858,33 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                         return
                     
                     
-                    indicator_trades = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/indicator_trades')
+                    indicator_trades = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/indicator_trades_'+length)
                     
-                    if len(indicator_trades) > 10:
+                    if length == '1m' and len(indicator_trades) > 13:
+                        time.sleep(120)
+                        return
+                    elif length == '5m' and len(indicator_trades) > 15:
+                        time.sleep(120)
+                        return
+                    elif length == '15m' and len(indicator_trades) > 20:
+                        time.sleep(120)
+                        return
+                    elif length == '30m' and len(indicator_trades) > 25:
+                        time.sleep(120)
+                        return
+                    elif length == '1h' and len(indicator_trades) > 25:
+                        time.sleep(120)
+                        return
+                    elif length == '2h' and len(indicator_trades) > 30:
+                        time.sleep(120)
+                        return
+                    elif length == '6h' and len(indicator_trades) > 30:
+                        time.sleep(120)
+                        return
+                    elif length == '12h' and len(indicator_trades) > 30:
+                        time.sleep(120)
+                        return
+                    elif length == '1d' and len(indicator_trades) > 30:
                         time.sleep(120)
                         return
                     
@@ -858,12 +903,6 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                     print('-------------------buy!', symbol['symbol'], 'current price', current_price, 'current price time', get_readable_time(order_book['time']), 'look_back', look_back, 'look back original price', data[index-look_back][4], 'look back original time', get_readable_time(data[index-look_back][0]),   'price_to_buy', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back], 'price_to_sell', price_to_sell,  'price_to_sell_factor',price_to_sell_factor_array[look_back] , 'price_increase_factor',price_increase_factor_array[look_back] , minutes_until_sale, get_time())
                     
                     
-                    if length == '1m':
-                        save_data_until = int(time.time()) + 60*60
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/should_save_' + symbol['symbol'], save_data_until)
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol['symbol'], False)
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/order_book_history/' + symbol['symbol'] + '_' + str(save_data_until), [symbol['symbol'], 'current price', current_price, 'current price time', get_readable_time(order_book['time']), 'look_back', look_back, 'look back original price', data[index-look_back][4], 'look back original time', get_readable_time(data[index-look_back][0]),   'price_to_buy', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back], 'price_to_sell', price_to_sell,  'price_to_sell_factor',price_to_sell_factor_array[look_back] , 'price_increase_factor',price_increase_factor_array[look_back] , minutes_until_sale, get_time()])
-
                     amount_to_buy = part_of_bitcoin_to_use/price_to_buy
                     largest_buy_segment = largest_bitcoin_order/price_to_buy
 
@@ -929,8 +968,6 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                         time_to_give_up = int(time.time()) + 45*60
                     elif length == '1d':
                         time_to_give_up = int(time.time()) + 60*60
-                        
-                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
                     
                     
                     price_to_buy_max = price_to_buy*buy_price_increase_factor

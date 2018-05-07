@@ -38,7 +38,7 @@ try:
                 current_state = False
         
             if isinstance(current_state,dict):
-                print('')
+                print(length)
                 print('coin has state..', current_state['symbol'], current_state['executedQty']*current_state['price_to_buy'], current_state['executedQty'])
 
     print('total_btc_coins with volume >', min_symbol_volume, '---', total_btc_coins)

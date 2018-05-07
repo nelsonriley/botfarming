@@ -14,6 +14,13 @@ import json
 import math
 from binance.client import Client
 
+print(ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/1_6h_optimal_for_LOOMBTC_11.pklz'))
+
+length = '6h'
+
+version = '1_'
+
+print(ut.pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/' + version + length  + '_optimal_for_' + symbol['symbol'] + '_11.pklz'))
 # file_path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/1m_0_1525256825_binance_all_trades_history.pklz'
 # trades = ut.pickle_read(file_path)
 
@@ -25,11 +32,11 @@ from binance.client import Client
 
 # print(int(time.time()))
 
-stop_trading_until = int(time.time()) + 60*60*24*365
-ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_12h', stop_trading_until)
-ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_6h', stop_trading_until)
+# stop_trading_until = int(time.time()) + 60*60*24*365
+# ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_12h', stop_trading_until)
+# ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_6h', stop_trading_until)
     
-print(ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_6h'))
+# print(ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_6h'))
 
 # last_three_trades = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_three_trades')
     

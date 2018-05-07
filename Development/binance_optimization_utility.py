@@ -242,19 +242,19 @@ def run_optimizer_multi(lengths, compare_price_type):
                     minutes = 60
                     minutes_until_sale = 12
                 if length == '2h':
-                    data_length_multiplier = 60*24*30/120 # 1 month
+                    data_length_multiplier = 60*24*21/120 # 3 weeks
                     minutes = 60 * 2
                     minutes_until_sale = 8
                 if length == '6h':
-                    data_length_multiplier = 60*24*45/360 # 1.5 months
+                    data_length_multiplier = 60*24*21/360 # 3 weeks
                     minutes = 60 * 6
                     minutes_until_sale = 4
                 if length == '12h':
-                    data_length_multiplier = 60*24*90/720 # 3 months
+                    data_length_multiplier = 60*24*30/720 # 1 month
                     minutes = 60 * 12
                     minutes_until_sale = 3
                 if length == '1d':
-                    data_length_multiplier = 60*24*120/1440 # 4 months
+                    data_length_multiplier = 60*24*30/1440 # 1 month
                     minutes = 60 * 24
                     minutes_until_sale = 2
                 hours_per_period = round(float(data_length_multiplier*minutes/60.0), 3)
@@ -278,10 +278,11 @@ def run_optimizer_multi(lengths, compare_price_type):
                     for lb in optimizing_array:
                         results_by_look_back[str(lb)] = []
                 
-                    step_back_periods = 12
+                    step_back_periods = 6
                     for step_back in range(0, step_back_periods):
                         end_time = int(time.time()) - data_length_multiplier * step_back * minutes * 60
                         results = get_optimization_factors(optimizing_array, data_length_multiplier, end_time, symbol, symbols_trimmed_one, length, minutes, minutes_until_sale, compare_price_type)
+                        
                         for r in results:
                             results_by_look_back[str(r['look_back'])].append(r)
                         # results = [r, r, r...]
@@ -295,6 +296,16 @@ def run_optimizer_multi(lengths, compare_price_type):
                         lowest_buy_factors = []
                         highest_sale_factors = []
                         results = results_by_look_back[lb]
+                        if len(results) < 6:
+                            print('not enough data writing false..')
+                            if compare_price_type == 0:
+                                optimization_factors_path = '/home/ec2-user/environment/botfarming/Development/optimization_factors/1_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(lb) + '.pklz'
+                                ut.pickle_write(optimization_factors_path, False)
+                                continue
+                            else:
+                                optimization_factors_path_2 = '/home/ec2-user/environment/botfarming/Development/optimization_factors/2_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(lb) + '.pklz'
+                                ut.pickle_write(optimization_factors_path_2, False)
+                                continue
                         for r in results:
                             lowest_buy_factors.append(r['lowest_buy_factor'])
                             highest_sale_factors.append(r['highest_sale_factor'])

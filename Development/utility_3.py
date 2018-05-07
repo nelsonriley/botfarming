@@ -674,7 +674,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
         std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor')
         
         if indicator_bot == 1:
-            std_dev_increase_factor = 2
+            std_dev_increase_factor = 4
 
         for look_back in look_back_schedule:
             
@@ -782,11 +782,12 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                         indicator_trades_old = pickle_read(indicator_trades_path)
                         indicator_trades_new = []
                         for trade_time in indicator_trades_old:
-                            if int(time.time()) - trade_time < 7*60:
+                            if int(time.time()) - trade_time < 15*60:
                                 indicator_trades_new.append(trade_time)
                         indicator_trades_new.append(int(time.time()))
-                        if len(indicator_trades_new) > 6:
-                            pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
+                        # if len(indicator_trades_new) > 6:
+                        #     pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
+                        print('new trade', symbol['symbol'], 'length indicator', len(indicator_trades_new))
                         pickle_write(indicator_trades_path, indicator_trades_new)
                         time.sleep(3*60)
                         return

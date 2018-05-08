@@ -5,5 +5,5 @@ import utility_3 as ut
 
 #ut.update_symbol_list()
 
-ut.update_order_book(4800, 99999999)
+ut.update_order_book(3000, 99999999)
 

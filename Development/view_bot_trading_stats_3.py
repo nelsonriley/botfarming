@@ -79,7 +79,7 @@ for look_back in look_backs:
         if file.startswith(look_back + "_0"):
             #print('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/' + file)
             trade = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/' + file)
-            if len(trade) == 12:
+            if len(trade) == 13:
                 trade.append(look_back)
                 trade.append(trade[0])
                 trade[0] = ut.convert_date_to_epoch(trade[0])
@@ -147,7 +147,7 @@ print('final_profit_b', final_profit_b)
 print('final_total_trades_b', final_total_trades_b)
 print('max_time', max_time)
 print('current_time', int(time.time()))
-print('time of last commit', int(time.time())-23*60*60)
+print('time of last commit', int(time.time())-8*60*60)
 
 pprint(profit_by_std)
 

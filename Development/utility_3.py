@@ -550,7 +550,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
 
         largest_bitcoin_order = .1
         if length == '1m':
-            max_price_to_buy_factor = .98
+            max_price_to_buy_factor = .99
             largest_bitcoin_order = .1
             if False and a_b == 1:
                 part_of_bitcoin_to_use = .4*3
@@ -562,7 +562,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             minutes_until_sale = 10
             minutes_until_sale_final = 12
         elif length == '5m':
-            max_price_to_buy_factor = .97
+            max_price_to_buy_factor = .98
             largest_bitcoin_order = .2
             if False and a_b == 1:
                 part_of_bitcoin_to_use = .45*3
@@ -574,7 +574,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
         elif length == '15m':
-            max_price_to_buy_factor = .96
+            max_price_to_buy_factor = .97
             largest_bitcoin_order = .2
             if False and a_b == 1:
                 part_of_bitcoin_to_use = .5*3
@@ -586,7 +586,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
         elif length == '30m':
-            max_price_to_buy_factor = .95
+            max_price_to_buy_factor = .965
             largest_bitcoin_order = .2
             if False and a_b == 1:
                 part_of_bitcoin_to_use = .55*3
@@ -598,7 +598,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
         elif length == '1h':
-            max_price_to_buy_factor = .94
+            max_price_to_buy_factor = .96
             largest_bitcoin_order = .2
             if False and a_b == 1:
                 part_of_bitcoin_to_use = .6*3
@@ -610,7 +610,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
         elif length == '2h':
-            max_price_to_buy_factor = .93
+            max_price_to_buy_factor = .95
             largest_bitcoin_order = .2
             if False and a_b == 1:
                 part_of_bitcoin_to_use = .65*3
@@ -688,7 +688,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             if look_back_optimized != False:
                 
                 price_to_buy_factor = look_back_optimized['lowest_buy_factor'] + std_dev_increase_factor * look_back_optimized['lowest_buy_factor_std_dev']
-                price_to_sell_factor = min(look_back_optimized['highest_sale_factor'], .99)
+                price_to_sell_factor = min(look_back_optimized['highest_sale_factor'], .995)
                 
                 if indicator_bot != 1: 
                     if price_to_sell_factor - price_to_buy_factor < .007:
@@ -817,7 +817,10 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                         time.sleep(trade_keep_length)
                         return
                     
-                    print('----start buy', symbol['symbol'], 'std_dev_increase_factor', std_dev_increase_factor , get_time())
+                    
+                    indicator_trades = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/indicator_trades_'+length)
+                    
+                    print('----start buy', symbol['symbol'], 'std_dev_increase_factor', std_dev_increase_factor, 'len(indicator_trades)', len(indicator_trades), get_time())
                     
                     
                     ## block symbols for 24 hrs if 2 trades trigger within 4 minutes (only 1st trade executes)
@@ -860,33 +863,33 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                         return
                     
                     
-                    indicator_trades = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/indicator_trades_'+length)
+                    
                     
                     if length == '1m' and len(indicator_trades) > 35:
                         time.sleep(120)
                         return
-                    elif length == '5m' and len(indicator_trades) > 30:
+                    elif length == '5m' and len(indicator_trades) > 25:
                         time.sleep(120)
                         return
-                    elif length == '15m' and len(indicator_trades) > 25:
+                    elif length == '15m' and len(indicator_trades) > 10:
                         time.sleep(120)
                         return
-                    elif length == '30m' and len(indicator_trades) > 25:
+                    elif length == '30m' and len(indicator_trades) > 12:
                         time.sleep(120)
                         return
-                    elif length == '1h' and len(indicator_trades) > 15:
+                    elif length == '1h' and len(indicator_trades) > 11:
                         time.sleep(120)
                         return
-                    elif length == '2h' and len(indicator_trades) > 10:
+                    elif length == '2h' and len(indicator_trades) > 7:
                         time.sleep(120)
                         return
                     elif length == '6h' and len(indicator_trades) > 6:
                         time.sleep(120)
                         return
-                    elif length == '12h' and len(indicator_trades) > 5:
+                    elif length == '12h' and len(indicator_trades) > 6:
                         time.sleep(120)
                         return
-                    elif length == '1d' and len(indicator_trades) > 5:
+                    elif length == '1d' and len(indicator_trades) > 6:
                         time.sleep(120)
                         return
                     

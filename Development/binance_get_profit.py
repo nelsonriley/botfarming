@@ -26,7 +26,7 @@ prices = client.get_all_tickers()
 # ryans_symbols = { 'BNB': 210.21609545, 'XVG': 409685 }
 ## 20180505
 ryan_btc_before_bots = 14.186409436
-ryans_symbols = { 'BNB': 426.04237149 }
+ryans_symbols = { 'BNB': 363.04951434 }
 
 coins_held = 0
 bot_value = 0

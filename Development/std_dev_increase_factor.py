@@ -21,7 +21,7 @@ while True:
     for length in lengths:
         
         if length == '1m':
-            max_trades_allowed = 35
+            max_trades_allowed = 40
             max_std_increase = 1
         elif length == '5m':
             max_trades_allowed = 30

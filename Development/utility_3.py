@@ -858,7 +858,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                     
                     
                     
-                    if length == '1m' and len(indicator_trades) > 35:
+                    if length == '1m' and len(indicator_trades) > 40:
                         time.sleep(120)
                         return
                     elif length == '5m' and len(indicator_trades) > 30:

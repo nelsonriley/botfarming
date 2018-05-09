@@ -491,8 +491,9 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             stop_trading_until_length = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_'+length)
             
             if stop_trading_until_length != False and int(time.time()) < stop_trading_until_length:
-                # if symbol['symbol'] == 'ETHBTC':
-                #     print('not trading anything length', length)
+                if symbol['symbol'] == 'ETHBTC' and length == '1d':
+                    print('not trading anything...')
+                    time.sleep(20*60)
                 time.sleep(10*60)
                 return
             
@@ -549,6 +550,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
 
 
         largest_bitcoin_order = .1
+        look_back_schedule = [1,5,9,15]
         if length == '1m':
             max_price_to_buy_factor = .99
             largest_bitcoin_order = .1
@@ -558,7 +560,6 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                 part_of_bitcoin_to_use = .4*2
             gain_min = .001
             buy_price_increase_factor = 1.001
-            look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 10
             minutes_until_sale_final = 12
         elif length == '5m':
@@ -570,7 +571,6 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                 part_of_bitcoin_to_use = .45*2
             gain_min = .001
             buy_price_increase_factor = 1.002
-            look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
         elif length == '15m':
@@ -582,7 +582,6 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                 part_of_bitcoin_to_use = .5*2
             gain_min = .001
             buy_price_increase_factor = 1.002
-            look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
         elif length == '30m':
@@ -594,7 +593,6 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                 part_of_bitcoin_to_use = .55*2
             gain_min = .001
             buy_price_increase_factor = 1.002
-            look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
         elif length == '1h':
@@ -606,7 +604,6 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                 part_of_bitcoin_to_use = .6*2
             gain_min = .001
             buy_price_increase_factor = 1.002
-            look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
         elif length == '2h':
@@ -618,7 +615,6 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                 part_of_bitcoin_to_use = .65*2
             gain_min = .001
             buy_price_increase_factor = 1.002
-            look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 8*minutes
             minutes_until_sale_final = 10*minutes
         elif length == '6h':
@@ -630,7 +626,6 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                 part_of_bitcoin_to_use = .7*2
             gain_min = .001
             buy_price_increase_factor = 1.002
-            look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 4*minutes
             minutes_until_sale_final = 6*minutes
         elif length == '12h':
@@ -642,7 +637,6 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                 part_of_bitcoin_to_use = .75*2
             gain_min = .001
             buy_price_increase_factor = 1.002
-            look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 3*minutes
             minutes_until_sale_final = 5*minutes
         elif length == '1d':
@@ -654,7 +648,6 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                 part_of_bitcoin_to_use = .8*2
             gain_min = .001
             buy_price_increase_factor = 1.002
-            look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 2*minutes
             minutes_until_sale_final = 4*minutes
            
@@ -868,19 +861,19 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                     if length == '1m' and len(indicator_trades) > 35:
                         time.sleep(120)
                         return
-                    elif length == '5m' and len(indicator_trades) > 25:
+                    elif length == '5m' and len(indicator_trades) > 30:
                         time.sleep(120)
                         return
-                    elif length == '15m' and len(indicator_trades) > 10:
+                    elif length == '15m' and len(indicator_trades) > 15:
                         time.sleep(120)
                         return
-                    elif length == '30m' and len(indicator_trades) > 12:
+                    elif length == '30m' and len(indicator_trades) > 15:
                         time.sleep(120)
                         return
-                    elif length == '1h' and len(indicator_trades) > 11:
+                    elif length == '1h' and len(indicator_trades) > 15:
                         time.sleep(120)
                         return
-                    elif length == '2h' and len(indicator_trades) > 7:
+                    elif length == '2h' and len(indicator_trades) > 12:
                         time.sleep(120)
                         return
                     elif length == '6h' and len(indicator_trades) > 6:
@@ -1251,7 +1244,7 @@ def process_socket_pushes_order_book(msg):
             msg['data']['time'] = int(time.time())
             pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/'+symbol+'.pklz', msg['data'])
     
-            if (symbol == 'ETHBTC') and (time.localtime().tm_sec == 1 or time.localtime().tm_sec == 2):
+            if (symbol == 'ETHBTC' or symbol == 'ZECBTC') and (time.localtime().tm_sec == 1 or time.localtime().tm_sec == 2):
                 print('process_socket_pushes_order_book()', symbol, msg['data']['bids'][0][0], 'time given', get_readable_time(msg['data']['time']), 'current time', get_time())
     
             # if time.localtime().tm_sec < 30:
@@ -1287,9 +1280,26 @@ def update_order_book(min_volume, max_volume):
     bm = BinanceSocketManager(client)
     
     # limit symbols by 24hr volume
-    
     symbol_path = '/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz'
     symbols = pickle_read(symbol_path)
+    
+    extra_coins_to_add = {}
+    if min_volume == 300:
+        for s in symbols:
+            symbol = symbols[s]
+            lengths = ['1m', '5m', '15m', '30m', '1h', '2h', '6h', '12h', '1d']
+            for length in lengths:
+                try:
+                    f = gzip.open('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + length + '_0_' + symbol['symbol'] + '.pklz','rb')
+                    current_state = pickle.load(f)
+                    f.close()
+                except Exception as e:
+                    current_state = False
+            
+                if isinstance(current_state,dict):
+                    extra_coins_to_add[current_state['symbol']] = 1
+    
+   
     total_btc_coins = 0
     symbols_trimmed = {}
     global socket_list
@@ -1301,6 +1311,14 @@ def update_order_book(min_volume, max_volume):
             symbols_trimmed[s] = symbol
             socket_list.append(s.lower()+'@depth20')
             pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/'+s+'.pklz', False)
+        elif min_volume == 300 and symbol['symbol'] in extra_coins_to_add and float(symbol['24hourVolume']) < min_volume:
+            print('adding extra coins', symbol['symbol'])
+            total_btc_coins += 1
+            symbols_trimmed[s] = symbol
+            socket_list.append(s.lower()+'@depth20')
+            pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/'+s+'.pklz', False)
+        
+    
     
     print('symbols with volume > ', min_volume, 'and less than', max_volume, '=', len(socket_list))
     

@@ -54,12 +54,12 @@ import utility_3 as ut
 # optimization_length = 360
 # version = '2_'
 
-# length = '15m'
-# min_gain = .001
-# minutes = 15
-# look_back_array = [1,3,5,7,9,11,13,15]
-# optimization_length = 360
-# version = '1_'
+length = '15m'
+min_gain = .001
+minutes = 15
+look_back_array = [1,5,9,15]
+optimization_length = 360
+version = '1_'
 
 # length = '30m'
 # min_gain = .001
@@ -82,12 +82,12 @@ import utility_3 as ut
 # optimization_length = 360
 # version = '1_'
 
-length = '6h'
-min_gain = .001
-minutes = 6*60
-look_back_array = [1,3,5,7,9,11,13,15]
-optimization_length = 360
-version = '1_'
+# length = '6h'
+# min_gain = .001
+# minutes = 6*60
+# look_back_array = [1,3,5,7,9,11,13,15]
+# optimization_length = 360
+# version = '1_'
 
 # length = '2h'
 # min_gain = .001
@@ -99,7 +99,7 @@ version = '1_'
 # length = '1h'
 # min_gain = .001
 # minutes = 1*60
-# look_back_array = [1,3,5,7,9,11,13,15]
+# look_back_array = [1,5,9,15]
 # optimization_length = 360
 # version = '1_'
 

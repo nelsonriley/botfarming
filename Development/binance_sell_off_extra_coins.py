@@ -16,11 +16,13 @@ from os import listdir
 from os.path import isfile, join
 from binance.client import Client
 
-coins_not_to_sell = {}
+
 
 
 while True:
     try:
+        
+        coins_not_to_sell = {}
     
         symbols = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz')
     
@@ -79,7 +81,7 @@ while True:
                 except Exception as e:
                     print(e)
                     #for balance in acct_info['balances']:
-        print('sleeping..')
+        print('sleeping..', ut.get_time())
         time.sleep(30*60)
     except Exception as e:
         print(e)

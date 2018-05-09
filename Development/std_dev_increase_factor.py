@@ -24,28 +24,28 @@ while True:
             max_trades_allowed = 35
             max_std_increase = 1
         elif length == '5m':
-            max_trades_allowed = 25
+            max_trades_allowed = 30
             max_std_increase = 1
         elif length == '15m':
-            max_trades_allowed = 10
+            max_trades_allowed = 15
             max_std_increase = 1
         elif length == '30m':
-            max_trades_allowed = 12
+            max_trades_allowed = 15
             max_std_increase = 1
         elif length == '1h':
-            max_trades_allowed = 11
+            max_trades_allowed = 15
             max_std_increase = 1
         elif length == '2h':
-            max_trades_allowed = 7
+            max_trades_allowed = 12
             max_std_increase = 1
         elif length == '6h':
-            max_trades_allowed = 6
+            max_trades_allowed = 1
             max_std_increase = 1
         elif length == '12h':
-            max_trades_allowed = 6
+            max_trades_allowed = 1
             max_std_increase = 1
         elif length == '1d':
-            max_trades_allowed = 6
+            max_trades_allowed = 1
             max_std_increase = 1
 
         indicator_trades = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/indicator_trades_'+length)

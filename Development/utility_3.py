@@ -1067,26 +1067,6 @@ def run_bot_parallel(file_number, length, total_files, client, indicator_bot=0):
     print(s.getsockname()[0])
     s.close()
 
-
-    if length == '1m':
-        minutes = 1
-    elif length == '5m':
-        minutes = 5
-    elif length == '15m':
-        minutes = 15
-    elif length == '30m':
-        minutes = 30
-    elif length == '1h':
-        minutes = 60
-    elif length == '2h':
-        minutes = 2*60
-    elif length == '6h':
-        minutes = 6*60
-    elif length == '12h':
-        minutes = 12*60
-    elif length == '1d':
-        minutes = 24*60
-
     try:
 
         symbols = pickle_read('/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz')

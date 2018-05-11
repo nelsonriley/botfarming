@@ -283,6 +283,42 @@ def get_first_in_line_price(current_state):
     # print(price_to_buy)
     return price_to_buy,first_ask, second_price_to_buy, second_ask, second_price_to_check, first_bid
 
+def sell_of_and_block_coin(symbol, client):
+    print('selling off and blocking coin for 24 hrs..', symbol['symbol'], get_time())
+    time_to_start_trading_2 = int(time.time()) + 24*60*60
+    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_2_' + symbol['symbol'], time_to_start_trading_2)
+    
+    if symbol['symbol'] != 'BNBBTC':
+        
+        all_lengths = ['1m', '5m', '15m', '30m', '1h', '2h', '6h', '12h', '1d']
+        for each_length in all_lengths:
+            pickle_write('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + each_length + '_0_' + symbol['symbol'] + '.pklz', False)
+        
+        acct_info = client.get_account()
+
+        for balance in acct_info['balances']:
+            
+            if balance['asset']+'BTC' == symbol['symbol']:
+                try:
+                    if float(balance['free']) > 0:
+                        print('sell', balance['asset'])
+                        min_quantity = max(float(symbol['filters'][1]['minQty']), float(symbol['filters'][2]['minNotional']))
+                        if float(balance['free']) > float(min_quantity):
+                            quantity_decimals = get_min_decimals(symbol['filters'][1]['minQty'])
+                            if float(quantity_decimals) == 0:
+                                quantity_for_sale = str(math.floor(float(balance['free'])))
+                            else:
+                                rounded_down_quantity = round_down(float(balance['free']),quantity_decimals)
+                                print('rounded_down_quantity', rounded_down_quantity)
+                                quantity_for_sale = float_to_str(rounded_down_quantity,get_length_of_float(rounded_down_quantity))
+                            print('quantity_for_sale', quantity_for_sale)
+                            sale_order = client.order_market_sell(symbol=symbol['symbol'], quantity=quantity_for_sale)
+                            pprint(sale_order)
+                except Exception as e:
+                    print('selling off all of this coin failed, error below', symbol['symbol'])
+                    print(e)
+    
+
 def sell_coin_with_order_book_use_min(current_state):
     print('########### - Selling...', current_state['symbol'], 'at minimum price',  current_state['price_to_sell'], 'original_buy_time_readable', current_state['original_buy_time_readable'], 'original investment', current_state['original_quantity']*current_state['original_price'], 'original price', current_state['original_price'], 'exectuedQty', current_state['executedQty'], 'look_back', current_state['look_back'], 'price to buy factor', current_state['price_to_buy_factor'], 'price_to_sell_factor', current_state['price_to_sell_factor'])
     
@@ -341,6 +377,12 @@ def sell_coin_with_order_book_use_min(current_state):
                         write_current_state(current_state, current_state)
                         
                 first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check, first_bid = get_first_in_line_price(current_state)
+                
+                if float(first_in_line_price) < .99*float(current_state['original_price']):
+                    print('price dropped more than 1%, selling off coin', current_state['symbol'], get_time())
+                    sell_of_and_block_coin(current_state['symbol_info'], current_state['client'])
+                    return
+                
                 if time.localtime().tm_sec < 1:
                     if keep_price == True:
                         if first_bid < current_state['compare_price']:
@@ -528,30 +570,15 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             return
         
         a_b = random.randint(0,1)
-        
-        if length == '1m':
-            minutes = 1
-        elif length == '5m':
-            minutes = 5
-        elif length == '15m':
-            minutes = 15
-        elif length == '30m':
-            minutes = 30
-        elif length == '1h':
-            minutes = 60
-        elif length == '2h':
-            minutes = 2*60
-        elif length == '6h':
-            minutes = 6*60
-        elif length == '12h':
-            minutes = 12*60
-        elif length == '1d':
-            minutes = 24*60
 
 
         largest_bitcoin_order = .1
         look_back_schedule = [1,5,9,15]
+        max_std_increase = 1
         if length == '1m':
+            minutes = 1
+            max_trades_allowed = 30
+            max_std_increase = 1
             max_price_to_buy_factor = .99
             largest_bitcoin_order = .1
             if False and a_b == 1:
@@ -563,6 +590,8 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             minutes_until_sale = 10
             minutes_until_sale_final = 12
         elif length == '5m':
+            minutes = 5
+            max_trades_allowed = 25
             max_price_to_buy_factor = .98
             largest_bitcoin_order = .2
             if False and a_b == 1:
@@ -574,6 +603,8 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
         elif length == '15m':
+            minutes = 15
+            max_trades_allowed = 5
             max_price_to_buy_factor = .97
             largest_bitcoin_order = .2
             if False and a_b == 1:
@@ -585,6 +616,8 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
         elif length == '30m':
+            minutes = 30
+            max_trades_allowed = 5
             max_price_to_buy_factor = .965
             largest_bitcoin_order = .2
             if False and a_b == 1:
@@ -596,6 +629,8 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
         elif length == '1h':
+            minutes = 60
+            max_trades_allowed = 4
             max_price_to_buy_factor = .96
             largest_bitcoin_order = .2
             if False and a_b == 1:
@@ -607,6 +642,8 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
         elif length == '2h':
+            minutes = 2*60
+            max_trades_allowed = 4
             max_price_to_buy_factor = .95
             largest_bitcoin_order = .2
             if False and a_b == 1:
@@ -618,6 +655,8 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             minutes_until_sale = 8*minutes
             minutes_until_sale_final = 10*minutes
         elif length == '6h':
+            minutes = 6*60
+            max_trades_allowed = 1
             max_price_to_buy_factor = .92
             largest_bitcoin_order = .2
             if False and a_b == 1:
@@ -629,6 +668,8 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             minutes_until_sale = 4*minutes
             minutes_until_sale_final = 6*minutes
         elif length == '12h':
+            minutes = 12*60
+            max_trades_allowed = 1
             max_price_to_buy_factor = .91
             largest_bitcoin_order = .2
             if False and a_b == 1:
@@ -640,6 +681,8 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             minutes_until_sale = 3*minutes
             minutes_until_sale_final = 5*minutes
         elif length == '1d':
+            minutes = 24*60
+            max_trades_allowed = 1
             max_price_to_buy_factor = .9
             largest_bitcoin_order = .2
             if False and a_b == 1:
@@ -797,17 +840,23 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                         elif length == '1d':
                             trade_keep_length = minutes*2*60
                     
-                        for trade_time in indicator_trades_old:
-                            if int(time.time()) - trade_time < trade_keep_length:
-                                indicator_trades_new.append(trade_time)
+                        for old_trade in indicator_trades_old:
+                            if int(time.time()) - old_trade[1] < trade_keep_length and old_trade[0] != symbol['symbol']:
+                                indicator_trades_new.append(old_trade)
                               
-                        indicator_trades_new.append(int(time.time()))
+                          
+                        indicator_trades_new.append([symbol['symbol'],int(time.time())])
                         # if len(indicator_trades_new) > 6:
                         #     pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
-                        print('new trade', symbol['symbol'], 'length indicator', len(indicator_trades_new), get_time())
                         pickle_write(indicator_trades_path, indicator_trades_new)
                         
-                        time.sleep(trade_keep_length)
+                        new_std_dev_increase_factor = max(0,round((float(max_trades_allowed)-float(len(indicator_trades_new)))*max_std_increase/float(max_trades_allowed),2))
+        
+                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor_'+length, new_std_dev_increase_factor)
+                        
+                        print('new trade', symbol['symbol'], 'length indicator', len(indicator_trades_new), 'std_increase_factor',new_std_dev_increase_factor,  get_time())
+                        
+                        time.sleep(trade_keep_length/2)
                         return
                     
                     
@@ -819,70 +868,12 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                     ## block symbols for 24 hrs if 2 trades trigger within 4 minutes (only 1st trade executes)
                     last_trade_start = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_' + symbol['symbol'])
                     if last_trade_start != False and int(time.time()) - last_trade_start < 190:
-                        print('too many trades on ', symbol['symbol'], 'blocking for 24 hr')
-                        time_to_start_trading_2 = int(time.time()) + 24*60*60
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_2_' + symbol['symbol'], time_to_start_trading_2)
-                        
-                        if symbol['symbol'] != 'BNBBTC':
-                            
-                            all_lengths = ['1m', '5m', '15m', '30m', '1h', '2h', '6h', '12h', '1d']
-                            for each_length in all_lengths:
-                                pickle_write('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + each_length + '_0_' + symbol['symbol'] + '.pklz', False)
-                            
-                            acct_info = client.get_account()
-        
-                            for balance in acct_info['balances']:
-                                
-                                if balance['asset']+'BTC' == symbol['symbol']:
-                                    try:
-                                        if float(balance['free']) > 0:
-                                            print('sell', balance['asset'])
-                                            min_quantity = max(float(symbol['filters'][1]['minQty']), float(symbol['filters'][2]['minNotional']))
-                                            if float(balance['free']) > float(min_quantity):
-                                                quantity_decimals = get_min_decimals(symbol['filters'][1]['minQty'])
-                                                if float(quantity_decimals) == 0:
-                                                    quantity_for_sale = str(math.floor(float(balance['free'])))
-                                                else:
-                                                    rounded_down_quantity = round_down(float(balance['free']),quantity_decimals)
-                                                    print('rounded_down_quantity', rounded_down_quantity)
-                                                    quantity_for_sale = float_to_str(rounded_down_quantity,get_length_of_float(rounded_down_quantity))
-                                                print('quantity_for_sale', quantity_for_sale)
-                                                sale_order = client.order_market_sell(symbol=symbol['symbol'], quantity=quantity_for_sale)
-                                                pprint(sale_order)
-                                    except Exception as e:
-                                        print('selling off all of this coin failed, error below', symbol['symbol'])
-                                        print(e)
-                    
+                        print('too many trades on ', symbol['symbol'], 'blocking for 24 hr', get_time())
+                        sell_of_and_block_coin(symbol, client)
                         return
                     
                     
-                    
-                    
-                    if length == '1m' and len(indicator_trades) > 35:
-                        time.sleep(120)
-                        return
-                    elif length == '5m' and len(indicator_trades) > 25:
-                        time.sleep(120)
-                        return
-                    elif length == '15m' and len(indicator_trades) > 15:
-                        time.sleep(120)
-                        return
-                    elif length == '30m' and len(indicator_trades) > 15:
-                        time.sleep(120)
-                        return
-                    elif length == '1h' and len(indicator_trades) > 15:
-                        time.sleep(120)
-                        return
-                    elif length == '2h' and len(indicator_trades) > 12:
-                        time.sleep(120)
-                        return
-                    elif length == '6h' and len(indicator_trades) > 6:
-                        time.sleep(120)
-                        return
-                    elif length == '12h' and len(indicator_trades) > 6:
-                        time.sleep(120)
-                        return
-                    elif length == '1d' and len(indicator_trades) > 6:
+                    if len(indicator_trades) > max_trades_allowed:
                         time.sleep(120)
                         return
                     
@@ -945,6 +936,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                     current_state['stop_trading_time'] = stop_trading_time
                     current_state['std_dev_increase_factor'] = std_dev_increase_factor
                     current_state['length_indicator_trades'] = len(indicator_trades)
+                    current_state['symbol_info'] = symbol
 
                     write_current_state(current_state, current_state)
 
@@ -1075,6 +1067,25 @@ def run_bot_parallel(file_number, length, total_files, client, indicator_bot=0):
     print(s.getsockname()[0])
     s.close()
 
+
+    if length == '1m':
+        minutes = 1
+    elif length == '5m':
+        minutes = 5
+    elif length == '15m':
+        minutes = 15
+    elif length == '30m':
+        minutes = 30
+    elif length == '1h':
+        minutes = 60
+    elif length == '2h':
+        minutes = 2*60
+    elif length == '6h':
+        minutes = 6*60
+    elif length == '12h':
+        minutes = 12*60
+    elif length == '1d':
+        minutes = 24*60
 
     try:
 

@@ -27,16 +27,16 @@ while True:
             max_trades_allowed = 25
             max_std_increase = 1
         elif length == '15m':
-            max_trades_allowed = 15
+            max_trades_allowed = 20
             max_std_increase = 1
         elif length == '30m':
             max_trades_allowed = 15
             max_std_increase = 1
         elif length == '1h':
-            max_trades_allowed = 15
+            max_trades_allowed = 5
             max_std_increase = 1
         elif length == '2h':
-            max_trades_allowed = 12
+            max_trades_allowed = 5
             max_std_increase = 1
         elif length == '6h':
             max_trades_allowed = 1

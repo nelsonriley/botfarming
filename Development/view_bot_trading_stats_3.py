@@ -56,7 +56,7 @@ first_loop = True
 path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/'
 onlyfiles = [f for f in listdir(path) if isfile(join(path, f))]
 
-#look_backs = ['1m', '5m', '15m', '30m', '1h', '2h', '6h', '12h', '1d']
+look_backs = ['1m', '5m', '15m', '30m', '1h', '2h', '6h', '12h', '1d']
 
 look_backs = ['1m']
 final_total_trades = 0
@@ -100,8 +100,10 @@ for look_back in look_backs:
             max_time = bot_trade[9]
         
         
-        if bot_trade[9] > 1525903812 and bot_trade[3] > -.3:
-            #print(bot_trade[2])
+        if bot_trade[9] > 1525874697 and bot_trade[3] > -.1 and bot_trade[12] < 31:
+            #print(bot_trade[2])1525874697,1525989553
+            if (bot_trade[3] < -.01):
+                bot_trade[2] = bot_trade[4]*-.01
             
             #pprint(bot_trade)
             
@@ -148,7 +150,7 @@ print('final_profit_b', final_profit_b)
 print('final_total_trades_b', final_total_trades_b)
 print('max_time', max_time)
 print('current_time', int(time.time()))
-print('time of last commit', int(time.time())-9*60*60)
+print('time of last commit', int(time.time())-43*60*60)
 
 pprint(profit_by_std)
 

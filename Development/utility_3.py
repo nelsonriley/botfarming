@@ -222,8 +222,7 @@ def calculate_profit_and_free_coin(current_state):
 
     print('coin sold, calculating profit and freeing coin', current_state['symbol'],get_time())
     percent_profit_from_trade = (current_state['total_revenue'] - current_state['original_quantity']*current_state['original_price'])/(current_state['original_quantity']*current_state['original_price'])
-    profit_from_trade = current_
-    state['total_revenue'] - current_state['original_quantity']*current_state['original_price']
+    profit_from_trade = current_state['total_revenue'] - current_state['original_quantity']*current_state['original_price']
     invested_btc = current_state['original_quantity']*current_state['original_price']
     print('PROFIT', current_state['symbol'] ,'profit was, absoulte profit, percent profit, amount invested', float_to_str(profit_from_trade, 8), float_to_str(percent_profit_from_trade, 5), float_to_str(invested_btc,8), get_time())
 
@@ -592,27 +591,27 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
         max_std_increase = 1
         if length == '1m':
             minutes = 1
-            max_trades_allowed = 27
             max_std_increase = 1
             max_price_to_buy_factor = .99
             largest_bitcoin_order = .1
-            if False and a_b == 1:
-                part_of_bitcoin_to_use = .4*3
+            if a_b == 1:
+                max_trades_allowed = 27
             else:
-                part_of_bitcoin_to_use = .4*2
+                max_trades_allowed = 40
+            part_of_bitcoin_to_use = .4*2
             gain_min = .001
             buy_price_increase_factor = 1.001
             minutes_until_sale = 10
             minutes_until_sale_final = 12
         elif length == '5m':
             minutes = 5
-            max_trades_allowed = 25
             max_price_to_buy_factor = .98
             largest_bitcoin_order = .2
-            if False and a_b == 1:
-                part_of_bitcoin_to_use = .45*3
+            if a_b == 1:
+                max_trades_allowed = 25
             else:
-                part_of_bitcoin_to_use = .45*2
+                max_trades_allowed = 35
+            part_of_bitcoin_to_use = .45*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             minutes_until_sale = 12*minutes
@@ -622,10 +621,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             max_trades_allowed = 5
             max_price_to_buy_factor = .97
             largest_bitcoin_order = .2
-            if False and a_b == 1:
-                part_of_bitcoin_to_use = .5*3
-            else:
-                part_of_bitcoin_to_use = .5*2
+            part_of_bitcoin_to_use = .5*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             minutes_until_sale = 12*minutes
@@ -635,10 +631,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             max_trades_allowed = 5
             max_price_to_buy_factor = .965
             largest_bitcoin_order = .2
-            if False and a_b == 1:
-                part_of_bitcoin_to_use = .55*3
-            else:
-                part_of_bitcoin_to_use = .55*2
+            part_of_bitcoin_to_use = .55*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             minutes_until_sale = 12*minutes
@@ -648,10 +641,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             max_trades_allowed = 4
             max_price_to_buy_factor = .96
             largest_bitcoin_order = .2
-            if False and a_b == 1:
-                part_of_bitcoin_to_use = .6*3
-            else:
-                part_of_bitcoin_to_use = .6*2
+            part_of_bitcoin_to_use = .6*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             minutes_until_sale = 12*minutes
@@ -661,10 +651,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             max_trades_allowed = 4
             max_price_to_buy_factor = .95
             largest_bitcoin_order = .2
-            if False and a_b == 1:
-                part_of_bitcoin_to_use = .65*3
-            else:
-                part_of_bitcoin_to_use = .65*2
+            part_of_bitcoin_to_use = .65*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             minutes_until_sale = 8*minutes
@@ -674,10 +661,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             max_trades_allowed = 1
             max_price_to_buy_factor = .92
             largest_bitcoin_order = .2
-            if False and a_b == 1:
-                part_of_bitcoin_to_use = .7*3
-            else:
-                part_of_bitcoin_to_use = .7*2
+            part_of_bitcoin_to_use = .7*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             minutes_until_sale = 4*minutes
@@ -687,10 +671,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             max_trades_allowed = 1
             max_price_to_buy_factor = .91
             largest_bitcoin_order = .2
-            if False and a_b == 1:
-                part_of_bitcoin_to_use = .75*3
-            else:
-                part_of_bitcoin_to_use = .75*2
+            part_of_bitcoin_to_use = .75*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             minutes_until_sale = 3*minutes
@@ -700,10 +681,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             max_trades_allowed = 1
             max_price_to_buy_factor = .9
             largest_bitcoin_order = .2
-            if False and a_b == 1:
-                part_of_bitcoin_to_use = .8*3
-            else:
-                part_of_bitcoin_to_use = .8*2
+            part_of_bitcoin_to_use = .8*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             minutes_until_sale = 2*minutes
@@ -731,10 +709,10 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
         for look_back in look_back_schedule:
             
             # NOTE, don't A/B test indicator_bot
-            #if a_b == 1:
-            look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/1_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
-            # else:
-            #     look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/2_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
+            if a_b == 1:
+                look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/1_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
+            else:
+                look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/2_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
 
             if look_back_optimized != False:
                 

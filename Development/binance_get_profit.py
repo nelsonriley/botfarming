@@ -53,4 +53,4 @@ profit = bot_value - ryan_btc_before_bots
 print('coins_held', coins_held)
 print('bot_value', bot_value)
 print('ryan_btc_before_bots', ryan_btc_before_bots)
-print('profit BTC', profit, '$', profit * 9800)
+print('profit BTC', profit, '$', profit * 8300)

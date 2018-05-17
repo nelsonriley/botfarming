@@ -238,9 +238,9 @@ def calculate_profit_and_free_coin(current_state):
     # update program state
     write_current_state(current_state, False)
     
-    # if percent_profit_from_trade < -.035 and percent_profit_from_trade != -1.0:
-    #     stop_trading_until = int(time.time()) + 60*60*6
-    #     pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until', stop_trading_until)
+    if percent_profit_from_trade < -.015 and percent_profit_from_trade != -1.0:
+        stop_trading_until = int(time.time()) + 60*60*6
+        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until', stop_trading_until)
     
     print('################## wrote profit and freed coin....', current_state['symbol'])
 
@@ -591,13 +591,14 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
         max_std_increase = 1
         if length == '1m':
             minutes = 1
-            max_std_increase = 1
             max_price_to_buy_factor = .99
             largest_bitcoin_order = .1
             if a_b == 1:
                 max_trades_allowed = 27
+                max_std_increase = .5
             else:
-                max_trades_allowed = 40
+                max_trades_allowed = 27
+                max_std_increase = .5
             part_of_bitcoin_to_use = .4*2
             gain_min = .001
             buy_price_increase_factor = 1.001

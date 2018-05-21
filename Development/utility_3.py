@@ -238,9 +238,9 @@ def calculate_profit_and_free_coin(current_state):
     # update program state
     write_current_state(current_state, False)
     
-    if percent_profit_from_trade < -.015 and percent_profit_from_trade != -1.0:
-        stop_trading_until = int(time.time()) + 60*60*6
-        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until', stop_trading_until)
+    # if percent_profit_from_trade < -.015 and percent_profit_from_trade != -1.0:
+    #     stop_trading_until = int(time.time()) + 60*60*6
+    #     pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until', stop_trading_until)
     
     print('################## wrote profit and freed coin....', current_state['symbol'])
 

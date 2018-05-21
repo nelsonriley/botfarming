@@ -390,7 +390,7 @@ def sell_coin_with_order_book_use_min(current_state):
                         
                 first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check, first_bid = get_first_in_line_price(current_state)
                 
-                if float(first_in_line_price) < .98*float(current_state['original_price']):
+                if float(first_in_line_price) < .985*float(current_state['original_price']):
                     if sell_now == False:
                         sell_now = True
                         print('******* price dropped 1% selling now..', current_state['symbol'], get_time())
@@ -461,6 +461,10 @@ def sell_coin_with_order_book_use_min(current_state):
             return True
         if error_as_string.find('Filter failure: MIN_NOTIONAL') >= 0:
             print('error selling, MIN_NOTIONAL error, so probably coin has sold mostly, so calculating profit and freeing coin')
+            calculate_profit_and_free_coin(current_state)
+            return True
+        if error_as_string.find('Filter failure: LOT_SIZE') >= 0:
+            print('error selling, LOT_SIZE error, so probably coin has sold mostly, so calculating profit and freeing coin')
             calculate_profit_and_free_coin(current_state)
             return True
         print('error selling')
@@ -601,17 +605,20 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
         look_back_schedule = [1,5,9,15]
         max_std_increase = 1
         overall_keep_length = 2
+        indicator_trade_check_length = 2
         if length == '1m':
             minutes = 1
             overall_keep_length = 15
             max_price_to_buy_factor = .99
             largest_bitcoin_order = .1
             if a_b == 1:
-                max_trades_allowed = 30
-                max_std_increase = 1
+                max_trades_allowed = 29
+                max_std_increase = .5
+                indicator_trade_check_length = 2
             else:
-                max_trades_allowed = 30
-                max_std_increase = 1
+                max_trades_allowed = 41
+                max_std_increase = .5
+                indicator_trade_check_length = 4
             part_of_bitcoin_to_use = .4*2
             gain_min = .001
             buy_price_increase_factor = 1.001
@@ -624,10 +631,10 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             largest_bitcoin_order = .2
             if a_b == 1:
                 max_trades_allowed = 25
-                max_std_increase = 1
+                max_std_increase = .5
             else:
                 max_trades_allowed = 35
-                max_std_increase = 1
+                max_std_increase = .5
             part_of_bitcoin_to_use = .45*2
             gain_min = .001
             buy_price_increase_factor = 1.002
@@ -845,11 +852,11 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                         
                         indicator_trades_lengths = get_indicator_trade_lengths(indicator_trades_new, overall_keep_length, minutes)
                         
-                        new_std_dev_increase_factor = max(0,round((float(max_trades_allowed)-float(indicator_trades_lengths[2]))*max_std_increase/float(max_trades_allowed),2))
+                        new_std_dev_increase_factor = max(0,round((float(max_trades_allowed)-float(indicator_trades_lengths[indicator_trade_check_length]))*max_std_increase/float(max_trades_allowed),2))
         
                         pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor_'+length, new_std_dev_increase_factor)
                         
-                        print('new trade', symbol['symbol'], 'length indicator', indicator_trades_lengths[2], 'std_increase_factor',new_std_dev_increase_factor,  get_time())
+                        print('new trade', symbol['symbol'], 'length indicator', indicator_trades_lengths[indicator_trade_check_length], 'std_increase_factor',new_std_dev_increase_factor,  get_time())
                         
                         time.sleep(minutes*60)
                         return
@@ -862,7 +869,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                     indicator_trades_lengths = get_indicator_trade_lengths(indicator_trades, overall_keep_length, minutes)
                     
                     
-                    print('----start buy', symbol['symbol'], 'std_dev_increase_factor', std_dev_increase_factor, 'len(indicator_trades)', indicator_trades_lengths[2], get_time())
+                    print('----start buy', symbol['symbol'], 'std_dev_increase_factor', std_dev_increase_factor, 'len(indicator_trades)', indicator_trades_lengths[indicator_trade_check_length], get_time())
                     
                     
                     ## block symbols for 24 hrs if 2 trades trigger within 4 minutes (only 1st trade executes)
@@ -882,7 +889,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                         return
                     
                     
-                    if indicator_trades_lengths[2] > max_trades_allowed:
+                    if indicator_trades_lengths[indicator_trade_check_length] > max_trades_allowed:
                         time.sleep(120)
                         return
                     

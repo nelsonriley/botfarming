@@ -605,20 +605,15 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
         look_back_schedule = [1,5,9,15]
         max_std_increase = 1
         overall_keep_length = 2
-        indicator_trade_check_length = 2
+        indicator_trade_check_length = 1
         if length == '1m':
             minutes = 1
             overall_keep_length = 15
             max_price_to_buy_factor = .99
             largest_bitcoin_order = .1
-            if a_b == 1:
-                max_trades_allowed = 29
-                max_std_increase = .5
-                indicator_trade_check_length = 2
-            else:
-                max_trades_allowed = 41
-                max_std_increase = .5
-                indicator_trade_check_length = 4
+            max_trades_allowed = 21
+            max_std_increase = .5
+            indicator_trade_check_length = 1
             part_of_bitcoin_to_use = .4*2
             gain_min = .001
             buy_price_increase_factor = 1.001
@@ -629,12 +624,8 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             overall_keep_length = 6
             max_price_to_buy_factor = .98
             largest_bitcoin_order = .2
-            if a_b == 1:
-                max_trades_allowed = 25
-                max_std_increase = .5
-            else:
-                max_trades_allowed = 35
-                max_std_increase = .5
+            max_trades_allowed = 25
+            max_std_increase = .5
             part_of_bitcoin_to_use = .45*2
             gain_min = .001
             buy_price_increase_factor = 1.002
@@ -733,11 +724,8 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
         for look_back in look_back_schedule:
             
             # NOTE, don't A/B test indicator_bot
-            if a_b == 1:
-                look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/1_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
-            else:
-                look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/2_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
-
+            look_back_optimized = pickle_read('/home/ec2-user/environment/botfarming/Development/optimization_factors/1_' + length + '_optimal_for_' + symbol['symbol'] + '_' + str(look_back) + '.pklz')
+            
             if look_back_optimized != False:
                 
                 price_to_buy_factor = look_back_optimized['lowest_buy_factor'] + std_dev_increase_factor * look_back_optimized['lowest_buy_factor_std_dev']

@@ -609,7 +609,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
         if length == '1m':
             minutes = 1
             overall_keep_length = 15
-            max_price_to_buy_factor = .98
+            max_price_to_buy_factor = .985
             largest_bitcoin_order = .1
             max_trades_allowed = 28
             max_std_increase = 1

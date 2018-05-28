@@ -609,7 +609,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
         if length == '1m':
             minutes = 1
             overall_keep_length = 15
-            max_price_to_buy_factor = .985
+            max_price_to_buy_factor = .98
             largest_bitcoin_order = .1
             max_trades_allowed = 28
             max_std_increase = 1
@@ -841,7 +841,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                         indicator_trades_lengths = get_indicator_trade_lengths(indicator_trades_new, overall_keep_length, minutes)
                         
                         new_std_dev_increase_factor = max(0,round((float(max_trades_allowed)-float(indicator_trades_lengths[indicator_trade_check_length]))*max_std_increase/float(max_trades_allowed),2))
-                        new_std_dev_increase_factor = new_std_dev_increase_factor - 1
+                        new_std_dev_increase_factor = new_std_dev_increase_factor -.5
         
                         pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor_'+length, new_std_dev_increase_factor)
                         
@@ -878,7 +878,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                         return
                     
                     
-                    if indicator_trades_lengths[indicator_trade_check_length] > max_trades_allowed or indicator_trades_lengths[3] > 28:
+                    if indicator_trades_lengths[indicator_trade_check_length] > max_trades_allowed:
                         time.sleep(120)
                         return
                     

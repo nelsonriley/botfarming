@@ -609,9 +609,9 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
         if length == '1m':
             minutes = 1
             overall_keep_length = 15
-            max_price_to_buy_factor = .985
+            max_price_to_buy_factor = .98
             largest_bitcoin_order = .1
-            max_trades_allowed = 28
+            max_trades_allowed = 25
             max_std_increase = 1
             indicator_trade_check_length = 2
             part_of_bitcoin_to_use = .4*2
@@ -622,10 +622,10 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
         elif length == '5m':
             minutes = 5
             overall_keep_length = 6
-            max_price_to_buy_factor = .98
+            max_price_to_buy_factor = .97
             largest_bitcoin_order = .2
-            max_trades_allowed = 25
-            max_std_increase = .5
+            max_trades_allowed = 20
+            max_std_increase = 1
             part_of_bitcoin_to_use = .45*2
             gain_min = .001
             buy_price_increase_factor = 1.002
@@ -729,11 +729,15 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             if look_back_optimized != False:
                 
                 price_to_buy_factor = look_back_optimized['lowest_buy_factor'] + std_dev_increase_factor * look_back_optimized['lowest_buy_factor_std_dev']
-                price_to_sell_factor = min(look_back_optimized['highest_sale_factor'], .995)
+                price_to_sell_factor = min(look_back_optimized['highest_sale_factor'], .99)
                 
                 if indicator_bot != 1: 
                     if price_to_sell_factor - price_to_buy_factor < .007:
                         price_to_buy_factor = price_to_sell_factor - .007
+                        
+                    if price_to_buy_factor > max_price_to_buy_factor:
+                        price_to_buy_factor = max_price_to_buy_factor
+                    
             
                 price_to_buy_factor_array[look_back] = price_to_buy_factor
                 price_to_sell_factor_array[look_back] = price_to_sell_factor

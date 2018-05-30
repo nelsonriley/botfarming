@@ -611,9 +611,9 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             overall_keep_length = 15
             max_price_to_buy_factor = .98
             largest_bitcoin_order = .1
-            max_trades_allowed = 25
+            max_trades_allowed = 34
             max_std_increase = 1
-            indicator_trade_check_length = 2
+            indicator_trade_check_length = 5
             part_of_bitcoin_to_use = .4*2
             gain_min = .001
             buy_price_increase_factor = 1.001
@@ -624,8 +624,9 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             overall_keep_length = 6
             max_price_to_buy_factor = .97
             largest_bitcoin_order = .2
-            max_trades_allowed = 20
+            max_trades_allowed = 29
             max_std_increase = 1
+            indicator_trade_check_length = 4
             part_of_bitcoin_to_use = .45*2
             gain_min = .001
             buy_price_increase_factor = 1.002
@@ -845,7 +846,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                         indicator_trades_lengths = get_indicator_trade_lengths(indicator_trades_new, overall_keep_length, minutes)
                         
                         new_std_dev_increase_factor = max(0,round((float(max_trades_allowed)-float(indicator_trades_lengths[indicator_trade_check_length]))*max_std_increase/float(max_trades_allowed),2))
-                        new_std_dev_increase_factor = new_std_dev_increase_factor -.5
+                        #new_std_dev_increase_factor = new_std_dev_increase_factor -.5
         
                         pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor_'+length, new_std_dev_increase_factor)
                         

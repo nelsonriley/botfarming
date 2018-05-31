@@ -100,7 +100,7 @@ for look_back in look_backs:
             max_time = bot_trade[9]
         
         
-        if bot_trade[9] > 1527592868 and bot_trade[3] > -.9 and bot_trade[14] == '1m':
+        if bot_trade[9] > 1527682422 and bot_trade[3] > -.9 and bot_trade[14] == '5m':
             #print(bot_trade[2])1525874697,1525989553
             # if (bot_trade[3] < -.01):
             #     bot_trade[2] = bot_trade[4]*-.01
@@ -159,7 +159,7 @@ for indicator_length_info in profit_by_std:
             if b in profit_by_std[indicator_length_info]:
                 temp_profit += profit_by_std[indicator_length_info][b]
                 total_trades += 1
-        if indicator_length_info == 999:
+        if indicator_length_info == 2:
             print('new max profit, indicator_length_info', indicator_length_info, 'max_trades_allowed', a,  temp_profit,'total_trades', total_trades)
             
         
@@ -177,7 +177,7 @@ print('final_profit_b', final_profit_b)
 print('final_total_trades_b', final_total_trades_b)
 print('max_time', max_time)
 print('current_time', int(time.time()))
-print('time of last commit', int(time.time())-24*60*60)
+print('time of last commit', int(time.time())-21*60*60)
 
 #pprint(profit_by_std)
 

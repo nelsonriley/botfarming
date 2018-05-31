@@ -5,5 +5,5 @@ import binance_optimization_utility as bou
 
 # optimize using average of 12 periods for all time periods
 
-lengths = ['12h','30m', '1h', '2h', '6h', '1d']
+lengths = ['30m', '1h', '2h']
 bou.run_optimizer_multi(lengths,0)

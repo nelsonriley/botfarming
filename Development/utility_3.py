@@ -611,9 +611,9 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             overall_keep_length = 15
             max_price_to_buy_factor = .98
             largest_bitcoin_order = .1
-            max_trades_allowed = 25
+            max_trades_allowed = 30
             max_std_increase = 1
-            indicator_trade_check_length = 2
+            indicator_trade_check_length = 4
             part_of_bitcoin_to_use = .4*2
             gain_min = .001
             buy_price_increase_factor = 1.001
@@ -624,9 +624,9 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             overall_keep_length = 6
             max_price_to_buy_factor = .965
             largest_bitcoin_order = .2
-            max_trades_allowed = 10
+            max_trades_allowed = 15
             max_std_increase = 1
-            indicator_trade_check_length = 3
+            indicator_trade_check_length = 2
             part_of_bitcoin_to_use = .45*2
             gain_min = .001
             buy_price_increase_factor = 1.002
@@ -634,10 +634,10 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             minutes_until_sale_final = 14*minutes
         elif length == '15m':
             minutes = 15
-            max_trades_allowed = 13
+            max_trades_allowed = 10
             max_std_increase = 1
             indicator_trade_check_length = 2
-            max_price_to_buy_factor = .955
+            max_price_to_buy_factor = .965
             largest_bitcoin_order = .2
             part_of_bitcoin_to_use = .5*2
             gain_min = .001
@@ -646,10 +646,10 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             minutes_until_sale_final = 14*minutes
         elif length == '30m':
             minutes = 30
-            max_trades_allowed = 10
+            max_trades_allowed = 9
             max_std_increase = 1
             indicator_trade_check_length = 2
-            max_price_to_buy_factor = .945
+            max_price_to_buy_factor = .955
             largest_bitcoin_order = .2
             part_of_bitcoin_to_use = .55*2
             gain_min = .001
@@ -661,7 +661,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             max_trades_allowed = 8
             max_std_increase = 1
             indicator_trade_check_length = 2
-            max_price_to_buy_factor = .935
+            max_price_to_buy_factor = .95
             largest_bitcoin_order = .2
             part_of_bitcoin_to_use = .6*2
             gain_min = .001
@@ -670,10 +670,10 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             minutes_until_sale_final = 14*minutes
         elif length == '2h':
             minutes = 2*60
-            max_trades_allowed = 7
+            max_trades_allowed = 5
             max_std_increase = 1
             indicator_trade_check_length = 2
-            max_price_to_buy_factor = .925
+            max_price_to_buy_factor = .94
             largest_bitcoin_order = .2
             part_of_bitcoin_to_use = .65*2
             gain_min = .001

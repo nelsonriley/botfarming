@@ -238,9 +238,10 @@ def calculate_profit_and_free_coin(current_state):
     # update program state
     write_current_state(current_state, False)
     
-    # if percent_profit_from_trade < -.015 and percent_profit_from_trade != -1.0:
-    #     stop_trading_until = int(time.time()) + 60*60*6
-    #     pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until', stop_trading_until)
+    if percent_profit_from_trade < -.01 and percent_profit_from_trade != -1.0:
+        print('**** more than 1% drop, blocking coin for 24 hrs', current_state['symbol'],get_time())
+        stop_trading_until = int(time.time()) + 60*60*24
+        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_2_' + current_state['symbol'], stop_trading_until)
     
     print('################## wrote profit and freed coin....', current_state['symbol'])
 
@@ -390,12 +391,12 @@ def sell_coin_with_order_book_use_min(current_state):
                         
                 first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check, first_bid = get_first_in_line_price(current_state)
                 
-                if float(first_in_line_price) < .985*float(current_state['original_price']):
-                    if sell_now == False:
-                        sell_now = True
-                        print('******* price dropped 1% selling now..', current_state['symbol'], get_time())
-                        current_state['sell_now'] = 1
-                        write_current_state(current_state, current_state)
+                # if float(first_in_line_price) < .985*float(current_state['original_price']):
+                #     if sell_now == False:
+                #         sell_now = True
+                #         print('******* price dropped 1% selling now..', current_state['symbol'], get_time())
+                #         current_state['sell_now'] = 1
+                #         write_current_state(current_state, current_state)
                 
                 if time.localtime().tm_sec < 1:
                     if keep_price == True:
@@ -573,7 +574,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             stop_trading_until = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until')
             
             if stop_trading_until != False and int(time.time()) < stop_trading_until:
-                pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
+                #pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
                 if symbol['symbol'] == 'ETHBTC' and length == '1d':
                     print('not trading anything...')
                 time.sleep(10*60)
@@ -624,7 +625,7 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
             overall_keep_length = 6
             max_price_to_buy_factor = .965
             largest_bitcoin_order = .2
-            max_trades_allowed = 15
+            max_trades_allowed = 7
             max_std_increase = 1
             indicator_trade_check_length = 2
             part_of_bitcoin_to_use = .45*2
@@ -880,13 +881,13 @@ def buy_coin(symbol, length, file_number, client, indicator_bot):
                         print('too many trades on ', symbol['symbol'], 'selling all coins blocking for 24 hr', get_time())
                         time_to_start_trading_2 = int(time.time()) + 24*60*60
                         pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_2_' + symbol['symbol'], time_to_start_trading_2)
-                        all_lengths = ['1m', '5m', '15m', '30m', '1h', '2h', '6h', '12h', '1d']
-                        for each_length in all_lengths:
+                        # all_lengths = ['1m', '5m', '15m', '30m', '1h', '2h', '6h', '12h', '1d']
+                        # for each_length in all_lengths:
                             
-                            others_current_state = pickle_read('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + each_length + '_0_' + symbol['symbol'] + '.pklz')
-                            if others_current_state != False:
-                                others_current_state['sell_now'] = 1
-                                pickle_write('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + each_length + '_0_' + symbol['symbol'] + '.pklz', others_current_state)
+                        #     others_current_state = pickle_read('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + each_length + '_0_' + symbol['symbol'] + '.pklz')
+                        #     if others_current_state != False:
+                        #         others_current_state['sell_now'] = 1
+                        #         pickle_write('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + each_length + '_0_' + symbol['symbol'] + '.pklz', others_current_state)
         
                         return
                     

@@ -99,7 +99,7 @@ for look_back in look_backs:
             max_time = bot_trade[9]
         
         
-        if bot_trade[9] > 1525450091 and bot_trade[3] != -1.0:
+        if bot_trade[9] > 1528147016 and bot_trade[3] != -1.0:
             #print(bot_trade[2])
             
             #pprint(bot_trade)

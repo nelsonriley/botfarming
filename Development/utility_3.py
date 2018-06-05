@@ -488,8 +488,8 @@ def buy_coin(symbol, length, file_number, client):
         stop_trading_until_length = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_'+length)
         
         if stop_trading_until_length != False and int(time.time()) < stop_trading_until_length:
-            # if symbol['symbol'] == 'ETHBTC':
-            #     print('not trading anything length', length)
+            if symbol['symbol'] == 'ETHBTC':
+                print('not trading anything length', length)
             time.sleep(10*60)
             return
         
@@ -498,8 +498,8 @@ def buy_coin(symbol, length, file_number, client):
         stop_trading_until = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until')
         
         if stop_trading_until != False and int(time.time()) < stop_trading_until:
-            ut.pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
-            if symbol['symbol'] == 'ETHBTC' and length == '1d':
+            pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
+            if symbol['symbol'] == 'ETHBTC':
                 print('not trading anything...')
             time.sleep(10*60)
             return
@@ -515,6 +515,8 @@ def buy_coin(symbol, length, file_number, client):
         time_to_start_trading_2 = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_2_' + symbol['symbol'])
         
         if time_to_start_trading_2 != False and int(time.time()) < time_to_start_trading_2:
+            if symbol['symbol'] == 'ETHBTC':
+                 print('not trading coin...')
             time.sleep(60)
             return
         ##
@@ -684,6 +686,10 @@ def buy_coin(symbol, length, file_number, client):
                 
                 if price_to_sell_factor - price_to_buy_factor < .007:
                     price_to_buy_factor = price_to_sell_factor - .007
+                    
+                if price_to_buy_factor >= .98:
+                    price_to_buy_factor = .98
+                    price_to_sell_factor = .987
             
                 price_to_buy_factor_array[look_back] = price_to_buy_factor
                 price_to_sell_factor_array[look_back] = price_to_sell_factor
@@ -761,8 +767,14 @@ def buy_coin(symbol, length, file_number, client):
 
             for look_back in look_back_schedule:
                 
+                
+                
                 if price_to_buy_factor_array[look_back] > max_price_to_buy_factor:
                     continue
+                
+                # if (symbol['symbol'] == 'ETHBTC') and look_back == 1:
+                #     print("hi", price_to_buy_factor_array[look_back])
+                    
             
                 price_to_start_buy = float(data[index-look_back][4])*price_to_buy_factor_array[look_back]*price_to_start_buy_factor
 

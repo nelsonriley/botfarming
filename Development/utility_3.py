@@ -233,8 +233,11 @@ def calculate_profit_and_free_coin(current_state):
     # update program state
     write_current_state(current_state, False)
     
+    current_stop_trading_until = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_' + current_state['symbol'])
     stop_trading_until = int(time.time()) + 60*60*1
-    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_' + current_state['symbol'], stop_trading_until)
+    
+    if stop_trading_until > current_stop_trading_until:
+        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_' + current_state['symbol'], stop_trading_until)
     
     if percent_profit_from_trade < -.01 and percent_profit_from_trade != -1.0:
         stop_trading_until = int(time.time()) + 60*60*24
@@ -795,11 +798,11 @@ def buy_coin(symbol, length, file_number, client):
                     #sleep 3 minutes
                     #return
                     
-                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
-                    
                     print('----start buy', symbol['symbol'], 'std_dev_increase_factor', std_dev_increase_factor , get_time())
                     
-                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_overall', int(time.time()))
+                    if std_dev_increase_factor == 0:
+                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
+                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_overall', int(time.time()))
 
                     ## block symbols for 24 hrs if 2 trades trigger within 4 minutes (only 1st trade executes)
                     last_trade_start = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_' + symbol['symbol'])
@@ -969,11 +972,12 @@ def buy_coin(symbol, length, file_number, client):
                         print('[last line reached] no one bought cancel order - freeing coin', current_state['symbol'], get_time())
                         write_current_state(current_state, False)
                         return True
-                        
                     
+                        
                     # std_dev_increase_factor
                     pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
-                    
+                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_overall', int(time.time()))
+    
                     # last_trade_start
                     pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_' + symbol['symbol'], int(time.time()))
 

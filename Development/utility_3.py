@@ -528,7 +528,7 @@ def buy_coin(symbol, length, file_number, client):
             return
         ##
         
-        if symbol['symbol'] == 'CTRBTC':
+        if symbol['symbol'] == 'CTRBTC' or symbol['symbol'] == 'BCNBTC':
             time.sleep(6000000)
             return
         
@@ -903,6 +903,7 @@ def buy_coin(symbol, length, file_number, client):
                     elif length == '1d':
                         time_to_give_up = int(time.time()) + 60*60
                         
+                    
                     pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
                     
                     

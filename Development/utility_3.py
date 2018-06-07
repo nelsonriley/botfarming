@@ -233,9 +233,12 @@ def calculate_profit_and_free_coin(current_state):
     # update program state
     write_current_state(current_state, False)
     
-    # if percent_profit_from_trade < -.035 and percent_profit_from_trade != -1.0:
-    #     stop_trading_until = int(time.time()) + 60*60*6
-    #     pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until', stop_trading_until)
+    if percent_profit_from_trade < -.01 and percent_profit_from_trade != -1.0:
+        stop_trading_until = int(time.time()) + 60*60*24
+        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until', stop_trading_until)
+    
+    stop_trading_until = int(time.time()) + 60*60*1
+    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until', stop_trading_until)
     
     print('################## wrote profit and freed coin....', current_state['symbol'])
 
@@ -804,36 +807,6 @@ def buy_coin(symbol, length, file_number, client):
                         time_to_start_trading_2 = int(time.time()) + 24*60*60
                         pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_2_' + symbol['symbol'], time_to_start_trading_2)
                         
-                        if symbol['symbol'] != 'BNBBTC':
-                            
-                            all_lengths = ['1m', '5m', '15m', '30m', '1h', '2h', '6h', '12h', '1d']
-                            for each_length in all_lengths:
-                                pickle_write('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + each_length + '_0_' + symbol['symbol'] + '.pklz', False)
-                            
-                            acct_info = client.get_account()
-        
-                            for balance in acct_info['balances']:
-                                
-                                if balance['asset']+'BTC' == symbol['symbol']:
-                                    try:
-                                        if float(balance['free']) > 0:
-                                            print('sell', balance['asset'])
-                                            min_quantity = max(float(symbol['filters'][1]['minQty']), float(symbol['filters'][2]['minNotional']))
-                                            if float(balance['free']) > float(min_quantity):
-                                                quantity_decimals = get_min_decimals(symbol['filters'][1]['minQty'])
-                                                if float(quantity_decimals) == 0:
-                                                    quantity_for_sale = str(math.floor(float(balance['free'])))
-                                                else:
-                                                    rounded_down_quantity = round_down(float(balance['free']),quantity_decimals)
-                                                    print('rounded_down_quantity', rounded_down_quantity)
-                                                    quantity_for_sale = float_to_str(rounded_down_quantity,get_length_of_float(rounded_down_quantity))
-                                                print('quantity_for_sale', quantity_for_sale)
-                                                sale_order = client.order_market_sell(symbol=symbol['symbol'], quantity=quantity_for_sale)
-                                                pprint(sale_order)
-                                    except Exception as e:
-                                        print('selling off all of this coin failed, error below', symbol['symbol'])
-                                        print(e)
-                    
                         return
                     
                     if std_dev_increase_factor == 0:

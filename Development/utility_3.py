@@ -547,11 +547,15 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '1d':
             minutes = 24*60
 
+        std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'+ '_' + str(file_number))
 
         largest_bitcoin_order = .1
         if length == '1m':
             if file_number == 0:
-                max_price_to_buy_factor = .98
+                if std_dev_increase_factor > 3:
+                    max_price_to_buy_factor = .98 + (std_dev_increase_factor-2)/2*.01
+                else:
+                    max_price_to_buy_factor = .98
                 min_trade_gap = .007
             else:
                 max_price_to_buy_factor = .975
@@ -652,8 +656,6 @@ def buy_coin(symbol, length, file_number, client):
         
         datapoints_trailing = look_back_schedule[-1] + 20
         
-        std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'+ '_' + str(file_number))
-
         for look_back in look_back_schedule:
             
             #if a_b == 1:
@@ -663,13 +665,12 @@ def buy_coin(symbol, length, file_number, client):
 
             if look_back_optimized != False:
                 price_to_buy_factor = look_back_optimized['lowest_buy_factor'] + std_dev_increase_factor * look_back_optimized['lowest_buy_factor_std_dev']
-                price_to_sell_factor = min(look_back_optimized['highest_sale_factor'], .99)
-                
-                if price_to_sell_factor - price_to_buy_factor < min_trade_gap:
-                    price_to_buy_factor = price_to_sell_factor - min_trade_gap
+                price_to_sell_factor = look_back_optimized['highest_sale_factor']
                     
                 if price_to_buy_factor >= max_price_to_buy_factor:
                     price_to_buy_factor = max_price_to_buy_factor
+                
+                if price_to_sell_factor - price_to_buy_factor < min_trade_gap:
                     price_to_sell_factor = price_to_buy_factor + min_trade_gap
             
                 price_to_buy_factor_array[look_back] = price_to_buy_factor

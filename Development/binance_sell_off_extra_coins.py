@@ -36,17 +36,18 @@ while True:
             
             lengths = ['1m', '5m', '15m', '30m', '1h', '2h', '6h', '12h', '1d']
             for length in lengths:
-                try:
-                    f = gzip.open('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + length + '_0_' + symbol['symbol'] + '.pklz','rb')
-                    current_state = pickle.load(f)
-                    f.close()
-                except Exception as e:
-                    current_state = False
-            
-                if isinstance(current_state,dict):
-                    print('')
-                    print('coin has state..', current_state['symbol'], current_state['executedQty']*current_state['price_to_buy'], current_state['executedQty'])
-                    coins_not_to_sell[current_state['symbol']] = 1
+                for file_number in range(0,10):
+                    try:
+                        f = gzip.open('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + length + '_' + str(file_number) + '_' + symbol['symbol'] + '.pklz','rb')
+                        current_state = pickle.load(f)
+                        f.close()
+                    except Exception as e:
+                        current_state = False
+                
+                    if isinstance(current_state,dict):
+                        print('')
+                        print('coin has state..', current_state['symbol'], current_state['executedQty']*current_state['price_to_buy'], current_state['executedQty'])
+                        coins_not_to_sell[current_state['symbol']] = 1
     
     
         api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'

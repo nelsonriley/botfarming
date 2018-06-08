@@ -550,24 +550,28 @@ def buy_coin(symbol, length, file_number, client):
 
         largest_bitcoin_order = .1
         if length == '1m':
-            max_price_to_buy_factor = .98
-            largest_bitcoin_order = .1
-            if False and a_b == 1:
-                part_of_bitcoin_to_use = .4*3
+            if file_number == 0:
+                max_price_to_buy_factor = .98
+                min_trade_gap = .007
             else:
-                part_of_bitcoin_to_use = .4*2
+                max_price_to_buy_factor = .975
+                min_trade_gap = .01
+            largest_bitcoin_order = .1
+            part_of_bitcoin_to_use = .4*2
             gain_min = .001
             buy_price_increase_factor = 1.001
             look_back_schedule = [1,3,5,7,9,11,13,15]
             minutes_until_sale = 10
             minutes_until_sale_final = 12
         elif length == '5m':
-            max_price_to_buy_factor = .97
-            largest_bitcoin_order = .2
-            if False and a_b == 1:
-                part_of_bitcoin_to_use = .45*3
+            if file_number == 0:
+                max_price_to_buy_factor = .97
+                min_trade_gap = .01
             else:
-                part_of_bitcoin_to_use = .45*2
+                max_price_to_buy_factor = .96
+                min_trade_gap = .015
+            largest_bitcoin_order = .2
+            part_of_bitcoin_to_use = .45*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -576,10 +580,7 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '15m':
             max_price_to_buy_factor = .96
             largest_bitcoin_order = .2
-            if False and a_b == 1:
-                part_of_bitcoin_to_use = .5*3
-            else:
-                part_of_bitcoin_to_use = .5*2
+            part_of_bitcoin_to_use = .5*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -588,10 +589,7 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '30m':
             max_price_to_buy_factor = .95
             largest_bitcoin_order = .2
-            if False and a_b == 1:
-                part_of_bitcoin_to_use = .55*3
-            else:
-                part_of_bitcoin_to_use = .55*2
+            part_of_bitcoin_to_use = .55*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -600,10 +598,7 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '1h':
             max_price_to_buy_factor = .94
             largest_bitcoin_order = .2
-            if False and a_b == 1:
-                part_of_bitcoin_to_use = .6*3
-            else:
-                part_of_bitcoin_to_use = .6*2
+            part_of_bitcoin_to_use = .6*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -612,10 +607,7 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '2h':
             max_price_to_buy_factor = .93
             largest_bitcoin_order = .2
-            if False and a_b == 1:
-                part_of_bitcoin_to_use = .65*3
-            else:
-                part_of_bitcoin_to_use = .65*2
+            part_of_bitcoin_to_use = .65*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -624,10 +616,7 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '6h':
             max_price_to_buy_factor = .92
             largest_bitcoin_order = .2
-            if False and a_b == 1:
-                part_of_bitcoin_to_use = .7*3
-            else:
-                part_of_bitcoin_to_use = .7*2
+            part_of_bitcoin_to_use = .7*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -636,10 +625,7 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '12h':
             max_price_to_buy_factor = .91
             largest_bitcoin_order = .2
-            if False and a_b == 1:
-                part_of_bitcoin_to_use = .75*3
-            else:
-                part_of_bitcoin_to_use = .75*2
+            part_of_bitcoin_to_use = .75*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -648,10 +634,7 @@ def buy_coin(symbol, length, file_number, client):
         elif length == '1d':
             max_price_to_buy_factor = .9
             largest_bitcoin_order = .2
-            if False and a_b == 1:
-                part_of_bitcoin_to_use = .8*3
-            else:
-                part_of_bitcoin_to_use = .8*2
+            part_of_bitcoin_to_use = .8*2
             gain_min = .001
             buy_price_increase_factor = 1.002
             look_back_schedule = [1,3,5,7,9,11,13,15]
@@ -682,12 +665,12 @@ def buy_coin(symbol, length, file_number, client):
                 price_to_buy_factor = look_back_optimized['lowest_buy_factor'] + std_dev_increase_factor * look_back_optimized['lowest_buy_factor_std_dev']
                 price_to_sell_factor = min(look_back_optimized['highest_sale_factor'], .99)
                 
-                if price_to_sell_factor - price_to_buy_factor < .007:
-                    price_to_buy_factor = price_to_sell_factor - .007
+                if price_to_sell_factor - price_to_buy_factor < min_trade_gap:
+                    price_to_buy_factor = price_to_sell_factor - min_trade_gap
                     
-                if price_to_buy_factor >= .98:
-                    price_to_buy_factor = .98
-                    price_to_sell_factor = .987
+                if price_to_buy_factor >= max_price_to_buy_factor:
+                    price_to_buy_factor = max_price_to_buy_factor
+                    price_to_sell_factor = price_to_buy_factor + min_trade_gap
             
                 price_to_buy_factor_array[look_back] = price_to_buy_factor
                 price_to_sell_factor_array[look_back] = price_to_sell_factor
@@ -1258,10 +1241,10 @@ def increase_std_dev_increase_factor(file_number):
         
         print('last_trade_start_overall', get_readable_time(last_trade_start_overall))
         
-        if int(time.time()) - last_trade_start_overall > 3*60:
-            if int(time.time()) - last_trade_start_overall < 7*60:
+        if int(time.time()) - last_trade_start_overall > 1*60:
+            if int(time.time()) - last_trade_start_overall < 5*60:
                 std_dev_increase_factor += 0.05
-            elif int(time.time()) - last_trade_start_overall < 11*60:
+            elif int(time.time()) - last_trade_start_overall < 9*60:
                 std_dev_increase_factor += 0.1
             else:
                 std_dev_increase_factor += 0.2

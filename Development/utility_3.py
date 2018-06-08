@@ -32,6 +32,12 @@ from binance.websockets import BinanceSocketManager
 def write_current_state(current_state_info, current_state):
     pickle_write('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + current_state_info['length'] + '_' + current_state_info['file_number'] + '_' + current_state_info['symbol'] + '.pklz', current_state, '******could not write state******')
 
+def save_stop_trading_until(symbol, file_number, time):
+    
+    current_stop_trading_until = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_' + symbol + '_' + str(file_number))
+    
+    if time > current_stop_trading_until:
+        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_' + symbol + '_' + str(file_number), time)
     
 
 def get_readable_time(time_to_get):
@@ -233,15 +239,12 @@ def calculate_profit_and_free_coin(current_state):
     # update program state
     write_current_state(current_state, False)
     
-    current_stop_trading_until = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_' + current_state['symbol'])
     stop_trading_until = int(time.time()) + 60*60*1
-    
-    if stop_trading_until > current_stop_trading_until:
-        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_' + current_state['symbol'], stop_trading_until)
+    save_stop_trading_until(current_state['symbol'], current_state['file_number'], stop_trading_until)
     
     if percent_profit_from_trade < -.01 and percent_profit_from_trade != -1.0:
         stop_trading_until = int(time.time()) + 60*60*24
-        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_' + current_state['symbol'], stop_trading_until)
+        save_stop_trading_until(current_state['symbol'], current_state['file_number'], stop_trading_until)
     
     
     print('################## wrote profit and freed coin....', current_state['symbol'])
@@ -316,9 +319,9 @@ def sell_coin_with_order_book_use_min(current_state):
                 started_give_up = True
                 print('Started give up 1, reduced price increase factor by half', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
                     
-            if int(time.time()) >= time_to_give_up_2:
-                started_give_up_2 = True
-                print('Started give up 2, reduced price increase factor by half again', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
+            # if int(time.time()) >= time_to_give_up_2:
+            #     started_give_up_2 = True
+            #     print('Started give up 2, reduced price increase factor by half again', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
             
             while True:
                 if current_state['orderId'] != False:
@@ -339,12 +342,12 @@ def sell_coin_with_order_book_use_min(current_state):
                         print('Started give up 1, reduced price increase factor by half', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
                         write_current_state(current_state, current_state)
                         
-                if int(time.time()) >= time_to_give_up_2:
-                    if started_give_up_2 == False:
-                        started_give_up_2 = True
-                        current_state['price_increase_factor'] = (float(current_state['price_increase_factor'])-1)/2+1
-                        print('Started give up 2, reduced price increase factor by half again', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
-                        write_current_state(current_state, current_state)
+                # if int(time.time()) >= time_to_give_up_2:
+                #     if started_give_up_2 == False:
+                #         started_give_up_2 = True
+                #         current_state['price_increase_factor'] = (float(current_state['price_increase_factor'])-1)/2+1
+                #         print('Started give up 2, reduced price increase factor by half again', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
+                #         write_current_state(current_state, current_state)
                         
                 first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check, first_bid = get_first_in_line_price(current_state)
                 if time.localtime().tm_sec < 1:
@@ -492,7 +495,7 @@ def buy_coin(symbol, length, file_number, client):
 
     try:
         
-        stop_trading_until_length = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_'+length)
+        stop_trading_until_length = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_' + length + '_' + str(file_number))
         
         if stop_trading_until_length != False and int(time.time()) < stop_trading_until_length:
             if symbol['symbol'] == 'ETHBTC':
@@ -502,7 +505,7 @@ def buy_coin(symbol, length, file_number, client):
         
         
         
-        stop_trading_until = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until')
+        stop_trading_until = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_' + str(file_number))
         
         if stop_trading_until != False and int(time.time()) < stop_trading_until:
             pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
@@ -511,22 +514,13 @@ def buy_coin(symbol, length, file_number, client):
             time.sleep(10*60)
             return
         
-        time_to_start_trading = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_' + symbol['symbol'])
+        time_to_start_trading = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_' + symbol['symbol'] + '_' + str(file_number))
         
         if time_to_start_trading != False and int(time.time()) < time_to_start_trading:
             if symbol['symbol'] == 'ETHBTC':
                  print('not trading coin...')
             time.sleep(60)
             return
-
-        time_to_start_trading_2 = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_2_' + symbol['symbol'])
-        
-        if time_to_start_trading_2 != False and int(time.time()) < time_to_start_trading_2:
-            if symbol['symbol'] == 'ETHBTC':
-                 print('not trading coin...')
-            time.sleep(60)
-            return
-        ##
         
         if symbol['symbol'] == 'CTRBTC' or symbol['symbol'] == 'BCNBTC':
             time.sleep(6000000)
@@ -664,21 +658,18 @@ def buy_coin(symbol, length, file_number, client):
             minutes_until_sale = 2*minutes
             minutes_until_sale_final = 4*minutes
            
-        stop_trading_value = -.023
-        stop_trading_time = 6 # hrs 
         price_to_start_buy_factor = 1.003
         sell_price_drop_factor = .997
         
 
         price_to_buy_factor_array = {}
         price_to_sell_factor_array = {}
-        lower_band_buy_factor_array = {}
         price_increase_factor_array = {}
         
         
         datapoints_trailing = look_back_schedule[-1] + 20
         
-        std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor')
+        std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'+ '_' + str(file_number))
 
         for look_back in look_back_schedule:
             
@@ -700,7 +691,6 @@ def buy_coin(symbol, length, file_number, client):
             
                 price_to_buy_factor_array[look_back] = price_to_buy_factor
                 price_to_sell_factor_array[look_back] = price_to_sell_factor
-                lower_band_buy_factor_array[look_back] = 100
                 price_increase_factor_array[look_back] = 1.01
                 
             else:
@@ -788,15 +778,6 @@ def buy_coin(symbol, length, file_number, client):
 
                 if current_price <= price_to_start_buy:
                     
-                    # TODO NELSON
-                    #if indicator_bot == 1:
-                    # load array 
-                    #remove greater than 7 minutes
-                    #add self to array
-                    #if greater than 6 trades in last 7 mintues: set std_dev_increase_factor = 0
-                    #save array
-                    #sleep 3 minutes
-                    #return
                     
                     print('----start buy', symbol['symbol'], 'std_dev_increase_factor', std_dev_increase_factor , get_time())
                     
@@ -804,13 +785,22 @@ def buy_coin(symbol, length, file_number, client):
                         pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
                         pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_overall', int(time.time()))
 
+                    
+                    last_attempted_trade = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_attempted_trade_start_' + symbol['symbol']+ '_' + str(file_number))
+                    
+                    if (last_attempted_trade > int(time.time()) - 15*60):
+                        print(symbol['symbol'], "attempted a trade too soon, returning")
+                        time.sleep(120)
+                        return
+
+                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_attempted_trade_start_' + symbol['symbol']+ '_' + str(file_number), int(time.time()))
+
                     ## block symbols for 24 hrs if 2 trades trigger within 4 minutes (only 1st trade executes)
-                    last_trade_start = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_' + symbol['symbol'])
+                    last_trade_start = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_' + symbol['symbol']+ '_' + str(file_number))
+                    
                     if last_trade_start != False and int(time.time()) - last_trade_start < 190:
                         print('too many trades on ', symbol['symbol'], 'blocking for 24 hr')
-                        time_to_start_trading_2 = int(time.time()) + 24*60*60
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_2_' + symbol['symbol'], time_to_start_trading_2)
-                        
+                        save_stop_trading_until(symbol['symbol'], file_number, int(time.time()) + 24*60*60)
                         return
                     
                     if std_dev_increase_factor == 0:
@@ -818,7 +808,6 @@ def buy_coin(symbol, length, file_number, client):
                         return
                     
 
-                    lower_band_buy_factor = lower_band_buy_factor_array[look_back]
                     price_to_buy_factor = price_to_buy_factor_array[look_back]
                     price_to_sell_factor = price_to_sell_factor_array[look_back]
                     price_increase_factor = price_increase_factor_array[look_back]
@@ -831,13 +820,6 @@ def buy_coin(symbol, length, file_number, client):
 
                     print('-------------------buy!', symbol['symbol'], 'current price', current_price, 'current price time', get_readable_time(order_book['time']), 'look_back', look_back, 'look back original price', data[index-look_back][4], 'look back original time', get_readable_time(data[index-look_back][0]),   'price_to_buy', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back], 'price_to_sell', price_to_sell,  'price_to_sell_factor',price_to_sell_factor_array[look_back] , 'price_increase_factor',price_increase_factor_array[look_back] , minutes_until_sale, get_time())
                     
-                    
-                    if length == '1m':
-                        save_data_until = int(time.time()) + 60*60
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/should_save_' + symbol['symbol'], save_data_until)
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol['symbol'], False)
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/order_book_history/' + symbol['symbol'] + '_' + str(save_data_until), [symbol['symbol'], 'current price', current_price, 'current price time', get_readable_time(order_book['time']), 'look_back', look_back, 'look back original price', data[index-look_back][4], 'look back original time', get_readable_time(data[index-look_back][0]),   'price_to_buy', price_to_buy , 'price_to_buy_factor', price_to_buy_factor_array[look_back], 'price_to_sell', price_to_sell,  'price_to_sell_factor',price_to_sell_factor_array[look_back] , 'price_increase_factor',price_increase_factor_array[look_back] , minutes_until_sale, get_time()])
-
                     amount_to_buy = part_of_bitcoin_to_use/price_to_buy
                     largest_buy_segment = largest_bitcoin_order/price_to_buy
 
@@ -904,7 +886,9 @@ def buy_coin(symbol, length, file_number, client):
                         time_to_give_up = int(time.time()) + 60*60
                         
                     
-                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
+                    
+                    temp_std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'+ '_' + str(file_number))
+                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'+ '_' + str(file_number), temp_std_dev_increase_factor/2)
                     
                     
                     price_to_buy_max = price_to_buy*buy_price_increase_factor
@@ -976,11 +960,11 @@ def buy_coin(symbol, length, file_number, client):
                     
                         
                     # std_dev_increase_factor
-                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
-                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_overall', int(time.time()))
+                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'+ '_' + str(file_number), 0)
+                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_overall'+ '_' + str(file_number), int(time.time()))
     
                     # last_trade_start
-                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_' + symbol['symbol'], int(time.time()))
+                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_' + symbol['symbol']+ '_' + str(file_number), int(time.time()))
 
                     current_state['finish_buy_time'] = int(time.time())
                     current_state['finish_buy_time_readable'] = get_time()
@@ -1050,18 +1034,11 @@ def run_bot_parallel(file_number, length, total_files, client):
             print(e)
             sys.exit()
 
-    file_start = file_number*total_btc_coins/total_files
-    file_end = (file_number+1)*total_btc_coins/total_files
 
-    loops = 0
     for s in symbols_trimmed:
         symbol = symbols_trimmed[s]
-
-        if loops >= file_start and loops < file_end:
-            t = Thread(target=buy_coin_thread, args=[symbol, length, file_number, client])
-            t.start()
-
-        loops += 1
+        t = Thread(target=buy_coin_thread, args=[symbol, length, file_number, client])
+        t.start()
 
 
 # "worker"
@@ -1264,3 +1241,41 @@ def update_symbol_list():
 
     symbols_saved = pickle_read('/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz')
     print('btc symbols saved:', len(symbols_saved))
+    
+def increase_std_dev_increase_factor(file_number):
+    
+    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_overall' + '_' + str(file_number), int(time.time()))
+
+    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor' + '_' + str(file_number), 0)
+    
+    while time.localtime().tm_sec > 2 or time.localtime().tm_sec < 1:
+        time.sleep(.5)
+    
+    
+    while True:
+    
+        std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor' + '_' + str(file_number))
+    
+        last_trade_start_overall = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_overall' + '_' + str(file_number))
+        
+        print('last_trade_start_overall', get_readable_time(last_trade_start_overall))
+        
+        if int(time.time()) - last_trade_start_overall > 3*60:
+            if int(time.time()) - last_trade_start_overall < 7*60:
+                std_dev_increase_factor += 0.05
+            elif int(time.time()) - last_trade_start_overall < 11*60:
+                std_dev_increase_factor += 0.1
+            else:
+                std_dev_increase_factor += 0.2
+        else:
+            std_dev_increase_factor = 0 # this is also done when trade completes, extra safe
+            
+        if std_dev_increase_factor > 4:
+            std_dev_increase_factor = 4
+            
+        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor' + '_' + str(file_number), std_dev_increase_factor)
+        
+        print('std_dev_increase_factor', std_dev_increase_factor, get_time())
+    
+        time.sleep(60)
+    

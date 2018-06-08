@@ -860,16 +860,14 @@ def buy_coin(symbol, length, file_number, client):
                     current_state['quantity_decimals'] = quantity_decimals
                     current_state['min_price'] = float(symbol['filters'][0]['minPrice'])
                     current_state['min_quantity'] = max(float(symbol['filters'][1]['minQty']), float(symbol['filters'][2]['minNotional']))
-                    current_state['stop_trading_value'] = stop_trading_value
-                    current_state['stop_trading_time'] = stop_trading_time
                     current_state['std_dev_increase_factor'] = std_dev_increase_factor
 
                     write_current_state(current_state, current_state)
 
                     if length == '1m':
-                        time_to_give_up = int(time.time()) + 120
-                    elif length == '5m':
                         time_to_give_up = int(time.time()) + 240
+                    elif length == '5m':
+                        time_to_give_up = int(time.time()) + 480
                     elif length == '15m':
                         time_to_give_up = int(time.time()) + 360
                     elif length == '30m':

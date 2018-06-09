@@ -301,27 +301,16 @@ def sell_coin_with_order_book_use_min(current_state):
     
             keep_price = False
             started_second_round = False
-            started_give_up = False
-            started_give_up_2 = False
-            try:
-                minutes_since_start = int(round((int(time.time()) - current_state['finish_buy_time'])/60))
-            except Exception as e:
-                minutes_since_start = int(round((int(time.time()) - current_state['original_buy_time'])/60))-2
-                
+            
+            minutes_since_start = int(round((int(time.time()) - current_state['finish_buy_time'])/60))
+            
             minutes_until_change = current_state['minutes_until_sale'] - minutes_since_start
             minutes_to_run = current_state['minutes_until_sale_final'] - minutes_since_start
         
             time_to_change = int(time.time()) + minutes_until_change * 60
             time_to_give_up = int(time.time()) + minutes_to_run * 60
-            time_to_give_up_2 = int(time.time()) + 4*minutes_to_run * 60
-            
-            if int(time.time()) >= time_to_give_up:
-                started_give_up = True
-                print('Started give up 1, reduced price increase factor by half', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
-                    
-            if int(time.time()) >= time_to_give_up_2:
-                started_give_up_2 = True
-                print('Started give up 2, reduced price increase factor by half again', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
+            time_to_give_up_2 = int(time.time()) + 2*minutes_to_run * 60
+            time_to_give_up_3 = int(time.time()) + 3*minutes_to_run * 60
             
             while True:
                 if current_state['orderId'] != False:
@@ -335,20 +324,6 @@ def sell_coin_with_order_book_use_min(current_state):
                         if current_state['executedQty'] < current_state['min_quantity']:
                             break
                     
-                if int(time.time()) >= time_to_give_up:
-                    if started_give_up == False:
-                        started_give_up = True
-                        current_state['price_increase_factor'] = (float(current_state['price_increase_factor'])-1)/2+1
-                        print('Started give up 1, reduced price increase factor by half', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
-                        write_current_state(current_state, current_state)
-                        
-                if int(time.time()) >= time_to_give_up_2:
-                    if started_give_up_2 == False:
-                        started_give_up_2 = True
-                        current_state['price_increase_factor'] = (float(current_state['price_increase_factor'])-1)/2+1
-                        print('Started give up 2, reduced price increase factor by half again', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
-                        write_current_state(current_state, current_state)
-                        
                 first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check, first_bid = get_first_in_line_price(current_state)
                 if time.localtime().tm_sec < 1:
                     if keep_price == True:
@@ -361,9 +336,20 @@ def sell_coin_with_order_book_use_min(current_state):
                 if int(time.time()) < time_to_change:
                     price_to_sell_min = current_state['price_to_sell']
                 else:
+                    
+                    if int(time.time()) >= time_to_give_up:
+                        current_state['price_increase_factor'] = 1.005
+                            
+                    if int(time.time()) >= time_to_give_up_2:
+                        current_state['price_increase_factor'] = 1.0025
+                    
+                    if int(time.time()) >= time_to_give_up_3:
+                        current_state['price_increase_factor'] = 1.001
+                    
                     if started_second_round == False:
                         started_second_round = True
                         print('######## starting second round of selling', current_state['symbol'], 'sell at price', current_state['compare_price']*current_state['price_increase_factor'], get_time())
+                    
                     price_to_sell_min_1 = current_state['compare_price']*current_state['price_increase_factor']
                     price_to_sell_min_2 = current_state['price_to_sell']
                     price_to_sell_min = min(price_to_sell_min_1, price_to_sell_min_2)
@@ -852,9 +838,9 @@ def buy_coin(symbol, length, file_number, client):
                     write_current_state(current_state, current_state)
 
                     if length == '1m':
-                        time_to_give_up = int(time.time()) + 240
+                        time_to_give_up = int(time.time()) + 120
                     elif length == '5m':
-                        time_to_give_up = int(time.time()) + 480
+                        time_to_give_up = int(time.time()) + 240
                     elif length == '15m':
                         time_to_give_up = int(time.time()) + 360
                     elif length == '30m':

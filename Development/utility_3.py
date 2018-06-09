@@ -313,15 +313,15 @@ def sell_coin_with_order_book_use_min(current_state):
         
             time_to_change = int(time.time()) + minutes_until_change * 60
             time_to_give_up = int(time.time()) + minutes_to_run * 60
-            time_to_give_up_2 = int(time.time()) + minutes_to_run * 60 + minutes_to_run * 60
+            time_to_give_up_2 = int(time.time()) + 4*minutes_to_run * 60
             
             if int(time.time()) >= time_to_give_up:
                 started_give_up = True
                 print('Started give up 1, reduced price increase factor by half', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
                     
-            # if int(time.time()) >= time_to_give_up_2:
-            #     started_give_up_2 = True
-            #     print('Started give up 2, reduced price increase factor by half again', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
+            if int(time.time()) >= time_to_give_up_2:
+                started_give_up_2 = True
+                print('Started give up 2, reduced price increase factor by half again', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
             
             while True:
                 if current_state['orderId'] != False:
@@ -342,12 +342,12 @@ def sell_coin_with_order_book_use_min(current_state):
                         print('Started give up 1, reduced price increase factor by half', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
                         write_current_state(current_state, current_state)
                         
-                # if int(time.time()) >= time_to_give_up_2:
-                #     if started_give_up_2 == False:
-                #         started_give_up_2 = True
-                #         current_state['price_increase_factor'] = (float(current_state['price_increase_factor'])-1)/2+1
-                #         print('Started give up 2, reduced price increase factor by half again', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
-                #         write_current_state(current_state, current_state)
+                if int(time.time()) >= time_to_give_up_2:
+                    if started_give_up_2 == False:
+                        started_give_up_2 = True
+                        current_state['price_increase_factor'] = (float(current_state['price_increase_factor'])-1)/2+1
+                        print('Started give up 2, reduced price increase factor by half again', current_state['symbol'], 'price_increase_factor', current_state['price_increase_factor'])
+                        write_current_state(current_state, current_state)
                         
                 first_in_line_price, first_ask, second_in_line_price, second_ask, second_price_to_check, first_bid = get_first_in_line_price(current_state)
                 if time.localtime().tm_sec < 1:
@@ -553,7 +553,7 @@ def buy_coin(symbol, length, file_number, client):
         if length == '1m':
             if file_number == 0:
                 if std_dev_increase_factor > 3:
-                    max_price_to_buy_factor = .98 + (std_dev_increase_factor-2)/2*.01
+                    max_price_to_buy_factor = .98 + (std_dev_increase_factor-2)/2*.005
                 else:
                     max_price_to_buy_factor = .98
                 min_trade_gap = .007
@@ -671,6 +671,9 @@ def buy_coin(symbol, length, file_number, client):
                     price_to_buy_factor = max_price_to_buy_factor
                 
                 if price_to_sell_factor - price_to_buy_factor < min_trade_gap:
+                    price_to_sell_factor = price_to_buy_factor + min_trade_gap
+                    
+                if price_to_sell_factor > .99:
                     price_to_sell_factor = price_to_buy_factor + min_trade_gap
             
                 price_to_buy_factor_array[look_back] = price_to_buy_factor
@@ -1242,10 +1245,10 @@ def increase_std_dev_increase_factor(file_number):
         
         print('last_trade_start_overall', get_readable_time(last_trade_start_overall))
         
-        if int(time.time()) - last_trade_start_overall > 1*60:
-            if int(time.time()) - last_trade_start_overall < 5*60:
+        if int(time.time()) - last_trade_start_overall > 3*60:
+            if int(time.time()) - last_trade_start_overall < 7*60:
                 std_dev_increase_factor += 0.05
-            elif int(time.time()) - last_trade_start_overall < 9*60:
+            elif int(time.time()) - last_trade_start_overall < 11*60:
                 std_dev_increase_factor += 0.1
             else:
                 std_dev_increase_factor += 0.2

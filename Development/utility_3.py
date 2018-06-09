@@ -838,9 +838,9 @@ def buy_coin(symbol, length, file_number, client):
                     write_current_state(current_state, current_state)
 
                     if length == '1m':
-                        time_to_give_up = int(time.time()) + 120
+                        time_to_give_up = int(time.time()) + 80
                     elif length == '5m':
-                        time_to_give_up = int(time.time()) + 240
+                        time_to_give_up = int(time.time()) + 180
                     elif length == '15m':
                         time_to_give_up = int(time.time()) + 360
                     elif length == '30m':

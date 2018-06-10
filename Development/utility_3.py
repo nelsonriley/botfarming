@@ -494,7 +494,7 @@ def buy_coin(symbol, length, file_number, client):
         stop_trading_until = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_' + str(file_number))
         
         if stop_trading_until != False and int(time.time()) < stop_trading_until:
-            pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
+            pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor' + '_'  + str(file_number), 0)
             if symbol['symbol'] == 'ETHBTC':
                 print('not trading anything...')
             time.sleep(10*60)
@@ -755,9 +755,10 @@ def buy_coin(symbol, length, file_number, client):
                     print('----start buy', symbol['symbol'], 'std_dev_increase_factor', std_dev_increase_factor , get_time())
                     
                     if std_dev_increase_factor == 0:
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor', 0)
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_overall', int(time.time()))
+                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor' + '_' + str(file_number), 0)
+                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_overall' + '_' + str(file_number), int(time.time()))
 
+                    
                     
                     last_attempted_trade = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_attempted_trade_start_' + symbol['symbol']+ '_' + str(file_number))
                     
@@ -1134,22 +1135,6 @@ def process_socket_pushes_order_book(msg):
             if (symbol == 'ETHBTC') and (time.localtime().tm_sec == 1 or time.localtime().tm_sec == 2):
                 print('process_socket_pushes_order_book()', symbol, msg['data']['bids'][0][0], 'time given', get_readable_time(msg['data']['time']), 'current time', get_time())
     
-            # if time.localtime().tm_sec < 30:
-            #     should_save = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/should_save_' + symbol)
-            #     if should_save != False and should_save > int(time.time()):
-            #         already_saved = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol)
-            #         if already_saved == False:
-            #             try:
-            #                 order_book_history = pickle_read('/home/ec2-user/environment/botfarming/Development/order_book_history/' + symbol + '_' + str(should_save))
-            #                 order_book_history.append(msg['data'])
-            #                 pickle_write('/home/ec2-user/environment/botfarming/Development/order_book_history/' + symbol + '_' + str(should_save), order_book_history)
-            #                 pickle_write('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol, True)
-            #             except Exception as e:
-            #                 print(e)
-            # elif time.localtime().tm_sec > 30:
-            #     should_save = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/should_save_' + symbol)
-            #     if should_save != False and should_save > int(time.time()):
-            #         pickle_write('/home/ec2-user/environment/botfarming/Development/variables/already_saved_' + symbol, False)
     except Exception as e:
         print(e)        
 

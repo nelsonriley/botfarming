@@ -762,13 +762,14 @@ def buy_coin(symbol, length, file_number, client):
                     
                     last_attempted_trade = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_attempted_trade_start_' + symbol['symbol']+ '_' + str(file_number))
                     
-                    if (last_attempted_trade > int(time.time()) - 15*60):
+                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_attempted_trade_start_' + symbol['symbol']+ '_' + str(file_number), int(time.time()))
+                    
+                    if (last_attempted_trade > int(time.time()) - 60*60):
                         print(symbol['symbol'], "attempted a trade too soon, returning")
                         time.sleep(120)
                         return
 
-                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_attempted_trade_start_' + symbol['symbol']+ '_' + str(file_number), int(time.time()))
-
+                    
                     ## block symbols for 24 hrs if 2 trades trigger within 4 minutes (only 1st trade executes)
                     last_trade_start = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_' + symbol['symbol']+ '_' + str(file_number))
                     

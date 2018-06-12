@@ -239,7 +239,7 @@ def calculate_profit_and_free_coin(current_state):
     # update program state
     write_current_state(current_state, False)
     
-    stop_trading_until = int(time.time()) + 60*60*1
+    stop_trading_until = int(time.time()) + 60*60*3
     save_stop_trading_until(current_state['symbol'], current_state['file_number'], stop_trading_until)
     
     if percent_profit_from_trade < -.01 and percent_profit_from_trade != -1.0:
@@ -481,33 +481,6 @@ def buy_coin(symbol, length, file_number, client):
 
     try:
         
-        stop_trading_until_length = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_' + length + '_' + str(file_number))
-        
-        if stop_trading_until_length != False and int(time.time()) < stop_trading_until_length:
-            if symbol['symbol'] == 'ETHBTC':
-                print('not trading anything length', length)
-            time.sleep(10*60)
-            return
-        
-        
-        
-        stop_trading_until = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_' + str(file_number))
-        
-        if stop_trading_until != False and int(time.time()) < stop_trading_until:
-            pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor' + '_'  + str(file_number), 0)
-            if symbol['symbol'] == 'ETHBTC':
-                print('not trading anything...')
-            time.sleep(10*60)
-            return
-        
-        time_to_start_trading = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_' + symbol['symbol'] + '_' + str(file_number))
-        
-        if time_to_start_trading != False and int(time.time()) < time_to_start_trading:
-            if symbol['symbol'] == 'ETHBTC':
-                 print('not trading coin...')
-            time.sleep(60)
-            return
-        
         if symbol['symbol'] == 'CTRBTC' or symbol['symbol'] == 'BCNBTC':
             time.sleep(6000000)
             return
@@ -738,7 +711,6 @@ def buy_coin(symbol, length, file_number, client):
             for look_back in look_back_schedule:
                 
                 
-                
                 if price_to_buy_factor_array[look_back] > max_price_to_buy_factor:
                     continue
                 
@@ -764,11 +736,6 @@ def buy_coin(symbol, length, file_number, client):
                     
                     pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_attempted_trade_start_' + symbol['symbol']+ '_' + str(file_number), int(time.time()))
                     
-                    if (last_attempted_trade > int(time.time()) - 60*60):
-                        print(symbol['symbol'], "attempted a trade too soon, returning")
-                        time.sleep(120)
-                        return
-
                     
                     ## block symbols for 24 hrs if 2 trades trigger within 4 minutes (only 1st trade executes)
                     last_trade_start = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_' + symbol['symbol']+ '_' + str(file_number))
@@ -777,6 +744,37 @@ def buy_coin(symbol, length, file_number, client):
                         print('too many trades on ', symbol['symbol'], 'blocking for 24 hr')
                         save_stop_trading_until(symbol['symbol'], file_number, int(time.time()) + 24*60*60)
                         return
+                    
+                    if (last_attempted_trade > int(time.time()) - 60*60):
+                        print(symbol['symbol'], "attempted a trade too soon, returning")
+                        time.sleep(120)
+                        return
+                    
+                    
+                    stop_trading_until_length = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_' + length + '_' + str(file_number))
+        
+                    if stop_trading_until_length != False and int(time.time()) < stop_trading_until_length:
+                        print(symbol['symbol'], 'not trading anything length', length)
+                        time.sleep(10*60)
+                        return
+                    
+                    
+                    
+                    stop_trading_until = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_' + str(file_number))
+                    
+                    if stop_trading_until != False and int(time.time()) < stop_trading_until:
+                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor' + '_'  + str(file_number), 0)
+                        print(symbol['symbol'], 'not trading anything...')
+                        time.sleep(10*60)
+                        return
+                    
+                    time_to_start_trading = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_' + symbol['symbol'] + '_' + str(file_number))
+                    
+                    if time_to_start_trading != False and int(time.time()) < time_to_start_trading:
+                        print(symbol['symbol'], 'not trading coin...')
+                        time.sleep(60)
+                        return
+                    
                     
                     if std_dev_increase_factor == 0:
                         time.sleep(120)

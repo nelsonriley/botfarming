@@ -512,7 +512,7 @@ def buy_coin(symbol, length, file_number, client):
         if length == '1m':
             if file_number == 0:
                 if std_dev_increase_factor > 3:
-                    max_price_to_buy_factor = .98
+                    max_price_to_buy_factor = .98 + (std_dev_increase_factor-2)/2*.005
                 else:
                     max_price_to_buy_factor = .98
                 min_trade_gap = .007

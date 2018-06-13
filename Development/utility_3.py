@@ -729,7 +729,13 @@ def buy_coin(symbol, length, file_number, client):
                     if std_dev_increase_factor == 0:
                         pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor' + '_' + str(file_number), 0)
                         pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_overall' + '_' + str(file_number), int(time.time()))
-
+                        time.sleep(120)
+                        return
+                    
+                    
+                    
+                    temp_std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'+ '_' + str(file_number))
+                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'+ '_' + str(file_number), temp_std_dev_increase_factor/2)
                     
                     
                     last_attempted_trade = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_attempted_trade_start_' + symbol['symbol']+ '_' + str(file_number))
@@ -737,17 +743,9 @@ def buy_coin(symbol, length, file_number, client):
                     pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_attempted_trade_start_' + symbol['symbol']+ '_' + str(file_number), int(time.time()))
                     
                     
-                    ## block symbols for 24 hrs if 2 trades trigger within 4 minutes (only 1st trade executes)
-                    last_trade_start = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_' + symbol['symbol']+ '_' + str(file_number))
-                    
-                    if last_trade_start != False and int(time.time()) - last_trade_start < 190:
-                        print('too many trades on ', symbol['symbol'], 'blocking for 24 hr')
-                        save_stop_trading_until(symbol['symbol'], file_number, int(time.time()) + 24*60*60)
-                        return
-                    
-                    if (last_attempted_trade > int(time.time()) - 60*60):
+                    if (last_attempted_trade > int(time.time()) - 30*60):
                         print(symbol['symbol'], "attempted a trade too soon, returning")
-                        time.sleep(120)
+                        time.sleep(10*60)
                         return
                     
                     
@@ -772,12 +770,7 @@ def buy_coin(symbol, length, file_number, client):
                     
                     if time_to_start_trading != False and int(time.time()) < time_to_start_trading:
                         print(symbol['symbol'], 'not trading coin...')
-                        time.sleep(60)
-                        return
-                    
-                    
-                    if std_dev_increase_factor == 0:
-                        time.sleep(120)
+                        time.sleep(10*60)
                         return
                     
 
@@ -858,8 +851,6 @@ def buy_coin(symbol, length, file_number, client):
                         
                     
                     
-                    temp_std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'+ '_' + str(file_number))
-                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'+ '_' + str(file_number), temp_std_dev_increase_factor/2)
                     
                     
                     price_to_buy_max = price_to_buy*buy_price_increase_factor

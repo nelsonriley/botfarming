@@ -199,24 +199,17 @@ def create_buy_order(current_state, price_to_buy):
         return current_state
     
 
-def create_sale_order(current_state, price_to_sell, market=False):
+def create_sale_order(current_state, price_to_sell):
     #print('in create sale order', price_to_sell)
-
-    if not 'largest_bitcoin_order' in current_state:
-        print(current_state['symbol'], 'largest_bitcoin_order NOT defined', get_time())
-        # EXCEPTION IN (/home/nelsonriley/Development/utility.py, LINE 294 "sold_coin, current_state = sell_with_order_book(current_state, current_state['price_to_sell_3'], current_state['minutes_until_sale_3'])"): 'largest_bitcoin_order'
-        current_state['largest_bitcoin_order'] = .1
 
     max_quantity = float_to_str(round_down(current_state['largest_bitcoin_order']/float(price_to_sell),current_state['quantity_decimals']))
     order_size = min(float(max_quantity), float(current_state['executedQty']))
 
-    if market:
-        sale_order = current_state['client'].order_market_sell(symbol=current_state['symbol'], quantity=order_size)
-    else:
-        sale_order = current_state['client'].order_limit_sell(symbol=current_state['symbol'], quantity=order_size, price=price_to_sell)
+    sale_order = current_state['client'].order_limit_sell(symbol=current_state['symbol'], quantity=order_size, price=price_to_sell)
 
     current_state['state'] = 'selling'
     current_state['orderId'] = sale_order['orderId']
+    current_state['sale_order_size'] = float(order_size)
     write_current_state(current_state, current_state)
 
     return current_state
@@ -360,18 +353,34 @@ def sell_coin_with_order_book_use_min(current_state):
                     if current_state['orderId'] != False:
                         sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
                         if first_ask != float(sale_order_info['price']):
-                            #print(current_state['symbol'], 'cancel sale order, price is in range, but we are not the first bid, so cancel and make us first bid. first_in_line_price', first_in_line_price, 'price_to_sell_min', price_to_sell_min, 'first_ask', first_ask, 'sale_order_info[price]', sale_order_info['price'])
-                            current_state = cancel_sale_order(current_state)
-                            if current_state['executedQty'] < current_state['min_quantity']:
-                                break
-                            current_state = create_sale_order(current_state, first_in_line_price)
+                            price_to_sell = first_in_line_price
                         else:
-                            if second_price_to_check < second_ask:
-                                #print(current_state['symbol'], 'cancel sale order, price is in range, we are first bid, but the next price is far back, so cancel and move us back. first_in_line_price', first_in_line_price, 'price_to_sell_min', price_to_sell_min, 'first_ask', first_ask, 'second_ask', second_ask, 'second_price_to_check', second_price_to_check, 'sale_order_info[price]', sale_order_info['price'])
-                                current_state = cancel_sale_order(current_state)
-                                if current_state['executedQty'] < current_state['min_quantity']:
-                                    break
-                                current_state = create_sale_order(current_state, second_in_line_price)
+                            price_to_sell = second_in_line_price
+                            
+   
+                        max_quantity = float_to_str(round_down(current_state['largest_bitcoin_order']/float(price_to_sell),current_state['quantity_decimals']))
+                        order_size = min(float(max_quantity), float(current_state['executedQty'] - current_state['sale_order_size']))
+                    
+                        if order_size > current_state['min_quantity']:
+                            sale_order = current_state['client'].order_limit_sell(symbol=current_state['symbol'], quantity=order_size, price=price_to_sell)
+                        
+                            current_state['temp_sale_order_id'] = sale_order['orderId']
+                            current_state['temp_sale_order_size'] = order_size
+                            
+                            write_current_state(current_state, current_state)
+        
+                        current_state = cancel_sale_order(current_state)
+                        
+                        if current_state['executedQty'] < current_state['min_quantity']:
+                            break
+                        
+                        if 'temp_sale_order_id' in current_state and current_state['temp_sale_order_id'] != False:
+                            current_state['orderId'] = current_state['temp_sale_order_id']
+                            current_state['sale_order_size'] = current_state['temp_sale_order_size']
+                            current_state['temp_sale_order_id'] = False
+                            current_state['temp_sale_order_size'] = 0
+                            write_current_state(current_state, current_state)
+                        
         
                     else:
                         #print(current_state['symbol'], 'price that would make us first is in range, but no sale order so create one', 'first_in_line_price', first_in_line_price, 'price_to_sell_min', price_to_sell_min)
@@ -443,6 +452,18 @@ def buy_coin_from_state(current_state):
             if current_state['executedQty'] < current_state['min_quantity']:
                 calculate_profit_and_free_coin(current_state)
                 return
+            
+            if 'temp_sale_order_id' in current_state and current_state['temp_sale_order_id'] != False:
+                current_state['orderId'] = current_state['temp_sale_order_id']
+                current_state['sale_order_size'] = current_state['temp_sale_order_size']
+                current_state['temp_sale_order_id'] = False
+                current_state['temp_sale_order_size'] = 0
+                write_current_state(current_state, current_state)
+                current_state = cancel_sale_order(current_state)
+                if current_state['executedQty'] < current_state['min_quantity']:
+                    calculate_profit_and_free_coin(current_state)
+                    return
+            
     
         print('buy_coin_from_state() no open orders, selling coin..', current_state['symbol'])
         

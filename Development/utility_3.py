@@ -24,6 +24,7 @@ from six.moves import urllib
 global number_of_api_requests
 from binance.client import Client
 from binance.websockets import BinanceSocketManager
+from twisted.internet import reactor
 
 
 
@@ -1129,39 +1130,50 @@ def process_socket_pushes_order_book(msg):
         print(e)        
 
     
-def update_order_book(min_volume, max_volume):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    print(s.getsockname()[0])
-    s.close()
+def update_order_book(process_number):
+    
+    if process_number == 0:
+        update_symbol_list()
     
     api_key = '41EwcPBxLxrwAw4a4W2cMRpXiQwaJ9Vibxt31pOWmWq8Hm3ZX2CBnJ80sIRJtbsI'
     api_secret = 'pnHoASmoe36q54DZOKsUujQqo4n5Ju25t5G0kBaioZZgGDOQPEHqgDDPA6s5dUiB'
     client = Client(api_key, api_secret)
-    global bm
+
     bm = BinanceSocketManager(client)
     
     # limit symbols by 24hr volume
     
     symbol_path = '/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz'
     symbols = pickle_read(symbol_path)
-    total_btc_coins = 0
-    symbols_trimmed = {}
-    global socket_list
-    socket_list = []
+    symbol_list_temp = []
+    symbol_list_sorted = []
     for s in symbols:
         symbol = symbols[s]
-        if float(symbol['24hourVolume']) > min_volume and float(symbol['24hourVolume']) < max_volume:
-            total_btc_coins += 1
-            symbols_trimmed[s] = symbol
-            socket_list.append(s.lower()+'@depth20')
-            pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/'+s+'.pklz', False)
+        symbol['24hourVolume2'] = float(symbol['24hourVolume'])
+        symbol_list_temp.append(symbol)
+    symbol_list_sorted = sorted(symbol_list_temp, key=lambda k: k['24hourVolume2'], reverse=True)
     
-    print('symbols with volume > ', min_volume, 'and less than', max_volume, '=', len(socket_list))
+    total_btc_coins = 0
+    symbol_count = 0
+    symbols_trimmed = {}
+    socket_list = []
+    for symbol in symbol_list_sorted:
+        
+        if symbol_count >= process_number*11 and symbol_count < (process_number+1)*11:
+            print(symbol['symbol'])
+            total_btc_coins += 1
+            symbols_trimmed[symbol['symbol']] = symbol
+            socket_list.append(symbol['symbol'].lower()+'@depth20')
+            pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/'+symbol['symbol']+'.pklz', False)
+        symbol_count += 1
+    
+    print('working on symbols', process_number*11, 'through', (process_number+1)*11, 'total:', len(socket_list))
     
     # start order_book web socket > call back saves most recent data to disk
     conn_key = bm.start_multiplex_socket(socket_list, process_socket_pushes_order_book)
     bm.start()
+            
+    
     
 
 def update_symbol_list():

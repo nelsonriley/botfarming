@@ -15,14 +15,46 @@ import math
 from binance.client import Client
 
 
-print(ut.get_time())
+symbol_path = '/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz'
+symbols = ut.pickle_read(symbol_path)
+total_btc_coins = 0
+symbols_trimmed = {}
+global socket_list
+socket_list = []
+symbol_list_temp = []
+symbol_list_sorted = []
 
-time_to_start_trading = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_WTCBTC' )
+pprint(symbols)
 
-print(ut.get_readable_time(time_to_start_trading))
+sys.exit()
 
-if time_to_start_trading != False and int(time.time()) < time_to_start_trading:
-    print('not trading coin...')
+for s in symbols:
+    symbol = symbols[s]
+    symbol['24hourVolume2'] = float(symbol['24hourVolume'])
+    symbol_list_temp.append(symbol)
+    
+
+symbol_list_sorted = sorted(symbol_list_temp, key=lambda k: k['24hourVolume2'], reverse=True) 
+
+pprint(symbol_list_sorted)
+
+
+
+
+    
+
+    
+
+        
+
+# print(ut.get_time())
+
+# time_to_start_trading = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_WTCBTC' )
+
+# print(ut.get_readable_time(time_to_start_trading))
+
+# if time_to_start_trading != False and int(time.time()) < time_to_start_trading:
+#     print('not trading coin...')
 
 
 # file_path = '/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/1m_0_1525256825_binance_all_trades_history.pklz'

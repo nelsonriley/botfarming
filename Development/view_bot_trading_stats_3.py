@@ -99,7 +99,7 @@ for look_back in look_backs:
             max_time = bot_trade[9]
         
         
-        if bot_trade[9] > 1529491424 and bot_trade[3] > -.18:
+        if bot_trade[9] > 1529619692 and bot_trade[3] > -.18:
             #print(bot_trade[2])
             
             #pprint(bot_trade)
@@ -148,7 +148,7 @@ print('final_profit_b', final_profit_b)
 print('final_total_trades_b', final_total_trades_b)
 print('max_time', max_time)
 print('current_time', int(time.time()))
-print('time of last commit', int(time.time())-33*60*60)
+print('time of last commit', int(time.time())-12*60*60)
 
 pprint(profit_by_std)
 

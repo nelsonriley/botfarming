@@ -231,9 +231,9 @@ def calculate_profit_and_free_coin(current_state):
     invested_btc = current_state['original_quantity']*current_state['original_price']
     print('PROFIT', current_state['symbol'] ,'profit was, absoulte profit, percent profit, amount invested', float_to_str(profit_from_trade, 8), float_to_str(percent_profit_from_trade, 5), float_to_str(invested_btc,8), get_time())
 
-    recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['a_b'], current_state['price_to_buy_factor'], current_state['price_to_sell_factor'], current_state['original_buy_time'], get_time()]
-    if 'std_dev_increase_factor' in current_state:
-        recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['a_b'], current_state['price_to_buy_factor'], current_state['price_to_sell_factor'], current_state['original_buy_time'], get_time(), current_state['std_dev_increase_factor']]
+    recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['a_b'], current_state['price_to_buy_factor'], current_state['price_to_sell_factor'], current_state['original_buy_time'], get_time(), current_state['std_dev_increase_factor']]
+    if 'last_attempted_trade' in current_state:
+        recorded_trade = [current_state['original_buy_time_readable'], current_state['symbol'], profit_from_trade, percent_profit_from_trade, invested_btc, current_state['look_back'], current_state['a_b'], current_state['price_to_buy_factor'], current_state['price_to_sell_factor'], current_state['original_buy_time'], get_time(), current_state['std_dev_increase_factor'], current_state['last_attempted_trade']]
     
     pickle_write('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/'+ current_state['length'] + '_' + current_state['file_number'] + '_' + str(current_state['original_buy_time']) + '_binance_all_trades_history.pklz', recorded_trade)
 
@@ -730,13 +730,10 @@ def buy_coin(symbol, length, file_number, client):
                     if std_dev_increase_factor == 0:
                         pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor' + '_' + str(file_number), 0)
                         pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_overall' + '_' + str(file_number), int(time.time()))
+                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_attempted_trade_start_' + symbol['symbol']+ '_' + str(file_number), int(time.time()))
                         time.sleep(120)
                         return
                     
-                    
-                    
-                    temp_std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'+ '_' + str(file_number))
-                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'+ '_' + str(file_number), temp_std_dev_increase_factor/2)
                     
                     
                     last_attempted_trade = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_attempted_trade_start_' + symbol['symbol']+ '_' + str(file_number))
@@ -749,6 +746,12 @@ def buy_coin(symbol, length, file_number, client):
                         time.sleep(10*60)
                         return
                     
+                    temp_std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'+ '_' + str(file_number))
+                    temp_std_dev_increase_factor = max(temp_std_dev_increase_factor - 1, 0)
+                    
+                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'+ '_' + str(file_number), temp_std_dev_increase_factor)
+                    
+                    pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_overall' + '_' + str(file_number), int(time.time()))
                     
                     stop_trading_until_length = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_' + length + '_' + str(file_number))
         
@@ -828,6 +831,7 @@ def buy_coin(symbol, length, file_number, client):
                     current_state['min_price'] = float(symbol['filters'][0]['minPrice'])
                     current_state['min_quantity'] = max(float(symbol['filters'][1]['minQty']), float(symbol['filters'][2]['minNotional']))
                     current_state['std_dev_increase_factor'] = std_dev_increase_factor
+                    current_state['last_attempted_trade'] = last_attempted_trade
 
                     write_current_state(current_state, current_state)
 
@@ -1145,6 +1149,24 @@ def update_order_book(process_number):
     
     symbol_path = '/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz'
     symbols = pickle_read(symbol_path)
+    
+    extra_coins_to_add = {}
+    if process_number == 5:
+        for s in symbols:
+            symbol = symbols[s]
+            lengths = ['1m', '5m', '15m', '30m', '1h', '2h', '6h', '12h', '1d']
+            for length in lengths:
+                try:
+                    f = gzip.open('/home/ec2-user/environment/botfarming/Development/program_state/program_state_' + length + '_0_' + symbol['symbol'] + '.pklz','rb')
+                    current_state = pickle.load(f)
+                    f.close()
+                except Exception as e:
+                    current_state = False
+            
+                if isinstance(current_state,dict):
+                    extra_coins_to_add[current_state['symbol']] = 1
+    
+    
     symbol_list_temp = []
     symbol_list_sorted = []
     for s in symbols:
@@ -1159,15 +1181,22 @@ def update_order_book(process_number):
     socket_list = []
     for symbol in symbol_list_sorted:
         
-        if symbol_count >= process_number*11 and symbol_count < (process_number+1)*11:
+        if symbol_count >= process_number*12 and symbol_count < (process_number+1)*12:
             print(symbol['symbol'])
             total_btc_coins += 1
             symbols_trimmed[symbol['symbol']] = symbol
             socket_list.append(symbol['symbol'].lower()+'@depth20')
             pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/'+symbol['symbol']+'.pklz', False)
+        if process_number == 5 and symbol_count >= (process_number+1)*12 and symbol['symbol'] in extra_coins_to_add:
+            print('adding extra coins', symbol['symbol'])
+            total_btc_coins += 1
+            symbols_trimmed[symbol['symbol']] = symbol
+            socket_list.append(symbol['symbol'].lower()+'@depth20')
+            pickle_write('/home/ec2-user/environment/botfarming/Development/recent_order_books/'+symbol['symbol']+'.pklz', False)
+            
         symbol_count += 1
     
-    print('working on symbols', process_number*11, 'through', (process_number+1)*11, 'total:', len(socket_list))
+    print('working on symbols', process_number*12, 'through', (process_number+1)*12, 'total:', len(socket_list))
     
     # start order_book web socket > call back saves most recent data to disk
     conn_key = bm.start_multiplex_socket(socket_list, process_socket_pushes_order_book)

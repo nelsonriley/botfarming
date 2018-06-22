@@ -193,6 +193,7 @@ def create_buy_order(current_state, price_to_buy):
     
         current_state['state'] = 'buying'
         current_state['orderId'] = buy_order['orderId']
+        current_state['buy_order_size'] = float(quantity_to_buy)
         write_current_state(current_state, current_state)
     
         return current_state
@@ -200,27 +201,21 @@ def create_buy_order(current_state, price_to_buy):
         return current_state
     
 
-def create_sale_order(current_state, price_to_sell, market=False):
+def create_sale_order(current_state, price_to_sell):
     #print('in create sale order', price_to_sell)
-
-    if not 'largest_bitcoin_order' in current_state:
-        print(current_state['symbol'], 'largest_bitcoin_order NOT defined', get_time())
-        # EXCEPTION IN (/home/nelsonriley/Development/utility.py, LINE 294 "sold_coin, current_state = sell_with_order_book(current_state, current_state['price_to_sell_3'], current_state['minutes_until_sale_3'])"): 'largest_bitcoin_order'
-        current_state['largest_bitcoin_order'] = .1
 
     max_quantity = float_to_str(round_down(current_state['largest_bitcoin_order']/float(price_to_sell),current_state['quantity_decimals']))
     order_size = min(float(max_quantity), float(current_state['executedQty']))
 
-    if market:
-        sale_order = current_state['client'].order_market_sell(symbol=current_state['symbol'], quantity=order_size)
-    else:
-        sale_order = current_state['client'].order_limit_sell(symbol=current_state['symbol'], quantity=order_size, price=price_to_sell)
+    sale_order = current_state['client'].order_limit_sell(symbol=current_state['symbol'], quantity=order_size, price=price_to_sell)
 
     current_state['state'] = 'selling'
     current_state['orderId'] = sale_order['orderId']
+    current_state['sale_order_size'] = float(order_size)
     write_current_state(current_state, current_state)
 
     return current_state
+
 
 def calculate_profit_and_free_coin(current_state):
     # also save trade to trade history
@@ -361,18 +356,34 @@ def sell_coin_with_order_book_use_min(current_state):
                     if current_state['orderId'] != False:
                         sale_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
                         if first_ask != float(sale_order_info['price']):
-                            #print(current_state['symbol'], 'cancel sale order, price is in range, but we are not the first bid, so cancel and make us first bid. first_in_line_price', first_in_line_price, 'price_to_sell_min', price_to_sell_min, 'first_ask', first_ask, 'sale_order_info[price]', sale_order_info['price'])
-                            current_state = cancel_sale_order(current_state)
-                            if current_state['executedQty'] < current_state['min_quantity']:
-                                break
-                            current_state = create_sale_order(current_state, first_in_line_price)
+                            price_to_sell = first_in_line_price
                         else:
-                            if second_price_to_check < second_ask:
-                                #print(current_state['symbol'], 'cancel sale order, price is in range, we are first bid, but the next price is far back, so cancel and move us back. first_in_line_price', first_in_line_price, 'price_to_sell_min', price_to_sell_min, 'first_ask', first_ask, 'second_ask', second_ask, 'second_price_to_check', second_price_to_check, 'sale_order_info[price]', sale_order_info['price'])
-                                current_state = cancel_sale_order(current_state)
-                                if current_state['executedQty'] < current_state['min_quantity']:
-                                    break
-                                current_state = create_sale_order(current_state, second_in_line_price)
+                            price_to_sell = second_in_line_price
+                            
+   
+                        max_quantity = float_to_str(round_down(current_state['largest_bitcoin_order']/float(price_to_sell),current_state['quantity_decimals']))
+                        order_size = min(float(max_quantity), float(current_state['executedQty'] - current_state['sale_order_size']))
+                    
+                        if order_size > current_state['min_quantity']:
+                            sale_order = current_state['client'].order_limit_sell(symbol=current_state['symbol'], quantity=order_size, price=price_to_sell)
+                        
+                            current_state['temp_sale_order_id'] = sale_order['orderId']
+                            current_state['temp_sale_order_size'] = order_size
+                            
+                            write_current_state(current_state, current_state)
+        
+                        current_state = cancel_sale_order(current_state)
+                        
+                        if current_state['executedQty'] < current_state['min_quantity']:
+                            break
+                        
+                        if 'temp_sale_order_id' in current_state and current_state['temp_sale_order_id'] != False:
+                            current_state['orderId'] = current_state['temp_sale_order_id']
+                            current_state['sale_order_size'] = current_state['temp_sale_order_size']
+                            current_state['temp_sale_order_id'] = False
+                            current_state['temp_sale_order_size'] = 0
+                            write_current_state(current_state, current_state)
+                        
         
                     else:
                         #print(current_state['symbol'], 'price that would make us first is in range, but no sale order so create one', 'first_in_line_price', first_in_line_price, 'price_to_sell_min', price_to_sell_min)
@@ -423,6 +434,15 @@ def buy_coin_from_state(current_state):
     
             if current_state['orderId'] != False:
                 current_state = cancel_buy_order(current_state)
+                
+            if 'temp_buy_order_id' in current_state and current_state['temp_buy_order_id'] != False:
+                current_state['orderId'] = current_state['temp_buy_order_id']
+                current_state['buy_order_size'] = current_state['temp_buy_order_size']
+                current_state['temp_buy_order_id'] = False
+                current_state['temp_buy_order_size'] = 0
+                write_current_state(current_state, current_state)
+                current_state = cancel_buy_order(current_state)
+                
     
             if float(current_state['executedQty']) < current_state['min_quantity']:
                 print('buy order canceled, was never filled, exiting')
@@ -444,6 +464,18 @@ def buy_coin_from_state(current_state):
             if current_state['executedQty'] < current_state['min_quantity']:
                 calculate_profit_and_free_coin(current_state)
                 return
+            
+            if 'temp_sale_order_id' in current_state and current_state['temp_sale_order_id'] != False:
+                current_state['orderId'] = current_state['temp_sale_order_id']
+                current_state['sale_order_size'] = current_state['temp_sale_order_size']
+                current_state['temp_sale_order_id'] = False
+                current_state['temp_sale_order_size'] = 0
+                write_current_state(current_state, current_state)
+                current_state = cancel_sale_order(current_state)
+                if current_state['executedQty'] < current_state['min_quantity']:
+                    calculate_profit_and_free_coin(current_state)
+                    return
+            
     
         print('buy_coin_from_state() no open orders, selling coin..', current_state['symbol'])
         
@@ -509,7 +541,7 @@ def buy_coin(symbol, length, file_number, client):
 
         std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'+ '_' + str(file_number))
 
-        largest_bitcoin_order = .1
+        largest_bitcoin_order = .2
         if length == '1m':
             if file_number == 0:
                 if std_dev_increase_factor > 3:
@@ -678,8 +710,7 @@ def buy_coin(symbol, length, file_number, client):
 
             order_book = get_order_book_local(symbol['symbol'], length)
             
-            # if (symbol['symbol'] == 'ETHBTC'):
-            #     print(symbol['symbol'],'time since orderbook update', int(time.time()) - order_book['time'])
+            
             
             
             if int(time.time()) - order_book['time'] > 30:
@@ -687,9 +718,9 @@ def buy_coin(symbol, length, file_number, client):
                 continue
 
             if length == '1m':
-                time.sleep(2)
+                time.sleep(.3)
             elif length == '5m':
-                time.sleep(6)
+                time.sleep(.3)
             elif length == '15m':
                 time.sleep(12)
             elif length == '30m':
@@ -724,16 +755,10 @@ def buy_coin(symbol, length, file_number, client):
 
                 if current_price <= price_to_start_buy:
                     
+                    current_std_dev_increase_factor = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'+ '_' + str(file_number))
                     
-                    print('----start buy', symbol['symbol'], 'std_dev_increase_factor', std_dev_increase_factor , get_time())
                     
-                    if std_dev_increase_factor == 0:
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor' + '_' + str(file_number), 0)
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_overall' + '_' + str(file_number), int(time.time()))
-                        pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_attempted_trade_start_' + symbol['symbol']+ '_' + str(file_number), int(time.time()))
-                        time.sleep(120)
-                        return
-                    
+                    print('----start buy', symbol['symbol'], 'when_buying_std_dev_increase_factor', std_dev_increase_factor, 'current_std_dev_increase_factor', current_std_dev_increase_factor , get_time())
                     
                     
                     last_attempted_trade = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/last_attempted_trade_start_' + symbol['symbol']+ '_' + str(file_number))
@@ -752,6 +777,11 @@ def buy_coin(symbol, length, file_number, client):
                     pickle_write('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'+ '_' + str(file_number), temp_std_dev_increase_factor)
                     
                     pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_trade_start_overall' + '_' + str(file_number), int(time.time()))
+                    
+                    if current_std_dev_increase_factor == 0:
+                        time.sleep(120)
+                        return
+                    
                     
                     stop_trading_until_length = pickle_read('/home/ec2-user/environment/botfarming/Development/variables/stop_trading_until_' + length + '_' + str(file_number))
         
@@ -856,8 +886,6 @@ def buy_coin(symbol, length, file_number, client):
                         
                     
                     
-                    
-                    
                     price_to_buy_max = price_to_buy*buy_price_increase_factor
                     amount_to_stop_buying = part_of_bitcoin_to_use/price_to_buy_max
                     print('max price for', symbol['symbol'], price_to_buy_max)
@@ -881,24 +909,40 @@ def buy_coin(symbol, length, file_number, client):
                         first_in_line_price, first_bid, second_in_line_price, second_bid, second_price_to_check = get_first_in_line_price_buying(current_state)
                         if float(first_in_line_price) <= price_to_buy_max:
                             if current_state['orderId'] != False:
+                                
                                 buy_order_info = current_state['client'].get_order(symbol=current_state['symbol'],orderId=current_state['orderId'])
                                 if first_bid != float(buy_order_info['price']):
-                                    #print(current_state['symbol'], 'cancel buy order, price is in range, but we are not the first bid, so cancel and make us first bid. first_in_line_price', first_in_line_price, 'price_to_buy_max', price_to_buy_max, 'first_bid', first_bid)
-                                    current_state = cancel_buy_order(current_state)
-                                    if current_state['executedQty'] >= amount_to_stop_buying:
-                                        break
-                                    current_state = create_buy_order(current_state, first_in_line_price)
-                                    if current_state['orderId'] == False:
-                                        break
+                                    price_to_buy = first_in_line_price
                                 else:
-                                    if second_price_to_check > second_bid:
-                                        #print(current_state['symbol'], 'cancel buy order, price is in range, we are the first but, but the second bid is pretty far back, so cancel and move our bid back. first_in_line_price', first_in_line_price, 'price_to_buy_max', price_to_buy_max, 'first_bid', first_bid, 'second_bid', second_bid, 'second_price_to_check', second_price_to_check)
-                                        current_state = cancel_buy_order(current_state)
-                                        if current_state['executedQty'] >= amount_to_stop_buying:
-                                            break
-                                        current_state = create_buy_order(current_state, second_in_line_price)
-                                        if current_state['orderId'] == False:
-                                            break
+                                    price_to_buy = second_in_line_price
+                                    
+                                maximum_order_to_buy = float_to_str(round_down(current_state['largest_buy_segment'], current_state['quantity_decimals']))
+                                maximum_possible_buy = float_to_str(round_down(current_state['original_amount_to_buy'] - current_state['executedQty'] - current_state['buy_order_size'], current_state['quantity_decimals']))
+                                
+                                quantity_to_buy = min(float(maximum_order_to_buy), float(maximum_possible_buy))
+                                
+                        
+                                if quantity_to_buy > current_state['min_quantity']:
+                                    
+                                    buy_order = current_state['client'].order_limit_buy(symbol=current_state['symbol'], quantity=quantity_to_buy, price=price_to_buy)
+    
+                                    current_state['temp_buy_order_id'] = buy_order['orderId']
+                                    current_state['temp_buy_order_size'] = float(quantity_to_buy)
+                                    write_current_state(current_state, current_state)
+                                    
+                                    
+                                current_state = cancel_buy_order(current_state)
+                                
+                                if current_state['executedQty'] >= amount_to_stop_buying:
+                                    break
+                                
+                                if 'temp_buy_order_id' in current_state and current_state['temp_buy_order_id'] != False:
+                                    current_state['orderId'] = current_state['temp_buy_order_id']
+                                    current_state['buy_order_size'] = current_state['temp_buy_order_size']
+                                    current_state['temp_buy_order_id'] = False
+                                    current_state['temp_buy_order_size'] = 0
+                                    write_current_state(current_state, current_state)
+                                        
 
                             else:
                                 #print(current_state['symbol'], 'price is in range and no order, so creating one.. first_in_line_price ',  first_in_line_price, 'price_to_buy_max', price_to_buy_max)

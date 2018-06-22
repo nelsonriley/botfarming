@@ -14,29 +14,32 @@ import json
 import math
 from binance.client import Client
 
+std_dev_increase_factor = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'+ '_' + str(0))
+print(std_dev_increase_factor)
 
-symbol_path = '/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz'
-symbols = ut.pickle_read(symbol_path)
-total_btc_coins = 0
-symbols_trimmed = {}
-global socket_list
-socket_list = []
-symbol_list_temp = []
-symbol_list_sorted = []
 
-pprint(symbols)
+# symbol_path = '/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz'
+# symbols = ut.pickle_read(symbol_path)
+# total_btc_coins = 0
+# symbols_trimmed = {}
+# global socket_list
+# socket_list = []
+# symbol_list_temp = []
+# symbol_list_sorted = []
 
-sys.exit()
+# pprint(symbols)
 
-for s in symbols:
-    symbol = symbols[s]
-    symbol['24hourVolume2'] = float(symbol['24hourVolume'])
-    symbol_list_temp.append(symbol)
+# sys.exit()
+
+# for s in symbols:
+#     symbol = symbols[s]
+#     symbol['24hourVolume2'] = float(symbol['24hourVolume'])
+#     symbol_list_temp.append(symbol)
     
 
-symbol_list_sorted = sorted(symbol_list_temp, key=lambda k: k['24hourVolume2'], reverse=True) 
+# symbol_list_sorted = sorted(symbol_list_temp, key=lambda k: k['24hourVolume2'], reverse=True) 
 
-pprint(symbol_list_sorted)
+# pprint(symbol_list_sorted)
 
 
 

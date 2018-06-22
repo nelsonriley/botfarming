@@ -164,7 +164,7 @@ bot_trades = []
 max_profit = -999999
 best_not_trade_value = -1
 best_hours_to_not_trade = -1
-
+ 
 
 for look_back in look_backs:
     for file in onlyfiles:

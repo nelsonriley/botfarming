@@ -235,8 +235,8 @@ def calculate_profit_and_free_coin(current_state):
     # update program state
     write_current_state(current_state, False)
     
-    stop_trading_until = int(time.time()) + 60*60*3
-    save_stop_trading_until(current_state['symbol'], current_state['file_number'], stop_trading_until)
+    # stop_trading_until = int(time.time()) + 60*60*3
+    # save_stop_trading_until(current_state['symbol'], current_state['file_number'], stop_trading_until)
     
     if percent_profit_from_trade < -.01 and percent_profit_from_trade != -1.0:
         stop_trading_until = int(time.time()) + 60*60*24
@@ -552,7 +552,7 @@ def buy_coin(symbol, length, file_number, client):
             else:
                 max_price_to_buy_factor = .975
                 min_trade_gap = .01
-            largest_bitcoin_order = .1
+            largest_bitcoin_order = .2
             part_of_bitcoin_to_use = .4*2
             gain_min = .001
             buy_price_increase_factor = 1.001
@@ -766,7 +766,7 @@ def buy_coin(symbol, length, file_number, client):
                     pickle_write('/home/ec2-user/environment/botfarming/Development/variables/last_attempted_trade_start_' + symbol['symbol']+ '_' + str(file_number), int(time.time()))
                     
                     
-                    if (last_attempted_trade > int(time.time()) - 30*60):
+                    if (last_attempted_trade > int(time.time()) - 15*60):
                         print(symbol['symbol'], "attempted a trade too soon, returning")
                         time.sleep(10*60)
                         return
@@ -1291,10 +1291,10 @@ def increase_std_dev_increase_factor(file_number):
         
         print('last_trade_start_overall', get_readable_time(last_trade_start_overall))
         
-        if int(time.time()) - last_trade_start_overall > 3*60:
-            if int(time.time()) - last_trade_start_overall < 7*60:
+        if int(time.time()) - last_trade_start_overall > 5*60:
+            if int(time.time()) - last_trade_start_overall < 8*60:
                 std_dev_increase_factor += 0.05
-            elif int(time.time()) - last_trade_start_overall < 11*60:
+            elif int(time.time()) - last_trade_start_overall < 12*60:
                 std_dev_increase_factor += 0.1
             else:
                 std_dev_increase_factor += 0.2

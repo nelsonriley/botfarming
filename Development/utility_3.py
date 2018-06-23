@@ -545,13 +545,13 @@ def buy_coin(symbol, length, file_number, client):
         if length == '1m':
             if file_number == 0:
                 if std_dev_increase_factor > 3:
-                    max_price_to_buy_factor = .975
+                    max_price_to_buy_factor = .977
                 else:
-                    max_price_to_buy_factor = .975
+                    max_price_to_buy_factor = .977
                 min_trade_gap = .007
             else:
-                max_price_to_buy_factor = .97
-                min_trade_gap = .08
+                max_price_to_buy_factor = .972
+                min_trade_gap = .085
             largest_bitcoin_order = .2
             part_of_bitcoin_to_use = .4*2
             gain_min = .001

@@ -545,18 +545,18 @@ def buy_coin(symbol, length, file_number, client):
         if length == '1m':
             if file_number == 0:
                 if std_dev_increase_factor > 3:
-                    max_price_to_buy_factor = .977
+                    max_price_to_buy_factor = .98
                 else:
-                    max_price_to_buy_factor = .977
+                    max_price_to_buy_factor = .98
                 min_trade_gap = .007
             else:
-                max_price_to_buy_factor = .972
+                max_price_to_buy_factor = .975
                 min_trade_gap = .085
             largest_bitcoin_order = .2
             part_of_bitcoin_to_use = .4*2
             gain_min = .001
             buy_price_increase_factor = 1.001
-            look_back_schedule = [1,5,11]
+            look_back_schedule = [1]
             minutes_until_sale = 10
             minutes_until_sale_final = 12
         elif length == '5m':
@@ -570,7 +570,7 @@ def buy_coin(symbol, length, file_number, client):
             part_of_bitcoin_to_use = .45*2
             gain_min = .001
             buy_price_increase_factor = 1.002
-            look_back_schedule = [1,5,11]
+            look_back_schedule = [1]
             minutes_until_sale = 12*minutes
             minutes_until_sale_final = 14*minutes
         elif length == '15m':
@@ -1291,10 +1291,10 @@ def increase_std_dev_increase_factor(file_number):
         
         print('last_trade_start_overall', get_readable_time(last_trade_start_overall))
         
-        if int(time.time()) - last_trade_start_overall > 5*60:
-            if int(time.time()) - last_trade_start_overall < 8*60:
+        if int(time.time()) - last_trade_start_overall > 3*60:
+            if int(time.time()) - last_trade_start_overall < 7*60:
                 std_dev_increase_factor += 0.05
-            elif int(time.time()) - last_trade_start_overall < 12*60:
+            elif int(time.time()) - last_trade_start_overall < 11*60:
                 std_dev_increase_factor += 0.1
             else:
                 std_dev_increase_factor += 0.2

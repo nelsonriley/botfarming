@@ -561,11 +561,11 @@ def buy_coin(symbol, length, file_number, client):
             minutes_until_sale_final = 12
         elif length == '5m':
             if file_number == 0:
-                max_price_to_buy_factor = .97
-                min_trade_gap = .01
+                max_price_to_buy_factor = .96
+                min_trade_gap = .085
             else:
                 max_price_to_buy_factor = .96
-                min_trade_gap = .015
+                min_trade_gap = .085
             largest_bitcoin_order = .2
             part_of_bitcoin_to_use = .45*2
             gain_min = .001

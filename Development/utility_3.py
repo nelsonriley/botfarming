@@ -449,8 +449,10 @@ def buy_coin_from_state(current_state):
                 write_current_state(current_state, False)
                 return
             else:
-                current_state['state'] = 'selling'
+                current_state['finish_buy_time'] = int(time.time())
+                current_state['finish_buy_time_readable'] = get_time()
                 current_state['original_quantity'] = current_state['executedQty']
+                current_state['state'] = 'selling'
                 write_current_state(current_state, current_state)
     
     
@@ -545,12 +547,12 @@ def buy_coin(symbol, length, file_number, client):
         if length == '1m':
             if file_number == 0:
                 if std_dev_increase_factor > 3:
-                    max_price_to_buy_factor = .98
+                    max_price_to_buy_factor = .983
                 else:
-                    max_price_to_buy_factor = .98
+                    max_price_to_buy_factor = .983
                 min_trade_gap = .007
             else:
-                max_price_to_buy_factor = .975
+                max_price_to_buy_factor = .98
                 min_trade_gap = .085
             largest_bitcoin_order = .2
             part_of_bitcoin_to_use = .4*2

@@ -14,8 +14,8 @@ import json
 import math
 from binance.client import Client
 
-std_dev_increase_factor = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/variables/std_dev_increase_factor'+ '_' + str(0))
-print(std_dev_increase_factor)
+current_state = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/program_state/program_state_1m_0_THETABTC.pklz')
+pprint(current_state)
 
 
 # symbol_path = '/home/ec2-user/environment/botfarming/Development/3_binance_btc_symbols.pklz'

@@ -66,8 +66,6 @@ final_total_trades_a = 0
 final_total_trades_b = 0
 
 profit_by_std = {}
-profit_by_length_since_last_trade = {}
-profit_by_look_back = {}
 
 max_time = 0
 
@@ -81,7 +79,7 @@ for look_back in look_backs:
         if file.startswith(look_back + "_0"):
             #print('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/' + file)
             trade = ut.pickle_read('/home/ec2-user/environment/botfarming/Development/binance_all_trades_history/' + file)
-            if len(trade) == 13:
+            if len(trade) == 12:
                 trade.append(look_back)
                 trade.append(trade[0])
                 trade[0] = ut.convert_date_to_epoch(trade[0])
@@ -101,7 +99,7 @@ for look_back in look_backs:
             max_time = bot_trade[9]
         
         
-        if bot_trade[9] > 1530036384 and bot_trade[3] > -.5:
+        if bot_trade[9] > 1530562209 and bot_trade[3] != -1.0:
             #print(bot_trade[2])
             
             #pprint(bot_trade)
@@ -114,16 +112,6 @@ for look_back in look_backs:
                 profit_by_std[bot_trade[11]] = bot_trade[2]
             else:
                 profit_by_std[bot_trade[11]] += bot_trade[2]
-                
-            if bot_trade[12] not in profit_by_length_since_last_trade:
-                profit_by_length_since_last_trade[bot_trade[9]-bot_trade[12]] = bot_trade[2]
-            else:
-                profit_by_length_since_last_trade[bot_trade[9]-bot_trade[12]] += bot_trade[2]
-                
-            if bot_trade[5] not in profit_by_look_back:
-                profit_by_look_back[bot_trade[5]] = bot_trade[2]
-            else:
-                profit_by_look_back[bot_trade[5]] += bot_trade[2]
             
             total_profit += bot_trade[2] # 'absolute profit', bot_trade[2], 'percentage profit', bot_trade[3]
             total_trades += 1
@@ -160,13 +148,9 @@ print('final_profit_b', final_profit_b)
 print('final_total_trades_b', final_total_trades_b)
 print('max_time', max_time)
 print('current_time', int(time.time()))
-print('time of last commit', int(time.time())-6*24*60*60)
+print('time of last commit', int(time.time())-24*60*60)
 
 pprint(profit_by_std)
-
-pprint(profit_by_length_since_last_trade)
-
-pprint(profit_by_look_back)
 
 sys.exit()
 
@@ -180,7 +164,7 @@ bot_trades = []
 max_profit = -999999
 best_not_trade_value = -1
 best_hours_to_not_trade = -1
- 
+
 
 for look_back in look_backs:
     for file in onlyfiles:
@@ -580,4 +564,3 @@ for look_back in look_backs:
 
 # print('total_trades_overall', total_trades_overall)
 # pprint(all_trades)
-
